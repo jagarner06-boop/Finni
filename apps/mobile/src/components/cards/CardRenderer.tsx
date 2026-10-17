@@ -1,10 +1,11 @@
-import { formatCents, type Bill, type Card } from '@finni/shared';
+import { BillRow } from '@/components/feedback/BillRow';
+import { router } from 'expo-router';
+import { formatCents, type Card } from '@finni/shared';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { ApprovalCard } from '@/components/cards/ApprovalCard';
 import { ChartCard } from '@/components/cards/ChartCard';
-import { DueChip } from '@/components/cards/DueChip';
 import { RichRow } from '@/components/cards/RichRow';
 import { SpendingBars } from '@/components/cards/SpendingBars';
 import { Surface } from '@/components/ui/Surface';
@@ -56,15 +57,7 @@ export function CardRenderer({ card, onRowPress }: { card: Card; onRowPress?: (i
       return (
         <Shell empty={card.bills.length === 0 && 'No bills due.'}>
           {card.bills.map((b) => (
-            <RichRow
-              key={b.id}
-              icon="file-text"
-              title={b.nickname ?? b.payee}
-              meta={billMeta(b)}
-              chip={b.status === 'pending' && b.dueDate ? <DueChip label={`Due ${formatRelativeDay(b.dueDate)}`} /> : null}
-              amount={formatCents(b.amountCents)}
-              onPress={tap(b.id)}
-            />
+            <BillRow key={b.id} bill={b} onPress={tap(b.id) ?? (() => router.push({ pathname: '/finn', params: { q: `Help me review ${b.nickname ?? b.payee}` } }))} />
           ))}
         </Shell>
       );
@@ -107,14 +100,6 @@ export function CardRenderer({ card, onRowPress }: { card: Card; onRowPress?: (i
       // Newer API card types render nothing instead of breaking the chat.
       return null;
   }
-}
-
-function billMeta(b: Bill): string | undefined {
-  if (b.status === 'completed') return 'Paid';
-  if (b.status === 'cancelled') return 'Cancelled';
-  if (b.status === 'recurring' && b.recurringDate) return `Monthly on the ${b.recurringDate}`;
-  if (!b.dueDate) return 'Unpaid';
-  return undefined; // due chip carries it
 }
 
 function Shell({ header, empty, children }: { header?: string; empty?: string | false; children: ReactNode }) {

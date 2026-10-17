@@ -18,11 +18,15 @@ export function HoldToApprove({
   onHoldStart,
   onHoldCancel,
   disabled = false,
+  label: idleLabel = 'Hold to approve',
+  actionLabel = 'Approve',
 }: {
   onApprove: () => void;
   onHoldStart?: () => void;
   onHoldCancel?: () => void;
   disabled?: boolean;
+  label?: string;
+  actionLabel?: string;
 }) {
   const [holding, setHolding] = useState(false);
   const [width, setWidth] = useState(0);
@@ -35,15 +39,15 @@ export function HoldToApprove({
   });
 
   const fillStyle = useAnimatedStyle(() => ({ width: `${hold.progress.value * 100}%` }));
-  const label = holding ? 'Keep holding…' : 'Hold to approve';
+  const label = holding ? 'Keep holding…' : idleLabel;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Hold to approve"
-      accessibilityHint="Press and hold to approve, or use the Approve action."
+      accessibilityLabel={idleLabel}
+      accessibilityHint={`Press and hold, or use the ${actionLabel} action.`}
       accessibilityState={{ disabled }}
-      accessibilityActions={[{ name: 'activate', label: 'Approve' }]}
+      accessibilityActions={[{ name: 'activate', label: actionLabel }]}
       onAccessibilityAction={(e) => {
         if (e.nativeEvent.actionName === 'activate' && !disabled) onApprove();
       }}

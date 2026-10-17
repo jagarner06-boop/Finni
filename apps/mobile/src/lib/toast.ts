@@ -5,6 +5,8 @@ export interface ToastMessage {
   id: number;
   title: string;
   body?: string;
+  variant?: 'success' | 'warning' | 'error' | 'info';
+  onUndo?: () => void;
 }
 
 type Listener = (t: ToastMessage) => void;
@@ -12,10 +14,12 @@ type Listener = (t: ToastMessage) => void;
 const listeners = new Set<Listener>();
 let nextId = 1;
 
-export function showToast(title: string, body?: string) {
-  const msg = { id: nextId++, title, body };
+export function showToast(title: string, body?: string, options: Pick<ToastMessage, 'variant' | 'onUndo'> = {}) {
+  const msg = { id: nextId++, title, body, ...options };
   listeners.forEach((l) => l(msg));
 }
+
+export const useToast = () => showToast;
 
 export function subscribeToasts(listener: Listener): () => void {
   listeners.add(listener);

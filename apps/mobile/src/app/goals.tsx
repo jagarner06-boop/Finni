@@ -1,3 +1,5 @@
+import { EmptyState } from '@/components/feedback/EmptyState';
+import { Delayed, Skeleton } from '@/components/feedback/Skeleton';
 import { formatCents } from '@finni/shared';
 import { router } from 'expo-router';
 import { ScrollView, StyleSheet, Text } from 'react-native';
@@ -35,7 +37,8 @@ export default function GoalsScreen() {
         {goals.map((g) => (
           <GoalCard key={g.id} goal={g} onPress={() => router.push(`/goal/${g.id}`)} />
         ))}
-        {!isLoading && goals.length === 0 && <Text style={styles.empty}>No goals yet. Start one with New goal.</Text>}
+        {isLoading && <Delayed><Skeleton /><Skeleton /></Delayed>}
+        {!isLoading && goals.length === 0 && <EmptyState pose="wave" color="sky" title="No goals yet." sub="Pick something worth saving for and I'll do the math." cta="Start a goal" onPress={() => router.push('/goal/new')} />}
       </ScrollView>
     </SafeAreaView>
   );

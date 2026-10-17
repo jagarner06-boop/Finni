@@ -1,3 +1,4 @@
+import { palette } from '@/theme/palette';
 import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
@@ -49,8 +50,8 @@ export function TideWell({ percent, scale = 1 }: { percent: number; scale?: numb
   const pct = Math.round(Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0)));
 
   const well = (
-    <View style={styles.well} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-      <Animated.View style={[styles.water, waterStyle]}>
+    <View style={[styles.well, pct >= 100 && { borderColor: palette.mint.base, borderWidth: 1.5 }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+      <Animated.View style={[styles.water, pct >= 100 && { experimental_backgroundImage: `linear-gradient(180deg, ${palette.mint.base}99, ${palette.mint.base})` }, waterStyle]}>
         {pct > 0 && pct < 100 && (
           <Animated.View style={[styles.crest, crestStyle]}>
             <Svg width={CREST_W} height={CREST_H}>

@@ -1,6 +1,6 @@
 import type { ChatMessage } from '@finni/shared';
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import Animated, { Easing, Keyframe } from 'react-native-reanimated';
+import Animated, { Easing, Keyframe, FadeIn, useReducedMotion } from 'react-native-reanimated';
 
 import { CardRenderer } from '@/components/cards/CardRenderer';
 import type { BubblePosition } from '@/components/chat/grouping';
@@ -37,11 +37,12 @@ export function MessageBubble({
   /** Set on a user message that didn't send; shows "Not sent · Retry". */
   onRetry?: () => void;
 }) {
+  const reduced = useReducedMotion();
   const spacing = { marginTop: grouped(position) ? GROUPED_GAP : GROUP_GAP };
 
   if (message.role === 'user') {
     return (
-      <Animated.View entering={userIn} style={[styles.userColumn, spacing]}>
+      <Animated.View entering={reduced ? FadeIn.duration(150) : userIn} style={[styles.userColumn, spacing]}>
         <View style={[styles.bubble, styles.user, userCorners(position)]}>
           <Text style={styles.text}>{message.text}</Text>
         </View>
@@ -56,7 +57,7 @@ export function MessageBubble({
 
   const showAvatar = !grouped(position);
   return (
-    <Animated.View entering={finnIn} style={[styles.finnRow, spacing]}>
+    <Animated.View entering={reduced ? FadeIn.duration(150) : finnIn} style={[styles.finnRow, spacing]}>
       <View style={styles.avatarSlot}>{showAvatar && <FinnAvatar mood={message.mood ?? 'happy'} size={AVATAR} />}</View>
       <View style={styles.finnColumn}>
         <View style={[styles.bubble, styles.finn, finnCorners(position)]}>
