@@ -1,6 +1,8 @@
 import type { Mood } from '@finni/shared';
 
-// Design tokens (Design System plan). Light mode only.
+// JS mirror of the @theme tokens in src/global.css, for places className can't
+// reach (navigator options, icon colors, Reanimated styles).
+
 export const colors = {
   deep: '#0B2545',
   muted: '#5B6B82',
@@ -14,14 +16,22 @@ export const colors = {
   berry: '#E5486A',
 } as const;
 
+export const fonts = {
+  body: 'Nunito_400Regular',
+  bold: 'Nunito_700Bold',
+  heavy: 'Nunito_800ExtraBold',
+} as const;
+
+export const radius = { card: 20, bubble: 22 } as const;
+
+export const fontSize = { hero: 32, title: 24, body: 17, caption: 14 } as const;
+
 export const moodColor: Record<Mood, string> = {
   happy: colors.lagoon,
   thinking: colors.ocean,
   worried: colors.berry,
   celebrating: colors.sun,
 };
-
-export const radius = { card: 20, bubble: 22, pill: 999 } as const;
 
 export const shadow = {
   shadowColor: colors.deep,

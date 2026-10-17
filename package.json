@@ -6,8 +6,9 @@
     "packages/*"
   ],
   "scripts": {
-    "api": "npm run dev -w apps/api",
-    "mobile": "npm run start -w apps/mobile",
+    "api": "npm run dev -w @finni/api",
+    "mobile": "npm run start -w @finni/mobile",
+    "mobile:web": "npm run web -w @finni/mobile",
     "typecheck": "npm run typecheck --workspaces --if-present"
   }
 }

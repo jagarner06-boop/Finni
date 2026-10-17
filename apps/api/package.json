@@ -14,7 +14,7 @@
     "smoke:agent": "tsx --env-file=.env scripts/smoke-agent.ts"
   },
   "dependencies": {
-    "@finni/shared": "^0.0.0",
+    "@finni/shared": "*",
     "@google/genai": "^2.30.0",
     "cors": "^2.8.6",
     "drizzle-orm": "^0.45.4",
