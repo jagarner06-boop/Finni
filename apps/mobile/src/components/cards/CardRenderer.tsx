@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { ApprovalCard } from '@/components/cards/ApprovalCard';
+import { ChartCard } from '@/components/cards/ChartCard';
 import { DueChip } from '@/components/cards/DueChip';
 import { RichRow } from '@/components/cards/RichRow';
 import { SpendingBars } from '@/components/cards/SpendingBars';
@@ -101,13 +102,7 @@ export function CardRenderer({ card, onRowPress }: { card: Card; onRowPress?: (i
     case 'approval':
       return <ApprovalCard card={card} />;
     case 'chart':
-      // Placeholder until the drawn ChartCard lands with the mobile-design merge: one row per point.
-      return (
-        <Rows
-          title={[card.title, card.subtitle].filter(Boolean).join(' · ')}
-          rows={card.labels.map((label, i) => [`${label}-${i}`, label, '', card.series.map((s) => formatCents(s.valuesCents[i] ?? 0)).join(' / ')])}
-        />
-      );
+      return <ChartCard card={card} />;
     default:
       // Newer API card types render nothing instead of breaking the chat.
       return null;
