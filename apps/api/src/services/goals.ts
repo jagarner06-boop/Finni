@@ -2,6 +2,8 @@ import type { Goal, GoalIcon } from "@finni/shared";
 import { and, asc, eq } from "drizzle-orm";
 import { db, schema } from "../db/client.js";
 import type { User } from "../db/schema.js";
+import { goalEta, isBehind } from "../domain/goals.js";
+import { isoDay } from "../lib/dates.js";
 import { nessie } from "../nessie/client.js";
 import { liveBalanceCents } from "./ledger.js";
 
@@ -12,6 +14,7 @@ export const goalPercent = (currentCents: number, targetCents: number) => (targe
 /** A goal row joined with its Nessie account's live balance. */
 export async function toGoal(row: GoalRow): Promise<Goal> {
   const currentCents = await liveBalanceCents(await nessie.getAccount(row.nessieAccountId));
+  const eta = row.status === "active" ? goalEta({ currentCents, targetCents: row.targetCents, contributionCents: row.contributionCents, cadence: row.cadence }, isoDay()) : null;
   return {
     id: row.id,
     name: row.name,
@@ -27,8 +30,8 @@ export async function toGoal(row: GoalRow): Promise<Goal> {
     cadence: row.cadence,
     contributionCents: row.contributionCents,
     nextContributionOn: row.nextContributionOn,
-    eta: null,
-    behind: false,
+    eta,
+    behind: isBehind(eta, row.targetDate),
   };
 }
 
