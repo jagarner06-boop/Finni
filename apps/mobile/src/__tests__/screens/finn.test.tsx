@@ -71,12 +71,11 @@ describe('Finn screen', () => {
     expect(mockApi.sendChat).toHaveBeenLastCalledWith({ message: 'Pay my card' });
   });
 
-  it('sends ?q= once on mount', async () => {
+  it('puts ?q= in the composer without sending it', async () => {
     mockParams.q = 'Pay my card down';
     mockApi.chatHistory.mockResolvedValue({ messages: [] });
-    mockApi.sendChat.mockResolvedValue({ reply: msg({ id: 'm4' }), cards: [] });
     await render(wrap(<FinnScreen />));
-    await waitFor(() => expect(mockApi.sendChat).toHaveBeenCalledWith({ message: 'Pay my card down' }));
-    expect(mockApi.sendChat).toHaveBeenCalledTimes(1);
+    expect((await screen.findByLabelText('Ask Finn')).props.value).toBe('Pay my card down');
+    expect(mockApi.sendChat).not.toHaveBeenCalled();
   });
 });

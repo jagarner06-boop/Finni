@@ -34,10 +34,9 @@ export default function FinnScreen() {
   const me = useMe();
   const send = useSendChat();
   const scan = useScanNudges();
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(params.q?.trim() ?? '');
   const scroll = useRef<ScrollView>(null);
   const input = useRef<TextInput>(null);
-  const sentQuery = useRef<string | null>(null);
 
   const messages = history.data?.messages ?? [];
   const greeting =
@@ -63,21 +62,25 @@ export default function FinnScreen() {
     setDraft('');
   };
 
-  // ?focus=1 puts the keyboard up; ?q= asks once. Clear them so returning to the tab doesn't repeat.
+  // ?focus=1 puts the keyboard up. Params are cleared so returning to the tab doesn't repeat them.
   useEffect(() => {
     if (params.focus !== '1') return;
     input.current?.focus();
     router.setParams({ focus: undefined });
   }, [params.focus]);
 
+  // A link can set ?q=, so it only fills the composer; the person still presses Send.
+  const q = params.q?.trim() || undefined;
+  const [seenQ, setSeenQ] = useState(q);
+  if (q !== seenQ) {
+    setSeenQ(q);
+    if (q) setDraft(q);
+  }
   useEffect(() => {
-    const q = params.q?.trim();
-    if (!q || sentQuery.current === q) return;
-    sentQuery.current = q;
-    send.mutate(q);
+    if (!q) return;
+    input.current?.focus();
     router.setParams({ q: undefined });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- send once per new ?q=
-  }, [params.q]);
+  }, [q]);
 
   // Demo trigger: long-press Finn to run the nudge scan.
   const checkAccounts = () =>
