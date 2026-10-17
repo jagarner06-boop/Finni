@@ -173,7 +173,8 @@ export const TOOLS: Record<string, Tool> = {
       name: "make_chart",
       description:
         "Draw a chart from the user's real data and show it under your reply. Use for 'show me', 'chart', 'graph', 'visualize', 'trend', 'over time'. " +
-        "spending_breakdown = donut by category/merchant; spending_over_time = bars per day (up to 14 days) or week; balance_history = line of the checking balance; income_vs_spending = weekly in vs out bars.",
+        "spending_breakdown = donut of WHERE money went (by category/merchant); spending_over_time = bars of WHEN money went (per day up to 14 days, else per week) — use it for 'graph my spending this week/month', 'daily spending', 'trend'; " +
+        "balance_history = line of the checking balance; income_vs_spending = weekly money in vs out bars.",
       parameters: {
         type: Type.OBJECT,
         properties: {
