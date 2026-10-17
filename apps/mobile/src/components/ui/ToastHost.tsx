@@ -25,8 +25,8 @@ export function ToastHost() {
     <View pointerEvents="none" className="absolute inset-x-4 gap-2" style={{ top: insets.top + 8 }}>
       {toasts.map((t) => (
         <View key={t.id} className="rounded-card bg-surface px-4 py-3 shadow-md">
-          <Text className="font-bold text-deep">{t.title}</Text>
-          {t.body ? <Text className="font-body text-muted">{t.body}</Text> : null}
+          <Text className="font-bold text-ink">{t.title}</Text>
+          {t.body ? <Text className="font-regular text-muted">{t.body}</Text> : null}
         </View>
       ))}
     </View>

@@ -1,49 +1,103 @@
-import { formatCents, type Card } from '@finni/shared';
+import { formatCents, type Bill, type Card } from '@finni/shared';
 import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { useApproveAction, useRejectAction } from '@/api/queries';
+import { ApprovalCard } from '@/components/cards/ApprovalCard';
+import { DueChip } from '@/components/cards/DueChip';
+import { RichRow } from '@/components/cards/RichRow';
+import { SpendingBars } from '@/components/cards/SpendingBars';
+import { Surface } from '@/components/ui/Surface';
 import { formatRelativeDay } from '@/lib/format';
-import { colors, radius, shadow } from '@/theme/tokens';
+import { colors, fonts, radius } from '@/theme/tokens';
 
-// Basic one-row-per-item rendering for every Card type. Real card designs replace these in the design pass.
-export function CardRenderer({ card }: { card: Card }) {
+/** Rich cards under Finn's bubbles. `onRowPress` gets the tapped item's id (source transactions, later). */
+export function CardRenderer({ card, onRowPress }: { card: Card; onRowPress?: (id: string) => void }) {
+  const tap = (id: string) => (onRowPress ? () => onRowPress(id) : undefined);
+
   switch (card.type) {
     case 'account_list':
-      return <Rows rows={card.accounts.map((a) => [a.id, a.nickname, a.isGoal ? 'Savings goal' : a.type, formatCents(a.balanceCents)])} />;
+      return (
+        <Shell empty={card.accounts.length === 0 && 'No accounts to show.'}>
+          {card.accounts.map((a) => (
+            <RichRow
+              key={a.id}
+              icon={a.type === 'Credit Card' ? 'credit-card' : 'briefcase'}
+              title={a.nickname}
+              meta={a.isGoal ? 'Savings goal' : a.type}
+              amount={formatCents(a.balanceCents)}
+              onPress={tap(a.id)}
+            />
+          ))}
+        </Shell>
+      );
     case 'transaction_list':
       return (
-        <Rows
-          title={card.title}
-          rows={card.transactions.map((t) => [t.id, t.merchantName, `${t.category ?? ''} · ${formatRelativeDay(t.date)}`, `−${formatCents(t.amountCents)}`])}
-        />
+        <Shell header={card.title} empty={card.transactions.length === 0 && 'No transactions in this range.'}>
+          {card.transactions.map((t) => (
+            <RichRow
+              key={t.id}
+              icon="shopping-bag"
+              title={t.merchantName}
+              meta={[t.category, formatRelativeDay(t.date)].filter(Boolean).join(' · ')}
+              amount={`−${formatCents(t.amountCents)}`}
+              onPress={tap(t.id)}
+            />
+          ))}
+        </Shell>
       );
     case 'spending_breakdown':
       return (
-        <Rows
-          title={`Last ${card.days} days · ${formatCents(card.totalCents)}`}
-          rows={card.items.map((i) => [i.label, i.label, `${i.percent}%`, formatCents(i.amountCents)])}
-        />
+        <Shell header={`Last ${card.days} days · ${formatCents(card.totalCents)}`} empty={card.items.length === 0 && 'No spending in this range.'}>
+          <SpendingBars items={card.items} onPress={onRowPress} />
+        </Shell>
       );
     case 'bill_list':
       return (
-        <Rows
-          rows={card.bills.map((b) => [
-            b.id,
-            b.nickname ?? b.payee,
-            b.status === 'completed' ? 'Paid' : b.status === 'recurring' ? `Monthly on the ${b.recurringDate}` : b.dueDate ? `Due ${formatRelativeDay(b.dueDate)}` : 'Unpaid',
-            formatCents(b.amountCents),
-          ])}
-        />
+        <Shell empty={card.bills.length === 0 && 'No bills due.'}>
+          {card.bills.map((b) => (
+            <RichRow
+              key={b.id}
+              icon="file-text"
+              title={b.nickname ?? b.payee}
+              meta={billMeta(b)}
+              chip={b.status === 'pending' && b.dueDate ? <DueChip label={`Due ${formatRelativeDay(b.dueDate)}`} /> : null}
+              amount={formatCents(b.amountCents)}
+              onPress={tap(b.id)}
+            />
+          ))}
+        </Shell>
       );
     case 'goal_progress':
       return (
-        <Rows
-          rows={card.goals.map((g) => [g.id, `${g.emoji ?? ''} ${g.name}`.trim(), `${g.percent}% of ${formatCents(g.targetCents)}`, formatCents(g.currentCents)])}
-        />
+        <Shell empty={card.goals.length === 0 && 'No goals yet.'}>
+          {card.goals.map((g) => (
+            <RichRow
+              key={g.id}
+              icon="target"
+              title={g.name}
+              meta={`${g.percent}% of ${formatCents(g.targetCents)}`}
+              chip={<Progress percent={g.percent} />}
+              amount={formatCents(g.currentCents)}
+              onPress={tap(g.id)}
+            />
+          ))}
+        </Shell>
       );
     case 'atm_list':
-      return <Rows title={card.note} rows={card.atms.map((a) => [a.id, a.name, a.address, a.distanceMiles != null ? `${a.distanceMiles} mi` : ''])} />;
+      return (
+        <Shell header={card.note} empty={card.atms.length === 0 && 'No ATMs nearby.'}>
+          {card.atms.map((a) => (
+            <RichRow
+              key={a.id}
+              icon="map-pin"
+              title={a.name}
+              meta={a.address}
+              amount={a.distanceMiles != null ? `${a.distanceMiles} mi` : undefined}
+              onPress={tap(a.id)}
+            />
+          ))}
+        </Shell>
+      );
     case 'approval':
       return <ApprovalCard card={card} />;
     case 'chart':
@@ -60,81 +114,35 @@ export function CardRenderer({ card }: { card: Card }) {
   }
 }
 
-function Rows({ title, rows }: { title?: string; rows: [key: string, title: string, caption: string, value: string][] }) {
+function billMeta(b: Bill): string | undefined {
+  if (b.status === 'completed') return 'Paid';
+  if (b.status === 'cancelled') return 'Cancelled';
+  if (b.status === 'recurring' && b.recurringDate) return `Monthly on the ${b.recurringDate}`;
+  if (!b.dueDate) return 'Unpaid';
+  return undefined; // due chip carries it
+}
+
+function Shell({ header, empty, children }: { header?: string; empty?: string | false; children: ReactNode }) {
   return (
-    <Box>
-      {title ? <Text style={styles.caption}>{title}</Text> : null}
-      {rows.map(([key, t, caption, value]) => (
-        <View key={key} style={styles.row}>
-          <View style={styles.rowText}>
-            <Text style={styles.title}>{t}</Text>
-            {caption ? <Text style={styles.caption}>{caption}</Text> : null}
-          </View>
-          <Text style={styles.money}>{value}</Text>
-        </View>
-      ))}
-    </Box>
+    <Surface style={styles.card}>
+      {header ? <Text style={styles.header}>{header}</Text> : null}
+      {empty ? <Text style={styles.empty}>{empty}</Text> : children}
+    </Surface>
   );
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  executing: 'Working on it…',
-  executed: 'Done ✅',
-  rejected: 'Declined',
-  expired: 'Expired',
-  failed: 'Something went wrong',
-};
-
-function ApprovalCard({ card }: { card: Extract<Card, { type: 'approval' }> }) {
-  const approve = useApproveAction();
-  const reject = useRejectAction();
-  // The mutation result is fresher than the card saved in chat history.
-  const status = approve.data?.action.status ?? reject.data?.action.status ?? card.status;
-  const busy = approve.isPending || reject.isPending;
-  const route = [card.fromLabel, card.toLabel].filter(Boolean).join(' → ');
-
+function Progress({ percent }: { percent: number }) {
   return (
-    <Box>
-      <Text style={styles.title}>{card.title}</Text>
-      {route ? <Text style={styles.caption}>{route}</Text> : null}
-      {card.amountCents != null && <Text style={styles.money}>{formatCents(card.amountCents)}</Text>}
-      {card.requiresStepUp && status === 'pending' && <Text style={styles.caption}>🔒 You'll confirm it's you first</Text>}
-      {status === 'pending' ? (
-        <View style={styles.buttons}>
-          {busy ? (
-            <ActivityIndicator color={colors.ocean} />
-          ) : (
-            <>
-              <Pressable style={[styles.button, styles.secondary]} onPress={() => reject.mutate(card.actionId)}>
-                <Text style={[styles.buttonText, styles.secondaryText]}>Not now</Text>
-              </Pressable>
-              <Pressable style={styles.button} onPress={() => approve.mutate(card.actionId)}>
-                <Text style={styles.buttonText}>Approve</Text>
-              </Pressable>
-            </>
-          )}
-        </View>
-      ) : (
-        <Text style={styles.caption}>{STATUS_LABEL[status] ?? status}</Text>
-      )}
-      {(approve.isError || reject.isError) && <Text style={styles.error}>{(approve.error ?? reject.error)?.message}</Text>}
-    </Box>
+    <View style={styles.track}>
+      <View style={[styles.fill, { width: `${Math.max(0, Math.min(100, percent))}%` }]} />
+    </View>
   );
 }
-
-const Box = ({ children }: { children: ReactNode }) => <View style={styles.card}>{children}</View>;
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: radius.card, padding: 14, gap: 10, ...shadow },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
-  rowText: { flexShrink: 1 },
-  title: { fontSize: 16, fontWeight: '700', color: colors.deep },
-  caption: { fontSize: 13, color: colors.muted },
-  money: { fontSize: 18, fontWeight: '800', color: colors.deep, fontVariant: ['tabular-nums'] },
-  buttons: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
-  button: { backgroundColor: colors.ocean, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 18 },
-  buttonText: { color: '#FFFFFF', fontWeight: '700' },
-  secondary: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.ocean },
-  secondaryText: { color: colors.ocean },
-  error: { color: colors.berry, fontSize: 13 },
+  card: { gap: 12, padding: 14 },
+  header: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted },
+  empty: { fontFamily: fonts.regular, fontSize: 14, color: colors.muted },
+  track: { height: 6, borderRadius: radius.pill, backgroundColor: colors.warmTrack, overflow: 'hidden', marginTop: 4 },
+  fill: { height: 6, borderRadius: radius.pill, backgroundColor: colors.accent },
 });

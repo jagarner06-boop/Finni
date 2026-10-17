@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F1EEE7;font-family:Figtree,system-ui,sans-serif;color:#14213D;-webkit-font-smoothing:antialiased}
+a{color:#2563EB;text-decoration:none}a:hover{color:#1E3A8A;text-decoration:underline}
+button{font-family:Figtree,system-ui,sans-serif}
+</style>
+</helmet>
+
+<section style="padding:56px 64px 72px">
+  <div style="font:600 12px/1 Figtree;letter-spacing:.08em;text-transform:uppercase;color:#5B6B82">Finni · Motion</div>
+  <h1 style="margin:6px 0 8px;font:700 36px/1.15 Figtree;letter-spacing:-.01em">Finn reactions</h1>
+  <p style="margin:0 0 36px;font:400 16px/1.5 Figtree;color:#5B6B82;max-width:720px">Four animations, each driven by real input. Use Tweaks to slow them down or preview Reduce Motion.</p>
+
+  <div style="display:flex;flex-wrap:wrap;gap:36px;align-items:flex-start">
+
+    <div style="display:grid;gap:14px;width:340px" data-screen-label="01 Approve">
+      <div style="display:grid;gap:4px">
+        <div style="font:600 12px Figtree;color:#5B6B82">01</div>
+        <div style="font:700 20px Figtree">Approve → celebrate</div>
+        <div style="font:400 14px/1.45 Figtree;color:#5B6B82">Press and hold the pill. Finn squashes as you hold, then hops with a tick burst when you finish. Let go early to cancel.</div>
+      </div>
+      <div style="position:relative;width:340px;height:540px;background:#FAF8F3;border:1px solid #DCD7CC;border-radius:32px;overflow:hidden;box-shadow:0 8px 24px -12px rgba(20,33,61,.18);display:flex;flex-direction:column">
+        <sc-if value="{{ aHap }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);height:26px;padding:0 10px;border-radius:999px;background:#14213D;color:#fff;font:600 12px/26px Figtree;z-index:5;white-space:nowrap">haptic · {{ aHap }}</div></sc-if>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+          <div style="position:relative;display:flex;flex-direction:column;align-items:center">
+            <div ref="{{ aFinn }}" style="width:104px;height:104px;transform-origin:50% 100%;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),inset 0 2px 1px rgba(255,255,255,.9),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img ref="{{ aImg }}" src="{{ aHead }}" alt="{{ aAlt }}" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+            <div ref="{{ aShadow }}" style="width:70px;height:12px;margin-top:8px;border-radius:50%;background:radial-gradient(closest-side,rgba(20,33,61,.22),transparent)"></div>
+            <svg width="40" height="40" viewBox="0 0 20 20" fill="none" stroke="#2563EB" stroke-width="2.4" stroke-linecap="round" style="position:absolute;right:-36px;top:-18px;overflow:visible"><path ref="{{ aTickR0 }}" d="M5 3.5l1.8 4" style="opacity:0;transform-box:fill-box;transform-origin:center"></path><path ref="{{ aTickR1 }}" d="M11.5 2.5l-.6 4.4" style="opacity:0;transform-box:fill-box;transform-origin:center"></path><path ref="{{ aTickR2 }}" d="M17 6.5l-3.6 2.4" style="opacity:0;transform-box:fill-box;transform-origin:center"></path></svg>
+            <svg width="40" height="40" viewBox="0 0 20 20" fill="none" stroke="#2563EB" stroke-width="2.4" stroke-linecap="round" style="position:absolute;left:-36px;top:-18px;overflow:visible;transform:scaleX(-1)"><path ref="{{ aTickL0 }}" d="M5 3.5l1.8 4" style="opacity:0;transform-box:fill-box;transform-origin:center"></path><path ref="{{ aTickL1 }}" d="M11.5 2.5l-.6 4.4" style="opacity:0;transform-box:fill-box;transform-origin:center"></path><path ref="{{ aTickL2 }}" d="M17 6.5l-3.6 2.4" style="opacity:0;transform-box:fill-box;transform-origin:center"></path></svg>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:28px 28px 0 0;padding:22px 20px 26px;display:grid;gap:14px;box-shadow:0 -8px 24px -16px rgba(20,33,61,.2)">
+          <div style="display:grid;gap:2px">
+            <span style="font:600 12px Figtree;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82">Move to Hawaii Fund</span>
+            <span style="font:700 34px/1.1 Figtree;font-variant-numeric:tabular-nums">$200<span style="font-weight:400;font-size:22px">.00</span></span>
+            <span style="font:400 14px Figtree;color:#5B6B82">From Everyday Checking •••• 1093</span>
+          </div>
+          <sc-if value="{{ aNotDone }}" hint-placeholder-val="{{ true }}">
+            <div onPointerDown="{{ aDown }}" onPointerUp="{{ aUp }}" onPointerCancel="{{ aUp }}" role="button" aria-label="Hold to approve" style="position:relative;height:56px;border-radius:999px;background:#C9D6F5;box-shadow:inset 0 2px 5px rgba(20,33,61,.18),0 1px 0 #fff;overflow:hidden;cursor:pointer;user-select:none;touch-action:none">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:{{ aFill }};background:linear-gradient(180deg,#3D78F2,#2159DC);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)"></div>
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;font:700 17px Figtree;color:#fff"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"></path></svg>{{ aLabel }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ aIsDone }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;gap:10px">
+              <div style="font:500 16px/1.4 Figtree;min-height:56px;display:flex;align-items:center">Done. $200.00 is in Hawaii Fund.</div>
+              <button onClick="{{ aReset }}" style="height:44px;border:1px solid #D9D4C9;box-shadow:inset 0 -2px 0 rgba(20,33,61,.05),0 2px 0 #E6E1D6,0 4px 8px -4px rgba(20,33,61,.12);background:#fff;border-radius:999px;font:600 15px Figtree;color:#14213D;cursor:pointer">Replay</button>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+      <div style="font:400 13px/1.5 Figtree;color:#5B6B82">Holding: squash to 1.04 × 0.95. On complete: squash, hop 26pt, land, settle (700ms). The head switches to excited at the top of the hop and the ticks burst 40ms apart. Haptics: light at 25/50/75%, success at the end.</div>
+    </div>
+
+    <div style="display:grid;gap:14px;width:340px" data-screen-label="02 Ask">
+      <div style="display:grid;gap:4px">
+        <div style="font:600 12px Figtree;color:#5B6B82">02</div>
+        <div style="font:700 20px Figtree">Ask → think → answer</div>
+        <div style="font:400 14px/1.45 Figtree;color:#5B6B82">Tap the suggestion. Finn tilts and rocks while he thinks, then nods when the answer arrives.</div>
+      </div>
+      <div style="position:relative;width:340px;height:540px;background:#FAF8F3;border:1px solid #DCD7CC;border-radius:32px;overflow:hidden;box-shadow:0 8px 24px -12px rgba(20,33,61,.18);display:flex;flex-direction:column">
+        <sc-if value="{{ bHap }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:14px;right:14px;height:26px;padding:0 10px;border-radius:999px;background:#14213D;color:#fff;font:600 12px/26px Figtree;z-index:5;white-space:nowrap">haptic · {{ bHap }}</div></sc-if>
+        <div style="display:flex;align-items:center;gap:12px;padding:22px 20px 14px;border-bottom:1px solid #EDEAE3">
+          <div ref="{{ bFinn }}" style="width:52px;height:52px;flex:none;transform-origin:50% 90%;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),inset 0 2px 1px rgba(255,255,255,.9),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img ref="{{ bImg }}" src="{{ bHead }}" alt="{{ bAlt }}" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+          <div><div style="font:700 17px Figtree">Finn</div><div style="font:400 13px Figtree;color:#5B6B82">{{ bStatus }}</div></div>
+        </div>
+        <div style="flex:1;padding:16px;display:flex;flex-direction:column;gap:10px;overflow:hidden">
+          <div style="align-self:flex-start;max-width:82%;background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:10px 14px;font:400 16px/1.4 Figtree">Hi Gabe. Ask me anything about your money.</div>
+          <sc-if value="{{ bShowUser }}" hint-placeholder-val="{{ false }}">
+            <div ref="{{ bUser }}" style="align-self:flex-end;max-width:82%;background:#E8F0FE;border-radius:22px 22px 6px 22px;padding:10px 14px;font:400 16px/1.4 Figtree">Can I afford Hawaii in March?</div>
+          </sc-if>
+          <sc-if value="{{ bTyping }}" hint-placeholder-val="{{ false }}">
+            <div style="align-self:flex-start;background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:14px 16px;display:flex;gap:5px">
+              <span ref="{{ bDot0 }}" style="width:8px;height:8px;border-radius:999px;background:#2563EB"></span>
+              <span ref="{{ bDot1 }}" style="width:8px;height:8px;border-radius:999px;background:#C3CCDA"></span>
+              <span ref="{{ bDot2 }}" style="width:8px;height:8px;border-radius:999px;background:#C3CCDA"></span>
+            </div>
+          </sc-if>
+          <sc-if value="{{ bShowReply }}" hint-placeholder-val="{{ false }}">
+            <div ref="{{ bReply }}" style="align-self:flex-start;max-width:86%;background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:10px 14px;font:400 16px/1.4 Figtree">Yes. At $50 a week you'll have <b style="font-weight:700;font-variant-numeric:tabular-nums">$2,400.00</b> by March 2.</div>
+          </sc-if>
+        </div>
+        <div style="padding:10px 16px 22px;display:grid;gap:10px">
+          <sc-if value="{{ bCanAsk }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ bAsk }}" style="justify-self:start;height:38px;padding:0 16px;border:0;border-radius:999px;background:linear-gradient(180deg,#F1F5FF,#E3ECFD);color:#1E4FD0;box-shadow:inset 0 1px 0 #fff,0 1px 0 #CBD9F8,0 3px 6px -3px rgba(37,99,235,.25);font:600 14px Figtree;cursor:pointer" style-active="transform:translateY(1px);box-shadow:inset 0 1px 3px rgba(37,99,235,.25)">Can I afford Hawaii in March?</button>
+          </sc-if>
+          <sc-if value="{{ bDone }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ bReset }}" style="justify-self:start;height:38px;padding:0 16px;border:1px solid #D9D4C9;box-shadow:inset 0 -2px 0 rgba(20,33,61,.05),0 2px 0 #E6E1D6,0 4px 8px -4px rgba(20,33,61,.12);background:#fff;border-radius:999px;font:600 14px Figtree;color:#14213D;cursor:pointer">Replay</button>
+          </sc-if>
+          <div style="display:flex;align-items:center;gap:8px;height:50px;padding:0 5px 0 18px;border:1px solid #EDEAE3;border-radius:999px;background:#fff"><span style="flex:1;font:400 16px Figtree;color:#7D8AA0">Ask Finn…</span><span style="width:40px;height:40px;border-radius:50%;background:#C9D6F5;box-shadow:inset 0 1px 2px rgba(20,33,61,.12);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></span></div>
+        </div>
+      </div>
+      <div style="font:400 13px/1.5 Figtree;color:#5B6B82">The question rises in at 250ms. While thinking, Finn switches to the curious head and rocks −7° to 5° on a 1.6s loop. When the reply pops in, he switches to happy and nods twice. Haptic: selection on tap.</div>
+    </div>
+
+    <div style="display:grid;gap:14px;width:340px" data-screen-label="03 Save">
+      <div style="display:grid;gap:4px">
+        <div style="font:600 12px Figtree;color:#5B6B82">03</div>
+        <div style="font:700 20px Figtree">Save → tide rises</div>
+        <div style="font:400 14px/1.45 Figtree;color:#5B6B82">Tap the deposit button three times. The water rises on a spring and Finn bobs each time. At 100% he gets heart-eyes and hops.</div>
+      </div>
+      <div style="position:relative;width:340px;height:540px;background:#FAF8F3;border:1px solid #DCD7CC;border-radius:32px;overflow:hidden;box-shadow:0 8px 24px -12px rgba(20,33,61,.18);display:flex;flex-direction:column;padding:22px 20px 24px;box-sizing:border-box;gap:16px">
+        <sc-if value="{{ cHap }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:14px;right:14px;height:26px;padding:0 10px;border-radius:999px;background:#14213D;color:#fff;font:600 12px/26px Figtree;z-index:5;white-space:nowrap">haptic · {{ cHap }}</div></sc-if>
+        <div style="display:flex;align-items:flex-end;gap:10px;padding-top:14px">
+          <div style="position:relative;flex:none">
+            <div ref="{{ cFinn }}" style="width:60px;height:60px;transform-origin:50% 100%;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),inset 0 2px 1px rgba(255,255,255,.9),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img ref="{{ cImg }}" src="{{ cHead }}" alt="{{ cAlt }}" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+            <div ref="{{ cShadow }}" style="display:none"></div>
+            <svg width="30" height="30" viewBox="0 0 20 20" fill="none" stroke="#2563EB" stroke-width="2.4" stroke-linecap="round" style="position:absolute;right:-24px;top:-14px;overflow:visible"><path ref="{{ cTickR0 }}" d="M5 3.5l1.8 4" style="opacity:0;transform-box:fill-box;transform-origin:center"></path><path ref="{{ cTickR1 }}" d="M11.5 2.5l-.6 4.4" style="opacity:0;transform-box:fill-box;transform-origin:center"></path><path ref="{{ cTickR2 }}" d="M17 6.5l-3.6 2.4" style="opacity:0;transform-box:fill-box;transform-origin:center"></path></svg>
+            <svg width="30" height="30" viewBox="0 0 20 20" fill="none" stroke="#2563EB" stroke-width="2.4" stroke-linecap="round" style="position:absolute;left:-24px;top:-14px;overflow:visible;transform:scaleX(-1)"><path ref="{{ cTickL0 }}" d="M5 3.5l1.8 4" style="opacity:0;transform-box:fill-box;transform-origin:center"></path><path ref="{{ cTickL1 }}" d="M11.5 2.5l-.6 4.4" style="opacity:0;transform-box:fill-box;transform-origin:center"></path><path ref="{{ cTickL2 }}" d="M17 6.5l-3.6 2.4" style="opacity:0;transform-box:fill-box;transform-origin:center"></path></svg>
+          </div>
+          <div style="background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:10px 14px;font:400 15px/1.4 Figtree">{{ cLine }}</div>
+        </div>
+        <div style="position:relative;flex:1;border-radius:24px;background:#F4F7FE;border:1px solid {{ cBorder }};box-shadow:inset 0 3px 8px rgba(20,33,61,.1);overflow:hidden">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:{{ cPct }};background:linear-gradient(180deg,#D6E2FC,#BCD0FA);transition:height {{ cTideDur }} cubic-bezier(.34,1.4,.64,1)">
+            <svg ref="{{ cCrest }}" viewBox="0 0 120 10" preserveAspectRatio="none" style="position:absolute;left:-10%;width:120%;height:10px;top:-9px"><path d="M0 6 Q15 1 30 6 T60 6 T90 6 T120 6 V10 H0Z" fill="#D6E2FC"></path></svg>
+          </div>
+          <div style="position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:4px">
+            <span style="font:600 13px Figtree;color:#1E3A8A">Hawaii Fund</span>
+            <span style="font:700 34px/1.1 Figtree;font-variant-numeric:tabular-nums;color:#14213D">{{ cShownFmt }}</span>
+            <span style="font:500 14px Figtree;color:#1E3A8A;font-variant-numeric:tabular-nums">of $2,400.00 · {{ cPctLabel }}</span>
+          </div>
+        </div>
+        <sc-if value="{{ cOpen }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ cDeposit }}" style="height:52px;border:0;border-radius:999px;background:linear-gradient(180deg,#3D78F2 0%,#2563EB 60%,#2159DC 100%);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 -1px 0 rgba(10,30,90,.25),0 3px 0 #1B47B5,0 8px 16px -6px rgba(37,99,235,.5);font:700 17px Figtree;cursor:pointer;font-variant-numeric:tabular-nums" style-active="transform:translateY(3px);box-shadow:inset 0 2px 4px rgba(10,30,90,.35),0 0 0 #1B47B5">Add $150.00</button>
+        </sc-if>
+        <sc-if value="{{ cComplete }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ cReset }}" style="height:52px;border:1px solid #D9D4C9;box-shadow:inset 0 -2px 0 rgba(20,33,61,.05),0 2px 0 #E6E1D6,0 4px 8px -4px rgba(20,33,61,.12);background:#fff;border-radius:999px;font:600 16px Figtree;color:#14213D;cursor:pointer">Replay</button>
+        </sc-if>
+      </div>
+      <div style="font:400 13px/1.5 Figtree;color:#5B6B82">Each deposit raises the water on a 600ms spring, shifts the crest one wavelength, counts the balance up over 500ms, and bobs Finn 6pt. At 100% the border turns success green, the head switches to heart-eyes, and he hops with ticks. Haptics: light per deposit, success at 100%.</div>
+    </div>
+
+    <div style="display:grid;gap:14px;width:340px" data-screen-label="04 Peek">
+      <div style="display:grid;gap:4px">
+        <div style="font:600 12px Figtree;color:#5B6B82">04</div>
+        <div style="font:700 20px Figtree">End of list → peek</div>
+        <div style="font:400 14px/1.45 Figtree;color:#5B6B82">Scroll the list to the bottom. Finn peeks up from behind the tab bar. Scroll back up and he ducks down.</div>
+      </div>
+      <div style="position:relative;width:340px;height:540px;background:#FAF8F3;border:1px solid #DCD7CC;border-radius:32px;overflow:hidden;box-shadow:0 8px 24px -12px rgba(20,33,61,.18)">
+        <div style="position:absolute;top:0;left:0;right:0;height:72px;padding:22px 20px 0;box-sizing:border-box;display:flex;justify-content:space-between;align-items:baseline;background:#FAF8F3;z-index:2;border-bottom:1px solid #EDEAE3">
+          <span style="font:700 24px Figtree">Activity</span><span style="font:500 14px Figtree;color:#5B6B82">October</span>
+        </div>
+        <div onScroll="{{ dScroll }}" style="position:absolute;top:72px;left:0;right:0;bottom:60px;overflow-y:auto;padding:4px 20px 0">
+          <sc-for list="{{ txns }}" as="t" hint-placeholder-count="10">
+            <div style="display:flex;align-items:center;gap:12px;min-height:58px;border-bottom:1px solid #EDEAE3">
+              <div style="width:38px;height:38px;border-radius:12px;background:#fff;border:1px solid #EDEAE3;box-shadow:0 2px 0 #EDEAE3;display:flex;align-items:center;justify-content:center;font:700 13px Figtree;flex:none">{{ t.i }}</div>
+              <div style="flex:1;min-width:0"><div style="font:600 15px Figtree">{{ t.n }}</div><div style="font:400 13px Figtree;color:#5B6B82">{{ t.c }}</div></div>
+              <span style="font:600 15px Figtree;font-variant-numeric:tabular-nums">{{ t.a }}</span>
+            </div>
+          </sc-for>
+          <div style="height:120px"></div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:60px;height:116px;overflow:hidden;pointer-events:none">
+          <div ref="{{ dPeek }}" style="position:absolute;inset:0;transform:translateY(100%)">
+            <img src="assets/finn/pose-wave.png" alt="Finn waves" style="position:absolute;left:50%;margin-left:-66px;top:0;width:132px;height:132px;object-fit:cover;object-position:50% 0%;mix-blend-mode:multiply">
+          </div>
+          <div ref="{{ dBubble }}" style="position:absolute;left:210px;top:14px;opacity:0;transform-origin:0 100%;background:#fff;border:1px solid #EDEAE3;border-radius:18px 18px 18px 6px;padding:8px 12px;font:500 14px/1.3 Figtree;box-shadow:0 6px 14px -8px rgba(20,33,61,.25);white-space:nowrap">That's all of<br>October.</div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;height:60px;background:#fff;border-top:1px solid #EDEAE3;display:flex;justify-content:space-around;align-items:center;z-index:3">
+          <span style="font:600 12px Figtree;color:#5B6B82">Home</span><span style="font:600 12px Figtree;color:#5B6B82">Agent</span><span style="font:600 12px Figtree;color:#2563EB">Activity</span><span style="font:600 12px Figtree;color:#5B6B82">Settings</span>
+        </div>
+      </div>
+      <div style="font:400 13px/1.5 Figtree;color:#5B6B82">This triggers when the list is within 6pt of the end. Finn rises 520ms with a small overshoot and the bubble follows 280ms later. Going 40pt back up makes him duck down in 220ms. There's no haptic, since this one is ambient.</div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;speed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.25,&quot;max&quot;:2,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;reducedMotion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;showHaptics&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Motion&quot;}}">
+class Component extends DCLogic {
+  state = { aHold: 0, aPhase: 'idle', aMood: 'happy', bStage: 0, bMood: 'happy', cSaved: 1950, cShown: 1950, cMood: 'happy', dPeek: false, hap: {} };
+  _refs = {};
+  _timers = [];
+  r(n) { return this._refs[n] || (this._refs[n] = React.createRef()); }
+  el(n) { return this._refs[n] && this._refs[n].current; }
+  get sp() { return Math.max(0.1, Number(this.props.speed ?? 1) || 1); }
+  get rm() { return !!this.props.reducedMotion || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  t(ms) { return ms / this.sp; }
+  later(ms, fn) { const id = setTimeout(fn, this.t(ms)); this._timers.push(id); return id; }
+  componentWillUnmount() { this._timers.forEach(clearTimeout); cancelAnimationFrame(this.aRaf); cancelAnimationFrame(this.cRaf); }
+
+  anim(n, frames, o = {}) {
+    const e = this.el(n);
+    if (!e || !e.animate) return null;
+    return e.animate(frames, { duration: this.t(o.duration || 250), delay: this.t(o.delay || 0), easing: o.easing || 'ease-out', iterations: o.iterations || 1, fill: o.fill || 'none' });
+  }
+  haptic(card, kind) {
+    this.setState(s => ({ hap: { ...s.hap, [card]: kind } }));
+    clearTimeout(this['ht' + card]);
+    this['ht' + card] = setTimeout(() => this.setState(s => ({ hap: { ...s.hap, [card]: null } })), 900);
+  }
+  setMood(card, mood) {
+    this.setState({ [card + 'Mood']: mood }, () => this.anim(card + 'Img', [{ opacity: 0.2, transform: 'scale(.9)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 180 }));
+  }
+  burst(p, delay = 0) {
+    [0, 1, 2].forEach(i => ['L', 'R'].forEach(side => this.anim(p + 'Tick' + side + i,
+      [{ transform: 'scale(0)', opacity: 0 }, { transform: 'scale(1.2)', opacity: 1, offset: 0.3 }, { transform: 'scale(1)', opacity: 1, offset: 0.65 }, { transform: 'scale(1)', opacity: 0 }],
+      { duration: 900, delay: delay + i * 40, easing: 'cubic-bezier(.2,.8,.2,1)' })));
+  }
+  hop(p, mood) {
+    if (this.rm) { this.setMood(p, mood); this.burst(p); return; }
+    this.anim(p + 'Finn', [
+      { transform: 'translateY(0) scale(1,1)' },
+      { transform: 'translateY(0) scale(1.08,.88)', offset: 0.18, easing: 'ease-out' },
+      { transform: 'translateY(-26px) scale(.94,1.08)', offset: 0.45, easing: 'ease-in' },
+      { transform: 'translateY(0) scale(1.06,.92)', offset: 0.72, easing: 'ease-out' },
+      { transform: 'translateY(0) scale(1,1)' }], { duration: 700, easing: 'linear' });
+    this.anim(p + 'Shadow', [
+      { transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.12)', opacity: 1, offset: 0.18 },
+      { transform: 'scale(.55)', opacity: 0.4, offset: 0.45 }, { transform: 'scale(1.1)', opacity: 1, offset: 0.72 },
+      { transform: 'scale(1)', opacity: 1 }], { duration: 700, easing: 'linear' });
+    this.later(300, () => this.setMood(p, mood));
+    this.burst(p, 300);
+  }
+
+  // 01 approve
+  aDown = e => {
+    if (this.state.aPhase !== 'idle') return;
+    e.currentTarget.setPointerCapture && e.currentTarget.setPointerCapture(e.pointerId);
+    this.aT0 = performance.now();
+    this.setState({ aPhase: 'holding' });
+    this.aSquash = this.rm ? null : this.anim('aFinn', [{ transform: 'scale(1,1)' }, { transform: 'scale(1.04,.95)' }], { duration: 600, fill: 'forwards', easing: 'ease-in' });
+    const marks = [0.25, 0.5, 0.75]; let next = 0;
+    const loop = () => {
+      const p = Math.min(1, (performance.now() - this.aT0) / this.t(600));
+      if (next < 3 && p >= marks[next]) { next++; this.haptic('a', 'light'); }
+      this.setState({ aHold: p });
+      if (p >= 1) { this.aComplete(); return; }
+      this.aRaf = requestAnimationFrame(loop);
+    };
+    this.aRaf = requestAnimationFrame(loop);
+  };
+  aUp = () => {
+    if (this.state.aPhase !== 'holding') return;
+    cancelAnimationFrame(this.aRaf);
+    this.aSquash && this.aSquash.cancel();
+    this.setState({ aPhase: 'idle', aHold: 0 });
+    if (!this.rm) this.anim('aFinn', [{ transform: 'scale(1.04,.95)' }, { transform: 'scale(1,1)' }], { duration: 300, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+  };
+  aComplete() {
+    cancelAnimationFrame(this.aRaf);
+    this.aSquash && this.aSquash.cancel();
+    this.setState({ aPhase: 'done', aHold: 1 });
+    this.haptic('a', 'success');
+    this.hop('a', 'excited');
+  }
+  aReset = () => { this.setState({ aPhase: 'idle', aHold: 0 }); this.setMood('a', 'happy'); };
+
+  // 02 ask
+  bAsk = () => {
+    if (this.state.bStage) return;
+    this.haptic('b', 'selection');
+    this.setState({ bStage: 1 }, () => this.anim('bUser', [{ opacity: 0, transform: 'translateY(10px) scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: 250 }));
+    this.later(300, () => {
+      this.setMood('b', 'thinking');
+      this.setState({ bStage: 2 }, () => {
+        this.bDots = [0, 1, 2].map(i => this.anim('bDot' + i, [{ transform: 'translateY(0)', opacity: 0.6 }, { transform: 'translateY(-3px)', opacity: 1, offset: 0.3 }, { transform: 'translateY(0)', opacity: 0.6, offset: 0.6 }, { transform: 'translateY(0)', opacity: 0.6 }], { duration: 1200, delay: i * 150, iterations: Infinity, easing: 'ease-in-out' }));
+      });
+      if (!this.rm) this.bRock = this.anim('bFinn', [{ transform: 'rotate(0)' }, { transform: 'rotate(-7deg)' }, { transform: 'rotate(0)' }, { transform: 'rotate(5deg)' }, { transform: 'rotate(0)' }], { duration: 1600, iterations: Infinity, easing: 'ease-in-out' });
+    });
+    this.later(2100, () => {
+      this.bRock && this.bRock.cancel();
+      (this.bDots || []).forEach(a => a && a.cancel());
+      this.setMood('b', 'happy');
+      this.setState({ bStage: 3 }, () => {
+        this.anim('bReply', [{ opacity: 0, transform: 'translateY(8px) scale(.94)' }, { opacity: 1, transform: 'translateY(-2px) scale(1.01)', offset: 0.7 }, { opacity: 1, transform: 'none' }], { duration: 320 });
+        if (!this.rm) this.anim('bFinn', [{ transform: 'translateY(0)' }, { transform: 'translateY(-5px)' }, { transform: 'translateY(0)' }, { transform: 'translateY(-3px)' }, { transform: 'translateY(0)' }], { duration: 520, delay: 60, easing: 'ease-in-out' });
+      });
+    });
+  };
+  bReset = () => this.setState({ bStage: 0, bMood: 'happy' });
+
+  // 03 save
+  cDeposit = () => {
+    const from = this.state.cSaved;
+    if (from >= 2400) return;
+    const to = Math.min(2400, from + 150);
+    this.setState({ cSaved: to });
+    this.haptic('c', 'light');
+    cancelAnimationFrame(this.cRaf);
+    const t0 = performance.now(), dur = this.t(500), start = this.state.cShown;
+    const step = () => {
+      const k = Math.min(1, (performance.now() - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      this.setState({ cShown: start + (to - start) * e });
+      if (k < 1) this.cRaf = requestAnimationFrame(step);
+    };
+    this.cRaf = requestAnimationFrame(step);
+    if (!this.rm) {
+      this.anim('cCrest', [{ transform: 'translateX(0)' }, { transform: 'translateX(-14px)' }, { transform: 'translateX(0)' }], { duration: 800, easing: 'ease-in-out' });
+      if (to < 2400) this.anim('cFinn', [{ transform: 'translateY(0) scale(1,1)' }, { transform: 'translateY(-6px) scale(.97,1.03)', offset: 0.4 }, { transform: 'translateY(0) scale(1.03,.97)', offset: 0.75 }, { transform: 'translateY(0) scale(1,1)' }], { duration: 380 });
+    }
+    if (to >= 2400) this.later(450, () => { this.haptic('c', 'success'); this.hop('c', 'love'); });
+  };
+  cReset = () => { this.setState({ cSaved: 1950, cShown: 1950 }); this.setMood('c', 'happy'); };
+
+  // 04 peek
+  dScroll = e => {
+    const el = e.currentTarget, gap = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (gap < 6 && !this.state.dPeek) this.peek(true);
+    else if (gap > 40 && this.state.dPeek) this.peek(false);
+  };
+  peek(on) {
+    this.setState({ dPeek: on });
+    const prev = [this.dA, this.dB];
+    if (on) {
+      this.dA = this.rm
+        ? this.anim('dPeek', [{ opacity: 0, transform: 'translateY(20%)' }, { opacity: 1, transform: 'translateY(20%)' }], { duration: 150, fill: 'forwards' })
+        : this.anim('dPeek', [{ transform: 'translateY(100%)' }, { transform: 'translateY(12%)', offset: 0.65 }, { transform: 'translateY(20%)' }], { duration: 520, fill: 'forwards', easing: 'cubic-bezier(.2,.8,.3,1)' });
+      this.dB = this.anim('dBubble', [{ opacity: 0, transform: 'scale(.85)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 200, delay: this.rm ? 0 : 280, fill: 'both', easing: 'cubic-bezier(.34,1.56,.64,1)' });
+    } else {
+      this.dA = this.anim('dPeek', [{ opacity: 1, transform: 'translateY(20%)' }, { opacity: this.rm ? 0 : 1, transform: this.rm ? 'translateY(20%)' : 'translateY(100%)' }], { duration: 220, fill: 'forwards', easing: 'ease-in' });
+      this.dB = this.anim('dBubble', [{ opacity: 1 }, { opacity: 0 }], { duration: 120, fill: 'forwards' });
+    }
+    prev.forEach(a => a && a.cancel());
+  }
+
+  renderVals() {
+    const s = this.state;
+    const heads = { happy: ['head-happy', 'Finn looks happy'], thinking: ['head-curious', 'Finn is thinking'], excited: ['head-excited', 'Finn is celebrating'], love: ['head-love', 'Finn has heart eyes'] };
+    const H = m => 'assets/finn/' + heads[m][0] + '.png';
+    const showHap = this.props.showHaptics ?? true;
+    const money = n => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const refNames = ['aFinn', 'aImg', 'aShadow', 'bFinn', 'bImg', 'bUser', 'bReply', 'bDot0', 'bDot1', 'bDot2', 'cFinn', 'cImg', 'cShadow', 'cCrest', 'dPeek', 'dBubble'];
+    ['a', 'c'].forEach(p => ['L', 'R'].forEach(sd => [0, 1, 2].forEach(i => refNames.push(p + 'Tick' + sd + i))));
+    const refs = {}; refNames.forEach(n => refs[n] = this.r(n));
+    const complete = s.cSaved >= 2400;
+    const pct = Math.round(s.cSaved / 2400 * 100);
+    return {
+      ...refs,
+      aHead: H(s.aMood), aAlt: heads[s.aMood][1],
+      aHap: showHap ? s.hap.a : null,
+      aNotDone: s.aPhase !== 'done', aIsDone: s.aPhase === 'done',
+      aFill: (s.aHold * 100).toFixed(1) + '%',
+      aLabel: s.aPhase === 'holding' ? 'Keep holding…' : 'Hold to approve',
+      aDown: this.aDown, aUp: this.aUp, aReset: this.aReset,
+
+      bHead: H(s.bMood), bAlt: heads[s.bMood][1],
+      bHap: showHap ? s.hap.b : null,
+      bStatus: s.bStage === 2 ? 'Thinking…' : 'Here to help',
+      bShowUser: s.bStage >= 1, bTyping: s.bStage === 2, bShowReply: s.bStage === 3,
+      bCanAsk: s.bStage === 0, bDone: s.bStage === 3,
+      bAsk: this.bAsk, bReset: this.bReset,
+
+      cHead: H(s.cMood), cAlt: heads[s.cMood][1],
+      cHap: showHap ? s.hap.c : null,
+      cPct: pct + '%', cPctLabel: pct + '%',
+      cShownFmt: money(Math.round(s.cShown * 100) / 100),
+      cTideDur: Math.round(this.t(this.rm ? 150 : 600)) + 'ms',
+      cBorder: complete ? '#2FB37F' : '#E1E8F8',
+      cLine: complete ? 'Hawaii is fully funded. Nice work.' : (s.cSaved === 1950 ? '$450.00 to go. Want to top it up?' : money(2400 - s.cSaved) + ' to go.'),
+      cOpen: !complete, cComplete: complete,
+      cDeposit: this.cDeposit, cReset: this.cReset,
+
+      dScroll: this.dScroll,
+      txns: [
+        { i: 'WF', n: 'Whole Foods', c: 'Groceries · Oct 15', a: '−$82.14' },
+        { i: 'SP', n: 'Spotify', c: 'Subscriptions · Oct 14', a: '−$14.99' },
+        { i: 'SH', n: 'Shell', c: 'Transport · Oct 13', a: '−$41.20' },
+        { i: 'HF', n: 'Hawaii Fund', c: 'Transfer · Oct 12', a: '−$50.00' },
+        { i: 'AC', n: 'Acme Payroll', c: 'Income · Oct 10', a: '+$2,140.00' },
+        { i: 'CH', n: 'Chipotle', c: 'Dining · Oct 9', a: '−$13.85' },
+        { i: 'HU', n: 'Hulu', c: 'Subscriptions · Oct 8', a: '−$17.99' },
+        { i: 'TG', n: 'Target', c: 'Shopping · Oct 6', a: '−$64.37' },
+        { i: 'RT', n: 'Rent', c: 'Housing · Oct 1', a: '−$1,250.00' },
+        { i: 'HF', n: 'Hawaii Fund', c: 'Transfer · Oct 1', a: '−$50.00' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
