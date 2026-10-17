@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { haptics } from '@/lib/haptics';
 import { colors, fonts, hitTarget, motion, radius, shadow } from '@/theme/tokens';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';
 
-const HEIGHT = { md: 48, sm: 36 } as const;
+const HEIGHT = { lg: 52, md: 48, sm: 36 } as const;
 // Raised variants sit on a lip; pressing drops the face onto it.
 const LIP: Record<ButtonVariant, number> = { primary: 3, secondary: 2, destructive: 2, ghost: 0 };
 
@@ -25,12 +25,13 @@ export function Button({
   label: string;
   onPress: () => void;
   variant?: ButtonVariant;
-  size?: 'md' | 'sm';
+  size?: 'lg' | 'md' | 'sm';
   loading?: boolean;
   disabled?: boolean;
   accessibilityLabel?: string;
 }) {
   const inactive = disabled || loading;
+  const reduced = useReducedMotion();
   const lip = disabled ? 0 : LIP[variant];
   const height = HEIGHT[size];
   const slop = Math.max(0, Math.ceil((hitTarget - height) / 2));
@@ -42,11 +43,11 @@ export function Button({
   const pressIn = () => {
     setPressed(true);
     haptics.light();
-    if (lip) ty.set(withTiming(lip, { duration: motion.pressDown }));
+    if (lip && !reduced) ty.set(withTiming(lip, { duration: motion.pressDown }));
   };
   const pressOut = () => {
     setPressed(false);
-    ty.set(withSpring(0, motion.finnSpring));
+    ty.set(reduced ? withTiming(0, { duration: motion.micro }) : withSpring(0, motion.finnSpring));
   };
 
   const look = disabled ? looks.disabled : looks[variant];
@@ -71,7 +72,7 @@ export function Button({
           variant === 'primary' && !disabled && { boxShadow: pressed ? shadow.primaryPressed : shadow.primaryFace },
           faceStyle,
         ]}>
-        <Text style={[styles.label, { fontSize: size === 'sm' ? 15 : 16, color: look.text }, loading && styles.hidden]}>{label}</Text>
+        <Text style={[styles.label, { fontSize: size === 'lg' ? 17 : size === 'sm' ? 15 : 16, color: look.text }, loading && styles.hidden]}>{label}</Text>
         {loading && <ActivityIndicator style={StyleSheet.absoluteFill} color={look.text} />}
       </Animated.View>
     </Pressable>
