@@ -11,6 +11,12 @@ describe("goalEta", () => {
   it("counts the contributions still needed", () =>
     expect(goalEta({ currentCents: 148_800, targetCents: 240_000, contributionCents: 5_000, cadence: "weekly" }, "2026-10-17")).toBe("2027-02-27"));
   it("is today when funded", () => expect(goalEta({ currentCents: 100_000, targetCents: 100_000, contributionCents: null, cadence: null }, "2026-10-17")).toBe("2026-10-17"));
+  it("works out huge plans without looping", () => {
+    const started = Date.now();
+    expect(goalEta({ currentCents: 0, targetCents: 2_000_000_000, contributionCents: 100, cadence: "weekly" }, "2026-10-17")).toBeNull();
+    expect(goalEta({ currentCents: 0, targetCents: 120_000, contributionCents: 10_000, cadence: "monthly" }, "2026-01-31")).toBe("2027-01-31");
+    expect(Date.now() - started).toBeLessThan(50);
+  });
   it("is null without a plan", () => expect(goalEta({ currentCents: 0, targetCents: 100_000, contributionCents: null, cadence: null }, "2026-10-17")).toBeNull());
 });
 

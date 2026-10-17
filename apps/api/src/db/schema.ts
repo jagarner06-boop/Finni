@@ -1,4 +1,5 @@
 import { boolean, date, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import type { Card, NudgeAction, Prefs } from "@finni/shared";
 
 // Nessie is the source of truth for money; these tables hold only what Nessie can't.
@@ -124,7 +125,13 @@ export const pendingActions = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     executedAt: timestamp("executed_at", { withTimezone: true }),
   },
-  (t) => [index("actions_user_status_idx").on(t.userId, t.status)],
+  (t) => [
+    index("actions_user_status_idx").on(t.userId, t.status),
+    // One refund per purchase: a second dispute can't be claimed while one is executing or done.
+    uniqueIndex("actions_one_refund_per_purchase_uq")
+      .on(sql`(${t.payload}->>'purchaseId')`)
+      .where(sql`${t.type} = 'dispute_charge' and ${t.status} in ('executing', 'executed')`),
+  ],
 );
 
 export const nudges = pgTable(
