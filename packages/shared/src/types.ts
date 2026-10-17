@@ -94,6 +94,25 @@ export interface Goal {
   behind: boolean;
 }
 
+  export interface CashflowPaycheck { date: ISODate; amountCents: Cents | null; source: string; basis: 'deposits' | 'profile' }
+  export interface CashflowCommitment { kind: 'bill' | 'goal'; id: string; label: string; date: ISODate; amountCents: Cents }
+  export interface CashflowForecast {
+    balanceCents: Cents;
+    paycheck: CashflowPaycheck | null;
+    /** Last day counted: the day before payday, or today + 13 without one. */
+    untilDate: ISODate;
+    /** By date; bills before goals on the same day. */
+    commitments: CashflowCommitment[];
+    billsCents: Cents;
+    goalsCents: Cents;
+    /** balance - bills - goals; negative when there isn't enough. */
+    safeCents: Cents;
+    /** How far bills alone overdraw Checking (0 when they fit). Goal savings never cause an overdraft: they need approval. */
+    shortCents: Cents;
+    /** The bill that first takes Checking below zero. */
+    firstShort: CashflowCommitment | null;
+  }
+  
 export type PendingActionType =
   | 'transfer'
   | 'bill_payment'
