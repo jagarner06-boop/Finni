@@ -56,7 +56,9 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const SCOPES = ['openid', 'profile', 'email', 'offline_access'];
 const EXPIRY_SKEW_S = 60;
 
-export const redirectUri = makeRedirectUri({ scheme: 'finni' });
+// Must match an Allowed Callback URL in Auth0: exp://<LAN-IP>:8081/--/callback (Expo Go),
+// finni://callback (dev build), http://localhost:8081/callback (web).
+export const redirectUri = makeRedirectUri({ scheme: 'finni', path: 'callback' });
 
 const MOCK_USER: AuthUser = { sub: 'mock|alex', email: 'alex@finni.app', name: 'Alex', givenName: 'Alex' };
 
