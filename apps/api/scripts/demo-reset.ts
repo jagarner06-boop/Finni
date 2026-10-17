@@ -4,10 +4,8 @@
 // and goals. Never touches Nessie's global data (merchants stay).
 import { desc, eq, not, like, or } from "drizzle-orm";
 import { db, schema } from "../src/db/client.js";
-import { alexPlan } from "../src/seed/personas/alex.js";
 import { listAccounts } from "../src/services/accounts.js";
-import { seedPersona } from "../src/services/seed.js";
-import { createPersonaCustomer } from "../src/services/users.js";
+import { resetPersona } from "../src/services/reset.js";
 
 const args = process.argv.slice(2);
 const nameIdx = args.indexOf("--name");
@@ -30,15 +28,7 @@ if (!user) {
 const firstName = name ?? user.firstName ?? "Friend";
 console.log(`resetting ${user.auth0Sub} (${firstName})`);
 
-const plan = alexPlan();
-const nessieIds = await createPersonaCustomer(firstName, plan);
-await db.transaction(async (tx) => {
-  for (const table of [schema.chatMessages, schema.pendingActions, schema.nudges, schema.goals]) await tx.delete(table).where(eq(table.userId, user.id));
-  await tx.update(schema.users).set({ ...nessieIds, firstName, personaTemplate: "alex", seededAt: null, lastNudgeScanAt: null }).where(eq(schema.users.id, user.id));
-});
-
-const fresh = { ...user, ...nessieIds, firstName };
-await seedPersona(fresh, plan);
+const fresh = await resetPersona(user, { firstName, wait: true });
 for (const a of await listAccounts(fresh)) console.log(`  ${a.nickname.padEnd(16)} $${a.balanceCents / 100}`);
 console.log("done — pull to refresh / reopen the app");
 process.exit(0);

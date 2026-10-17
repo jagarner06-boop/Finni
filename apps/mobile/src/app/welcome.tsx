@@ -58,7 +58,6 @@ function DevPanel() {
       <Text className="font-bold text-ink">Dev</Text>
       <Text className="font-regular text-xs text-muted" selectable>
         API: {config.apiUrl}
-        {config.useMocks ? ' (mocks)' : ''}
         {'\n'}Auth0 callback: {redirectUri}
       </Text>
       <Pressable onPress={ping} className="self-start rounded-full bg-accent px-4 py-2">

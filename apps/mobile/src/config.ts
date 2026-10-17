@@ -20,5 +20,4 @@ export const config = {
     clientId: process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID || 'qQweRCxviMmTL4nsKygCt8Try2jLvQJL',
     audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE || 'https://api.finni.app',
   },
-  useMocks: process.env.EXPO_PUBLIC_USE_MOCKS === '1',
 } as const;

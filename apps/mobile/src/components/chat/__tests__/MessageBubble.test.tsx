@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react-native';
 
 import { MessageBubble } from '@/components/chat/MessageBubble';
 
-const finn = (text: string): ChatMessage => ({ id: text, role: 'finn', text, mood: 'happy', cards: [], createdAt: '2026-10-17T12:00:00.000Z' });
+const finn = (text: string): ChatMessage => ({ id: text, role: 'finn', text, mood: 'happy', cards: [], chips: [], createdAt: '2026-10-17T12:00:00.000Z' });
 
 describe('MessageBubble', () => {
   it.each(['first', 'solo'] as const)('shows Finn on a %s bubble', async (position) => {

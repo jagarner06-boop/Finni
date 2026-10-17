@@ -148,7 +148,7 @@ export const TOOLS: Record<string, Tool> = {
       const goals = await listGoals(ctx.user);
       if (goals.length) addCard(ctx, { type: "goal_progress", goals });
       return {
-        goals: goals.map((g) => ({ id: g.id, account_id: g.nessieAccountId, name: g.name, emoji: g.emoji, target: usd(g.targetCents), saved: usd(g.currentCents), percent: g.percent, targetDate: g.targetDate, status: g.status })),
+        goals: goals.map((g) => ({ id: g.id, account_id: g.nessieAccountId, name: g.name, icon: g.icon, target: usd(g.targetCents), saved: usd(g.currentCents), percent: g.percent, targetDate: g.targetDate, status: g.status })),
       };
     },
   }),
@@ -290,7 +290,7 @@ export const TOOLS: Record<string, Tool> = {
           name: { type: Type.STRING, description: "Short goal name, e.g. 'Laptop'." },
           target_amount: { type: Type.NUMBER, description: "Whole dollars." },
           target_date: { type: Type.STRING, description: "Optional YYYY-MM-DD." },
-          emoji: { type: Type.STRING, description: "One fitting emoji." },
+          icon: { type: Type.STRING, enum: ["sun", "tool", "shield", "home", "book", "gift"], description: "sun = trip, tool = repair, shield = emergency, home, book = school, gift." },
         },
         required: ["name", "target_amount"],
       },
@@ -299,10 +299,10 @@ export const TOOLS: Record<string, Tool> = {
       name: z.string().min(1).max(40),
       target_amount: z.number().positive(),
       target_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-      emoji: z.string().max(8).optional(),
+      icon: z.enum(["sun", "tool", "shield", "home", "book", "gift"]).optional(),
     }),
     run: async (a, ctx) =>
-      propose(ctx, { type: "create_goal", name: a.name, targetCents: Math.round(a.target_amount) * 100, targetDate: a.target_date, emoji: a.emoji }),
+      propose(ctx, { type: "create_goal", name: a.name, targetCents: Math.round(a.target_amount) * 100, targetDate: a.target_date, icon: a.icon }),
   }),
 };
 

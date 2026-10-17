@@ -13,7 +13,8 @@ const DONUT_SIZE = 132;
 const DONUT_STROKE = 20;
 // Charts use the spending fills, never semantic colors (design system rule).
 const fill = (i: number) => colors.barFills[i % colors.barFills.length];
-const money = (cents: number) => formatCents(cents).replace(/\.00$/, '');
+// Axis ticks only: short whole-dollar labels. Every amount a person reads as a value uses formatCents.
+const tick = (cents: number) => formatCents(cents).replace(/\.00$/, '');
 
 /** Finn's charts (make_chart / make_custom_chart): donut, grouped bars or a line, drawn with react-native-svg. */
 export function ChartCard({ card }: { card: ChartCardData }) {
@@ -64,7 +65,7 @@ function Donut({ card }: { card: ChartCardData }) {
           )}
         </Svg>
         <View style={styles.donutCenter} pointerEvents="none">
-          <Text style={styles.donutTotal}>{money(total)}</Text>
+          <Text style={styles.donutTotal}>{formatCents(total)}</Text>
           <Text style={styles.axis}>total</Text>
         </View>
       </View>
@@ -120,7 +121,7 @@ function Bars({ card, width }: { card: ChartCardData; width: number }) {
 
   return (
     <View style={styles.plot}>
-      <Text style={styles.axis}>{money(max)}</Text>
+      <Text style={styles.axis}>{tick(max)}</Text>
       <Svg width={width} height={PLOT_HEIGHT}>
         <Rect x={0} y={PLOT_HEIGHT - 1} width={width} height={1} fill={colors.hairline} />
         {card.series.map((s, si) =>
@@ -167,8 +168,8 @@ function Line({ card, width }: { card: ChartCardData; width: number }) {
   return (
     <View style={styles.plot}>
       <View style={styles.lineHeader}>
-        <Text style={styles.axis}>{money(values[0])}</Text>
-        <Text style={styles.lineNow}>{money(values[last])}</Text>
+        <Text style={styles.axis}>{tick(values[0])}</Text>
+        <Text style={styles.lineNow}>{formatCents(values[last])}</Text>
       </View>
       <Svg width={width} height={PLOT_HEIGHT}>
         <Defs>
@@ -184,7 +185,7 @@ function Line({ card, width }: { card: ChartCardData; width: number }) {
       </Svg>
       <View style={styles.lineHeader}>
         <Text style={styles.axis}>{card.labels[0]}</Text>
-        <Text style={styles.axis}>low {money(min)} · high {money(max)}</Text>
+        <Text style={styles.axis}>low {tick(min)} · high {tick(max)}</Text>
         <Text style={styles.axis}>{card.labels[last]}</Text>
       </View>
     </View>
@@ -206,7 +207,7 @@ function SeriesLegend({ names }: { names: string[] }) {
 
 /** Screen-reader summary: the chart as a short list of values. */
 function describe(card: ChartCardData): string {
-  const points = card.labels.map((l, i) => `${l} ${card.series.map((s) => money(s.valuesCents[i] ?? 0)).join(' and ')}`);
+  const points = card.labels.map((l, i) => `${l} ${card.series.map((s) => formatCents(s.valuesCents[i] ?? 0)).join(' and ')}`);
   return `${card.title}. ${points.slice(0, 12).join(', ')}`;
 }
 

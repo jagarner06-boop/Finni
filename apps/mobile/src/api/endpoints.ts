@@ -19,7 +19,6 @@ import type {
 
 import { config } from '@/config';
 import { apiFetch } from './client';
-import { mockApi } from './mocks';
 
 // One typed function per backend route (Component Plan 1). Keep in sync with apps/api/src/routes.
 const realApi = {
@@ -57,4 +56,4 @@ const realApi = {
 
 export type Api = typeof realApi;
 
-export const api: Api = config.useMocks ? mockApi : realApi;
+export const api: Api = realApi;
