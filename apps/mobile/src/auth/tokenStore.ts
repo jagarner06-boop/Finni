@@ -12,20 +12,23 @@ export interface StoredTokens {
 const KEY = 'finni.tokens';
 
 // SecureStore has no web implementation; fall back to localStorage there.
-async function read(): Promise<string | null> {
-  if (Platform.OS === 'web') return globalThis.localStorage?.getItem(KEY) ?? null;
-  return SecureStore.getItemAsync(KEY);
+export async function secureRead(key: string): Promise<string | null> {
+  if (Platform.OS === 'web') return globalThis.localStorage?.getItem(key) ?? null;
+  return SecureStore.getItemAsync(key);
 }
 
-async function write(value: string | null): Promise<void> {
+export async function secureWrite(key: string, value: string | null): Promise<void> {
   if (Platform.OS === 'web') {
-    if (value === null) globalThis.localStorage?.removeItem(KEY);
-    else globalThis.localStorage?.setItem(KEY, value);
+    if (value === null) globalThis.localStorage?.removeItem(key);
+    else globalThis.localStorage?.setItem(key, value);
     return;
   }
-  if (value === null) await SecureStore.deleteItemAsync(KEY);
-  else await SecureStore.setItemAsync(KEY, value);
+  if (value === null) await SecureStore.deleteItemAsync(key);
+  else await SecureStore.setItemAsync(key, value);
 }
+
+const read = () => secureRead(KEY);
+const write = (value: string | null) => secureWrite(KEY, value);
 
 export const tokenStore = {
   async get(): Promise<StoredTokens | null> {

@@ -31,3 +31,15 @@ jest.mock('@rive-app/react-native', () => {
     useRiveTrigger: (path: string) => ({ error: null, trigger: () => r.trigger(path) }),
   };
 });
+
+jest.mock('expo-local-authentication', () => ({
+  hasHardwareAsync: jest.fn(() => Promise.resolve(false)),
+  isEnrolledAsync: jest.fn(() => Promise.resolve(false)),
+  authenticateAsync: jest.fn(() => Promise.resolve({ success: true })),
+}));
+
+require('react-native-gesture-handler/jestSetup');
+
+jest.mock('expo-crypto', () => ({
+  randomUUID: () => require('node:crypto').randomUUID(),
+}));

@@ -4,6 +4,7 @@ import type {
   ActionsQuery,
   ActionsResponse,
   BillsResponse,
+  BootstrapRequest,
   BootstrapResponse,
   ChatHistoryResponse,
   ChatRequest,
@@ -12,9 +13,13 @@ import type {
   CreateGoalRequest,
   GoalsResponse,
   HealthResponse,
+  HomeResponse,
   Me,
   NudgeScanResponse,
   NudgesResponse,
+  SettingsResponse,
+  TransactionsResponse,
+  UpdateSettingsRequest,
 } from '@finni/shared';
 
 import { config } from '@/config';
@@ -24,11 +29,26 @@ import { apiFetch } from './client';
 const realApi = {
   health: () => apiFetch<HealthResponse>('/health', { anonymous: true }),
 
-  bootstrap: () => apiFetch<BootstrapResponse>('/me/bootstrap', { method: 'POST' }),
+  bootstrap: (body?: BootstrapRequest) =>
+    apiFetch<BootstrapResponse>('/me/bootstrap', {
+      method: 'POST',
+      body: body ?? (config.authMode === 'demo' && config.demoName ? { firstName: config.demoName } : undefined),
+    }),
   me: () => apiFetch<Me>('/me'),
 
   sendChat: (body: ChatRequest) => apiFetch<ChatResponse>('/chat', { method: 'POST', body }),
   chatHistory: (limit = 50) => apiFetch<ChatHistoryResponse>('/chat/history', { query: { limit } }),
+
+  home: () => apiFetch<HomeResponse>('/home'),
+  transactions: (q: { days?: number; accountId?: string } = {}) =>
+    apiFetch<TransactionsResponse>('/transactions', { query: { days: q.days, accountId: q.accountId } }),
+
+  settings: () => apiFetch<SettingsResponse>('/settings'),
+  updateSettings: (body: UpdateSettingsRequest) =>
+    apiFetch<SettingsResponse>('/settings', { method: 'PATCH', body }),
+  resetDemo: () => apiFetch<BootstrapResponse>('/me/reset', { method: 'POST' }),
+  clearChat: () => apiFetch<void>('/chat/history', { method: 'DELETE' }),
+  stepUp: () => apiFetch<void>('/me/step-up', { method: 'POST' }),
 
   accounts: () => apiFetch<AccountsResponse>('/accounts'),
 
@@ -51,6 +71,8 @@ const realApi = {
   nudges: () => apiFetch<NudgesResponse>('/nudges'),
   markNudgeRead: (id: string) => apiFetch<void>(`/nudges/${id}/read`, { method: 'POST' }),
   markNudgeNotified: (id: string) => apiFetch<void>(`/nudges/${id}/notified`, { method: 'POST' }),
+  dismissNudge: (id: string) => apiFetch<void>(`/nudges/${id}/dismiss`, { method: 'POST' }),
+  actOnNudge: (id: string) => apiFetch<ActionResponse>(`/nudges/${id}/act`, { method: 'POST' }),
   scanNudges: () => apiFetch<NudgeScanResponse>('/nudges/scan', { method: 'POST' }),
 };
 
