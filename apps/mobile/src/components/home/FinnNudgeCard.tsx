@@ -15,12 +15,15 @@ export function FinnNudgeCard({
   cta,
   onPress,
   mood = 'celebrating',
+  loading = false,
 }: {
   text: string;
   highlight?: string;
   cta: string;
   onPress: () => void;
   mood?: Mood;
+  /** The CTA spins while Finn sets up the action. */
+  loading?: boolean;
 }) {
   const at = highlight ? text.indexOf(highlight) : -1;
   const sentence =
@@ -40,7 +43,7 @@ export function FinnNudgeCard({
       <View style={styles.body}>
         <Text style={styles.text}>{sentence}</Text>
         <View style={styles.cta}>
-          <Button label={cta} size="sm" onPress={onPress} />
+          <Button label={cta} size="sm" onPress={onPress} loading={loading} />
         </View>
       </View>
     </View>

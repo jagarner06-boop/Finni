@@ -43,3 +43,6 @@ require('react-native-gesture-handler/jestSetup');
 jest.mock('expo-crypto', () => ({
   randomUUID: () => require('node:crypto').randomUUID(),
 }));
+
+// Uniwind ships untranspiled TS; screens only need the passthrough.
+jest.mock('uniwind', () => ({ withUniwind: (component: unknown) => component }));

@@ -12,7 +12,18 @@ export const utilizationLevel = (pct: number): UtilizationLevel => (pct <= 30 ? 
 const SIZE = 92;
 const STROKE = 9;
 
-export function UtilizationCard({ percent, closesInDays, limitCents }: { percent: number; closesInDays: number; limitCents: Cents }) {
+export function UtilizationCard({
+  percent,
+  closesInDays,
+  limitCents,
+  closeDate,
+}: {
+  percent: number;
+  closesInDays: number;
+  limitCents: Cents;
+  /** Short statement close date, e.g. "Oct 22". */
+  closeDate?: string;
+}) {
   const r = (SIZE - STROKE) / 2;
   const circumference = 2 * Math.PI * r;
   const clamped = Math.max(0, Math.min(100, percent));
@@ -35,12 +46,13 @@ export function UtilizationCard({ percent, closesInDays, limitCents }: { percent
           />
         </Svg>
         <Text style={styles.pct}>{percent}%</Text>
-        <Text style={styles.ringLabel}>used</Text>
+        <Text style={styles.ringLabel}>Utilization</Text>
       </View>
       <View style={styles.facts}>
         <View>
           <Text style={styles.factLabel}>Statement closes in</Text>
-          <Text style={styles.factValue}>{closesInDays} days</Text>
+          <Text style={styles.factValue}>{closesInDays === 1 ? '1 day' : `${closesInDays} days`}</Text>
+          {closeDate && <Text style={styles.factLabel}>{closeDate}</Text>}
         </View>
         <View>
           <Text style={styles.factLabel}>Limit</Text>
@@ -57,7 +69,7 @@ const styles = StyleSheet.create({
   // Start the arc at 12 o'clock.
   svg: { position: 'absolute', transform: [{ rotate: '-90deg' }] },
   pct: { fontFamily: fonts.bold, fontSize: 20, color: colors.ink, fontVariant: ['tabular-nums'] },
-  ringLabel: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted },
+  ringLabel: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted },
   facts: { flex: 1, gap: 12 },
   factLabel: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted },
   factValue: { fontFamily: fonts.bold, fontSize: 17, color: colors.ink, fontVariant: ['tabular-nums'] },

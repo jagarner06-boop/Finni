@@ -7,7 +7,10 @@ import TabsLayout from '@/app/(tabs)/_layout';
 jest.mock('@/auth/useSession', () => ({ useSession: () => ({ phase: 'ready', retry: jest.fn() }) }));
 jest.mock('@/lib/useNudgeNotifier', () => ({ useNudgeNotifier: () => 2 }));
 
-const stub = (name: string) => () => <Text>{name} screen</Text>;
+const stub = (name: string) =>
+  function Stub() {
+    return <Text>{name} screen</Text>;
+  };
 
 describe('tabs layout', () => {
   it('shows Home, Finn, Activity, Settings with the unread badge', async () => {

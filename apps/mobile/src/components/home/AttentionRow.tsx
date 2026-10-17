@@ -3,7 +3,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, fonts } from '@/theme/tokens';
 
-export type AttentionStatus = 'danger' | 'warning' | 'success';
+export type AttentionStatus = 'danger' | 'warning' | 'success' | 'info';
+
+const DOT: Record<AttentionStatus, string> = { danger: colors.danger, warning: colors.warning, success: colors.success, info: colors.muted };
 
 export function AttentionRow({ title, meta, status, onPress }: { title: string; meta: string; status: AttentionStatus; onPress?: () => void }) {
   return (
@@ -13,7 +15,7 @@ export function AttentionRow({ title, meta, status, onPress }: { title: string; 
       disabled={!onPress}
       onPress={onPress}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
-      <View testID="status-dot" style={[styles.dot, { backgroundColor: colors[status] }]} />
+      <View testID="status-dot" style={[styles.dot, { backgroundColor: DOT[status] }]} />
       <View style={styles.text}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.meta}>{meta}</Text>
