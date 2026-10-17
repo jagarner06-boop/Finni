@@ -67,9 +67,10 @@ describe('Goal detail', () => {
     await render(wrap(<GoalDetailScreen />));
     expect(await screen.findByText('$300.00 of $1,200.00')).toBeTruthy();
     expect(screen.getByText('$40.00 every 2 weeks · next Oct 24')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Add money' }));
     await fireEvent.press(screen.getByText('$50'));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Add money' })).toBeEnabled());
-    await fireEvent.press(screen.getByText('Add money'));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Add $50' })).toBeEnabled());
+    await fireEvent.press(screen.getByRole('button', { name: 'Add $50' }));
     await waitFor(() =>
       expect(mockApi.createAction).toHaveBeenCalledWith({
         type: 'transfer',

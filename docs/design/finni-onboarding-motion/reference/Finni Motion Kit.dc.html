@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F1EEE7;font-family:Figtree,system-ui,sans-serif;color:#14213D;-webkit-font-smoothing:antialiased}
+a{color:#2563EB}a:hover{color:#1E4FD0}
+button{font-family:Figtree,system-ui,sans-serif}
+@keyframes mk-drop{0%{opacity:0;transform:translateY(-24px) scale(.96)}70%{opacity:1;transform:translateY(3px) scale(1.01)}100%{transform:none}}
+@keyframes mk-out{to{opacity:0;transform:translateY(-14px) scale(.96)}}
+@keyframes mk-shrink{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@keyframes mk-pop{0%{opacity:0;transform:translateY(10px) scale(.9)}65%{opacity:1;transform:translateY(-2px) scale(1.02)}100%{transform:none}}
+@keyframes mk-bigpop{0%{opacity:0;transform:scale(.6)}60%{opacity:1;transform:scale(1.06)}100%{transform:none}}
+@keyframes mk-shake{0%{opacity:0;transform:translateY(16px)}40%{opacity:1;transform:none}55%{transform:translateX(-5px)}70%{transform:translateX(4px)}85%{transform:translateX(-2px)}100%{transform:none}}
+@keyframes mk-flip{0%{transform:perspective(400px) rotateY(0) scale(1)}50%{transform:perspective(400px) rotateY(180deg) scale(1.15)}100%{transform:perspective(400px) rotateY(360deg) scale(1)}}
+@keyframes mk-dot{0%,60%,100%{transform:none}30%{transform:translateY(-4px)}}
+@keyframes mk-shim{from{background-position:-240px 0}to{background-position:240px 0}}
+@keyframes mk-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes mk-hop{0%,100%{transform:none}18%{transform:scale(1.08,.88)}45%{transform:translateY(-20px) scale(.94,1.08)}72%{transform:scale(1.06,.92)}}
+@keyframes mk-tick{0%{transform:scale(0);opacity:0}30%{transform:scale(1.2);opacity:1}65%{transform:scale(1)}100%{opacity:0}}
+@keyframes mk-bob{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-4px) rotate(-6deg)}75%{transform:translateY(-2px) rotate(5deg)}}
+@keyframes mk-num{0%{opacity:0;transform:translateY(60%)}60%{opacity:1;transform:translateY(-6%)}100%{transform:none}}
+@keyframes mk-banner{0%{opacity:0;transform:translateY(-110%)}60%{opacity:1;transform:translateY(4px)}100%{transform:none}}
+@keyframes mk-orbit{from{transform:rotate(0) translateX(70px) rotate(0)}to{transform:rotate(360deg) translateX(70px) rotate(-360deg)}}
+@keyframes mk-glow{0%,100%{box-shadow:0 0 0 0 rgba(255,176,32,.0)}50%{box-shadow:0 0 0 8px rgba(255,176,32,.18)}}
+</style>
+</helmet>
+<div style="padding:56px 64px 80px;display:flex;flex-direction:column;gap:36px;min-width:1560px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:720px">
+    <div style="font:600 12px Figtree;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82">Finni · Motion kit</div>
+    <div style="font:700 36px/1.1 Figtree">Pop-ups, alerts, and celebrations</div>
+    <div style="font:400 16px/1.5 Figtree;color:#5B6B82;text-wrap:pretty">Ten working patterns. Tap the controls under each one. Celebrations use the expanded palette, and actions stay cobalt.</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(4,360px);gap:40px 36px">
+
+    <!-- 01 TOASTS -->
+    <div data-screen-label="01 Toasts" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:10px"><div style="font:700 13px Figtree;color:#5B6B82;font-variant-numeric:tabular-nums">01</div><div style="font:700 18px Figtree">Toasts</div><div style="font:400 13px Figtree;color:#5B6B82">Auto-hide 3s · Undo</div></div>
+      <div style="position:relative;height:520px;border-radius:28px;background:#FAF8F3;overflow:hidden;box-shadow:0 0 0 1px #E2DDD2,0 24px 48px -30px rgba(20,33,61,.35);display:flex;flex-direction:column">
+        <div style="flex:1;padding:80px 20px 0;display:flex;flex-direction:column;gap:10px;opacity:.5">
+          <div style="height:64px;border-radius:18px;background:#fff;border:1px solid #EDEAE3"></div>
+          <div style="height:64px;border-radius:18px;background:#fff;border:1px solid #EDEAE3"></div>
+          <div style="height:64px;border-radius:18px;background:#fff;border:1px solid #EDEAE3"></div>
+        </div>
+        <div style="position:absolute;top:16px;left:14px;right:14px;display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="0">
+            <div style="position:relative;display:flex;align-items:center;gap:10px;padding:10px 12px 12px;border-radius:18px;background:linear-gradient(180deg,#24335A,#14213D);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 2px 0 #0A1430,0 12px 24px -10px rgba(20,33,61,.5);overflow:hidden;animation:{{ t.anim }}">
+              <div style="width:32px;height:32px;flex:none;border-radius:11px;background:{{ t.c }};display:flex;align-items:center;justify-content:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 0 rgba(0,0,0,.25)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="{{ t.ic }}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ t.d }}"></path></svg></div>
+              <div style="flex:1;font:600 14px/1.35 Figtree">{{ t.text }}</div>
+              <sc-if value="{{ t.undo }}" hint-placeholder-val="{{ false }}"><button onClick="{{ t.onUndo }}" style="height:32px;padding:0 10px;border-radius:999px;border:none;background:rgba(255,255,255,.12);color:#A9C3FF;font:700 13px Figtree;cursor:pointer">Undo</button></sc-if>
+              <div style="position:absolute;left:0;right:0;bottom:0;height:3px;background:{{ t.c }};transform-origin:0 50%;animation:mk-shrink 3s linear forwards;opacity:.9"></div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px">
+          <button onClick="{{ toastOk }}" style="height:44px;border-radius:999px;border:1px solid #D9D4C9;background:#fff;font:700 14px Figtree;color:#14213D;box-shadow:0 2px 0 #E6E1D6;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-active="transform:translateY(2px);box-shadow:none"><span style="width:9px;height:9px;border-radius:50%;background:#22B98A"></span>Success</button>
+          <button onClick="{{ toastWarn }}" style="height:44px;border-radius:999px;border:1px solid #D9D4C9;background:#fff;font:700 14px Figtree;color:#14213D;box-shadow:0 2px 0 #E6E1D6;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-active="transform:translateY(2px);box-shadow:none"><span style="width:9px;height:9px;border-radius:50%;background:#FFB020"></span>Warning</button>
+          <button onClick="{{ toastErr }}" style="height:44px;border-radius:999px;border:1px solid #D9D4C9;background:#fff;font:700 14px Figtree;color:#14213D;box-shadow:0 2px 0 #E6E1D6;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-active="transform:translateY(2px);box-shadow:none"><span style="width:9px;height:9px;border-radius:50%;background:#FF6B57"></span>Error</button>
+          <button onClick="{{ toastUndo }}" style="height:44px;border-radius:999px;border:1px solid #D9D4C9;background:#fff;font:700 14px Figtree;color:#14213D;box-shadow:0 2px 0 #E6E1D6;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-active="transform:translateY(2px);box-shadow:none"><span style="width:9px;height:9px;border-radius:50%;background:#2563EB"></span>With undo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 02 SHEET -->
+    <div data-screen-label="02 Bottom sheet" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:10px"><div style="font:700 13px Figtree;color:#5B6B82">02</div><div style="font:700 18px Figtree">Bottom sheet</div><div style="font:400 13px Figtree;color:#5B6B82">Slide up · scrim 42%</div></div>
+      <div style="position:relative;height:520px;border-radius:28px;background:#FAF8F3;overflow:hidden;box-shadow:0 0 0 1px #E2DDD2,0 24px 48px -30px rgba(20,33,61,.35)">
+        <div style="padding:24px 20px;display:flex;flex-direction:column;gap:14px">
+          <div style="font:700 22px Figtree">Goals</div>
+          <div style="display:flex;align-items:center;gap:14px;padding:16px;border-radius:20px;background:#fff;border:1px solid #EDEAE3;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(20,33,61,.04),0 8px 20px -10px rgba(20,33,61,.14)">
+            <div style="width:48px;height:48px;border-radius:15px;background:#E2F4FC;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1FA8E8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20M5 20c0-6 3-10 7-10s7 4 7 10M12 10V4M12 4l4 2"></path></svg></div>
+            <div style="flex:1"><div style="font:700 16px Figtree">Hawaii Fund</div><div style="font:400 13px Figtree;color:#5B6B82;font-variant-numeric:tabular-nums">{{ sheetSaved }} of $2,400</div></div>
+            <button onClick="{{ openSheet }}" style="height:40px;padding:0 14px;border-radius:999px;border:none;background:linear-gradient(180deg,#3D78F2 0%,#2563EB 60%,#2159DC 100%);color:#fff;font:700 14px Figtree;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 3px 0 #1B47B5;cursor:pointer" style-active="transform:translateY(3px);box-shadow:inset 0 2px 4px rgba(10,30,90,.35)">Add</button>
+          </div>
+        </div>
+        <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(20,33,61,.42);opacity:{{ scrimOp }};pointer-events:{{ scrimPe }};transition:opacity .25s"></div>
+        <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:28px 28px 0 0;padding:10px 20px 24px;display:flex;flex-direction:column;gap:16px;transform:{{ sheetTf }};transition:transform .3s cubic-bezier(.2,.8,.3,1);box-shadow:0 -10px 30px -12px rgba(20,33,61,.3)">
+          <div style="width:36px;height:5px;border-radius:999px;background:#D9D4C9;align-self:center"></div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:44px;height:44px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+            <div><div style="font:700 18px Figtree">Add to Hawaii Fund</div><div style="font:400 13px Figtree;color:#5B6B82">From Checking •••• 1203</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+            <sc-for list="{{ sheetAmts }}" as="a" hint-placeholder-count="3"><button onClick="{{ a.pick }}" style="height:56px;border-radius:16px;background:{{ a.bg }};border:{{ a.bd }};color:{{ a.fg }};font:700 18px Figtree;font-variant-numeric:tabular-nums;cursor:pointer;box-shadow:{{ a.sh }};transition:all .15s" style-active="transform:translateY(2px)">{{ a.label }}</button></sc-for>
+          </div>
+          <div style="font:400 13px/1.4 Figtree;color:#5B6B82">Lands today. You'll be at <b style="color:#14213D;font-variant-numeric:tabular-nums">{{ sheetAfter }}</b>.</div>
+          <button onClick="{{ confirmSheet }}" style="height:52px;border-radius:999px;border:none;background:linear-gradient(180deg,#3D78F2 0%,#2563EB 60%,#2159DC 100%);color:#fff;font:700 17px Figtree;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 -1px 0 rgba(10,30,90,.25),0 3px 0 #1B47B5,0 8px 16px -6px rgba(37,99,235,.5);cursor:pointer" style-active="transform:translateY(3px);box-shadow:inset 0 2px 4px rgba(10,30,90,.35)">Add {{ sheetAmtFmt }}</button>
+          <button onClick="{{ closeSheet }}" style="height:40px;border:none;background:transparent;color:#2563EB;font:700 15px Figtree;cursor:pointer">Not now</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 GOAL MILESTONE -->
+    <div data-screen-label="03 Goal milestone" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:10px"><div style="font:700 13px Figtree;color:#5B6B82">03</div><div style="font:700 18px Figtree">Goal milestone</div><div style="font:400 13px Figtree;color:#5B6B82">25 · 50 · 75 · 100%</div></div>
+      <div style="position:relative;height:520px;border-radius:28px;background:#FAF8F3;overflow:hidden;box-shadow:0 0 0 1px #E2DDD2,0 24px 48px -30px rgba(20,33,61,.35);display:flex;flex-direction:column">
+        <div style="flex:1;padding:24px 20px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;align-items:center;gap:16px;padding:16px;border-radius:20px;background:#fff;border:{{ goalBd }};box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(20,33,61,.04),0 8px 20px -10px rgba(20,33,61,.14);transition:border-color .3s">
+            <div style="position:relative;width:64px;height:84px;flex:none;border-radius:20px;background:#F4F7FE;border:1px solid #E1E8F8;overflow:hidden;box-shadow:inset 0 2px 5px rgba(20,33,61,.18)">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:{{ goalH }};background:linear-gradient(180deg,{{ goalW1 }},{{ goalW2 }});transition:height .6s cubic-bezier(.34,1.4,.64,1),background .4s"></div>
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 15px Figtree;color:#14213D;font-variant-numeric:tabular-nums">{{ goalPctLabel }}</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+              <div style="font:700 16px Figtree">Hawaii Fund</div>
+              <div style="font:700 22px Figtree;font-variant-numeric:tabular-nums">{{ goalSaved }}</div>
+              <div style="font:400 13px Figtree;color:#5B6B82">of $2,400</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <sc-for list="{{ goalMarks }}" as="m" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px"><div style="width:100%;height:8px;border-radius:999px;background:{{ m.bg }};transition:background .3s;box-shadow:inset 0 1px 2px rgba(20,33,61,.1)"></div><div style="font:600 12px Figtree;color:{{ m.fg }};font-variant-numeric:tabular-nums">{{ m.label }}</div></div></sc-for>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;padding:16px">
+          <button onClick="{{ goalAdd }}" style="flex:1;height:48px;border-radius:999px;border:none;background:linear-gradient(180deg,#3D78F2 0%,#2563EB 60%,#2159DC 100%);color:#fff;font:700 16px Figtree;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 3px 0 #1B47B5,0 8px 16px -6px rgba(37,99,235,.5);cursor:pointer" style-active="transform:translateY(3px);box-shadow:inset 0 2px 4px rgba(10,30,90,.35)">Add $240</button>
+          <button onClick="{{ goalReset }}" style="height:48px;padding:0 18px;border-radius:999px;border:1px solid #D9D4C9;background:#fff;color:#14213D;font:700 15px Figtree;box-shadow:0 2px 0 #E6E1D6;cursor:pointer" style-active="transform:translateY(2px);box-shadow:none">Reset</button>
+        </div>
+        <sc-if value="{{ mileShow }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ mileClose }}" style="position:absolute;inset:0;background:rgba(20,33,61,.42);display:flex;align-items:center;justify-content:center;padding:24px;animation:mk-pop .2s ease-out">
+            <div style="width:100%;border-radius:28px;background:#fff;padding:26px 22px 20px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;box-shadow:0 30px 50px -20px rgba(20,33,61,.5);animation:mk-bigpop .45s cubic-bezier(.34,1.4,.64,1)">
+              <div style="position:relative;width:96px;height:96px;border-radius:50%;padding:4px;background:conic-gradient({{ mileC }} {{ mileDeg }},#F1EEE7 0);animation:mk-hop .7s .15s both">
+                <div style="width:100%;height:100%;border-radius:50%;border:3px solid #fff;box-sizing:border-box;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="{{ mileHead }}" alt="Finn is celebrating" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+              </div>
+              <div style="height:28px;padding:0 12px;border-radius:999px;background:{{ mileT }};color:{{ mileI }};font:700 13px/28px Figtree;font-variant-numeric:tabular-nums">{{ mileTag }}</div>
+              <div style="font:700 24px/1.15 Figtree">{{ mileTitle }}</div>
+              <div style="font:400 15px/1.45 Figtree;color:#5B6B82;text-wrap:pretty">{{ mileSub }}</div>
+              <button onClick="{{ mileClose }}" style="width:100%;height:48px;margin-top:6px;border-radius:999px;border:none;background:linear-gradient(180deg,#3D78F2 0%,#2563EB 60%,#2159DC 100%);color:#fff;font:700 16px Figtree;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 3px 0 #1B47B5;cursor:pointer" style-active="transform:translateY(3px)">{{ mileCta }}</button>
+            </div>
+          </div>
+        </sc-if>
+        <canvas ref="{{ cvGoal }}" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
+      </div>
+    </div>
+
+    <!-- 04 UNUSUAL SPEND -->
+    <div data-screen-label="04 Unusual spend" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:10px"><div style="font:700 13px Figtree;color:#5B6B82">04</div><div style="font:700 18px Figtree">Unusual-spend alert</div><div style="font:400 13px Figtree;color:#5B6B82">Shake in · resolve</div></div>
+      <div style="position:relative;height:520px;border-radius:28px;background:#FAF8F3;overflow:hidden;box-shadow:0 0 0 1px #E2DDD2,0 24px 48px -30px rgba(20,33,61,.35);display:flex;flex-direction:column">
+        <div style="flex:1;padding:24px 20px;display:flex;flex-direction:column;justify-content:center">
+          <sc-if value="{{ spendShow }}" hint-placeholder-val="{{ true }}">
+            <div style="border-radius:24px;background:#fff;border:1px solid #EDEAE3;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(20,33,61,.04),0 14px 28px -14px rgba(20,33,61,.22);animation:mk-shake .6s ease-out">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="position:relative;width:52px;height:52px;flex:none;border-radius:50%;padding:2px;background:#FF6B57"><div style="width:100%;height:100%;border-radius:50%;border:2px solid #fff;box-sizing:border-box;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-surprised.png" alt="Finn looks surprised" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div></div>
+                <div style="flex:1"><div style="font:600 12px Figtree;letter-spacing:.04em;text-transform:uppercase;color:#B23A28">Unusual spend</div><div style="font:700 17px Figtree">Uber Eats · Oct 16</div></div>
+                <div style="font:700 20px Figtree;font-variant-numeric:tabular-nums">$86<span style="font-weight:400;color:#5B6B82">.40</span></div>
+              </div>
+              <div style="font:400 15px/1.45 Figtree">That's about <b style="color:#B23A28">3×</b> your usual order of $28.</div>
+              <div style="display:flex;align-items:flex-end;gap:10px;height:90px;padding:0 4px">
+                <sc-for list="{{ spendBars }}" as="b" hint-placeholder-count="6"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end"><div style="width:100%;height:{{ b.h }};border-radius:8px;background:{{ b.c }};transform-origin:50% 100%;animation:mk-pop .4s both;animation-delay:{{ b.delay }}"></div><div style="font:600 11px Figtree;color:#5B6B82">{{ b.l }}</div></div></sc-for>
+              </div>
+              <sc-if value="{{ spendOpen }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;gap:8px">
+                  <button onClick="{{ spendMe }}" style="flex:1;height:46px;border-radius:999px;border:1px solid #D9D4C9;background:#fff;color:#14213D;font:700 15px Figtree;box-shadow:0 2px 0 #E6E1D6;cursor:pointer" style-active="transform:translateY(2px);box-shadow:none">That was me</button>
+                  <button onClick="{{ spendFlag }}" style="flex:1;height:46px;border-radius:999px;border:none;background:linear-gradient(180deg,#3D78F2 0%,#2563EB 60%,#2159DC 100%);color:#fff;font:700 15px Figtree;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 3px 0 #1B47B5;cursor:pointer" style-active="transform:translateY(3px)">Flag it</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ spendDone }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:{{ spendDoneBg }};animation:mk-pop .3s ease-out"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{ spendDoneC }}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg><div style="font:600 14px/1.35 Figtree;color:{{ spendDoneC }}">{{ spendDoneText }}</div></div>
+              </sc-if>
+            </div>
+          </sc-if>
+        </div>
+        <div style="padding:16px"><button onClick="{{ spendReplay }}" style="width:100%;height:44px;border-radius:999px;border:1px solid #D9D4C9;background:#fff;color:#14213D;font:700 14px Figtree;box-shadow:0 2px 0 #E6E1D6;cursor:pointer" style-active="transform:translateY(2px);box-shadow:none">Replay alert</button></div>
+      </div>
+    </div>
+
+    <!-- 05 BILL DUE -->
+    <div data-screen-label="05 Bill due" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:10px"><div style="font:700 13px Figtree;color:#5B6B82">05</div><div style="font:700 18px Figtree">Bill-due reminder</div><div style="font:400 13px Figtree;color:#5B6B82">Push · hold to pay</div></div>
+      <div style="position:relative;height:520px;border-radius:28px;background:linear-gradient(180deg,#DCE6FA,#FAF8F3 55%);overflow:hidden;box-shadow:0 0 0 1px #E2DDD2,0 24px 48px -30px rgba(20,33,61,.35);display:flex;flex-direction:column">
+        <div style="height:96px;position:relative;padding:14px">
+          <sc-if value="{{ bannerShow }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:20px;background:rgba(255,255,255,.88);box-shadow:0 10px 30px -12px rgba(20,33,61,.35);animation:mk-banner .5s cubic-bezier(.2,.8,.3,1)">
+              <div style="width:36px;height:36px;flex:none;border-radius:10px;background:linear-gradient(135deg,#1E3A8A,#2F55C8);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M5 13l4-6M10 15l4-6"></path></svg></div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:2px"><div style="display:flex;justify-content:space-between;font:600 12px Figtree;color:#5B6B82"><span>FINNI</span><span>now</span></div><div style="font:700 14px Figtree">Electric bill due Friday</div><div style="font:400 13px/1.35 Figtree;color:#14213D">$84.20 to Gainesville Power. Want me to line it up?</div></div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="flex:1;padding:0 20px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;align-items:center;gap:14px;padding:16px;border-radius:20px;background:#fff;border:1px solid #EDEAE3;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(20,33,61,.04),0 8px 20px -10px rgba(20,33,61,.14)">
+            <div style="position:relative;width:60px;height:60px;flex:none;border-radius:50%;background:conic-gradient({{ billRingC }} {{ billRingDeg }},#F1EEE7 0);display:flex;align-items:center;justify-content:center;transition:background .3s">
+              <div style="width:48px;height:48px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center"><sc-if value="{{ billUnpaid }}" hint-placeholder-val="{{ true }}"><div style="font:700 18px/1 Figtree;font-variant-numeric:tabular-nums">3</div><div style="font:600 10px Figtree;color:#5B6B82">days</div></sc-if><sc-if value="{{ billPaid }}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22B98A" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" style="animation:mk-bigpop .4s"><path d="M5 12l5 5 9-10"></path></svg></sc-if></div>
+            </div>
+            <div style="flex:1"><div style="font:700 16px Figtree">Gainesville Power</div><div style="font:400 13px Figtree;color:#5B6B82">{{ billMeta }}</div></div>
+            <div style="font:700 17px Figtree;font-variant-numeric:tabular-nums">$84<span style="font-weight:400;color:#5B6B82">.20</span></div>
+          </div>
+          <sc-if value="{{ billUnpaid }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div onPointerDown="{{ holdStart }}" onPointerUp="{{ holdEnd }}" onPointerLeave="{{ holdEnd }}" style="position:relative;height:56px;border-radius:999px;background:#E8EDF7;box-shadow:inset 0 2px 5px rgba(20,33,61,.18),0 1px 0 #fff;overflow:hidden;cursor:pointer;user-select:none;touch-action:none">
+                <div style="position:absolute;left:0;top:0;bottom:0;width:{{ holdW }};background:linear-gradient(90deg,#3D78F2,#2563EB);border-radius:999px"></div>
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 16px Figtree;color:{{ holdFg }}">{{ holdLabel }}</div>
+              </div>
+              <div style="font:400 12px Figtree;color:#5B6B82;text-align:center">From Checking •••• 1203 · arrives Thursday</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ billPaid }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center;animation:mk-pop .35s ease-out">
+              <div style="font:700 20px Figtree">Paid. One less thing.</div>
+              <div style="font:400 13px Figtree;color:#5B6B82">Confirmation #GP-20481 · View in Activity</div>
+              <button onClick="{{ billReset }}" style="height:40px;padding:0 16px;border-radius:999px;border:1px solid #D9D4C9;background:#fff;color:#14213D;font:700 14px Figtree;box-shadow:0 2px 0 #E6E1D6;cursor:pointer">Reset</button>
+            </div>
+          </sc-if>
+        </div>
+        <canvas ref="{{ cvBill }}" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
+      </div>
+    </div>
+
+    <!-- 06 PULL TO REFRESH -->
+    <div data-screen-label="06 Pull to refresh" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:10px"><div style="font:700 13px Figtree;color:#5B6B82">06</div><div style="font:700 18px Figtree">Pull to refresh</div><div style="font:400 13px Figtree;color:#5B6B82">Drag the list down</div></div>
+      <div style="position:relative;height:520px;border-radius:28px;background:#FAF8F3;overflow:hidden;box-shadow:0 0 0 1px #E2DDD2,0 24px 48px -30px rgba(20,33,61,.35)">
+        <div style="position:absolute;top:18px;left:0;right:0;display:flex;justify-content:center;opacity:{{ pullOp }}">
+          <div style="position:relative;transform:scale({{ pullScale }});transition:{{ pullTr }}">
+            <div style="width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center;animation:{{ pullAnim }}"><img src="{{ pullHead }}" alt="Finn" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+            <svg width="30" height="30" viewBox="0 0 20 20" fill="none" stroke-width="2.6" stroke-linecap="round" style="position:absolute;right:-28px;top:-6px;overflow:visible"><path d="M4 14L9 6" stroke="#2563EB" stroke-dasharray="10" stroke-dashoffset="{{ tick1 }}"></path><path d="M11 16l5-6" stroke="#2563EB" stroke-dasharray="8" stroke-dashoffset="{{ tick2 }}"></path></svg>
+            <svg width="30" height="30" viewBox="0 0 20 20" fill="none" stroke-width="2.6" stroke-linecap="round" style="position:absolute;left:-28px;top:-6px;overflow:visible;transform:scaleX(-1)"><path d="M4 14L9 6" stroke="#2563EB" stroke-dasharray="10" stroke-dashoffset="{{ tick1 }}"></path><path d="M11 16l5-6" stroke="#2563EB" stroke-dasharray="8" stroke-dashoffset="{{ tick2 }}"></path></svg>
+          </div>
+        </div>
+        <div onPointerDown="{{ pullDown }}" onPointerMove="{{ pullMove }}" onPointerUp="{{ pullUp }}" onPointerCancel="{{ pullUp }}" style="position:absolute;inset:0;background:#FAF8F3;padding:20px;display:flex;flex-direction:column;gap:10px;transform:translateY({{ pullPx }});transition:{{ pullTr }};cursor:grab;touch-action:none;user-select:none">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:700 22px Figtree">Transactions</div><div style="font:400 12px Figtree;color:#5B6B82">{{ pullStamp }}</div></div>
+          <sc-for list="{{ txns }}" as="x" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:{{ x.bg }};border:1px solid #EDEAE3;animation:{{ x.anim }}">
+              <div style="width:40px;height:40px;flex:none;border-radius:13px;background:{{ x.t }};color:{{ x.i }};font:700 15px/40px Figtree;text-align:center">{{ x.m }}</div>
+              <div style="flex:1"><div style="font:700 15px Figtree">{{ x.name }}</div><div style="font:400 12px Figtree;color:#5B6B82">{{ x.meta }}</div></div>
+              <div style="font:700 15px Figtree;font-variant-numeric:tabular-nums">{{ x.amt }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- 07 SKELETON -->
+    <div data-screen-label="07 Skeleton" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:10px"><div style="font:700 13px Figtree;color:#5B6B82">07</div><div style="font:700 18px Figtree">Skeleton loaders</div><div style="font:400 13px Figtree;color:#5B6B82">Tinted shimmer</div></div>
+      <div style="position:relative;height:520px;border-radius:28px;background:#FAF8F3;overflow:hidden;box-shadow:0 0 0 1px #E2DDD2,0 24px 48px -30px rgba(20,33,61,.35);display:flex;flex-direction:column">
+        <div style="flex:1;padding:24px 20px;display:flex;flex-direction:column;gap:12px">
+          <sc-if value="{{ skelOn }}" hint-placeholder-val="{{ true }}">
+            <div style="height:130px;border-radius:22px;background:linear-gradient(90deg,#DCE5FB 0%,#EEF3FE 50%,#DCE5FB 100%);background-size:480px 100%;animation:mk-shim 1.3s linear infinite"></div>
+            <sc-for list="{{ skelRows }}" as="k" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:18px;background:#fff;border:1px solid #EDEAE3">
+                <div style="width:40px;height:40px;border-radius:13px;background:linear-gradient(90deg,{{ k.a }} 0%,{{ k.b }} 50%,{{ k.a }} 100%);background-size:480px 100%;animation:mk-shim 1.3s linear infinite"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="width:{{ k.w }};height:12px;border-radius:6px;background:linear-gradient(90deg,#F1EEE7 0%,#FAF8F3 50%,#F1EEE7 100%);background-size:480px 100%;animation:mk-shim 1.3s linear infinite"></div><div style="width:40%;height:10px;border-radius:5px;background:linear-gradient(90deg,#F1EEE7 0%,#FAF8F3 50%,#F1EEE7 100%);background-size:480px 100%;animation:mk-shim 1.3s linear infinite"></div></div>
+                <div style="width:56px;height:14px;border-radius:7px;background:linear-gradient(90deg,#F1EEE7 0%,#FAF8F3 50%,#F1EEE7 100%);background-size:480px 100%;animation:mk-shim 1.3s linear infinite"></div>
+              </div>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ skelOff }}" hint-placeholder-val="{{ false }}">
+            <div style="height:130px;border-radius:22px;padding:18px;box-sizing:border-box;color:#fff;background:radial-gradient(120% 90% at 90% -20%,rgba(255,255,255,.24),transparent 55%),linear-gradient(135deg,#1E3A8A,#2F55C8);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 3px 0 #172E6E,0 18px 30px -14px rgba(30,58,138,.6);display:flex;flex-direction:column;justify-content:space-between;animation:mk-pop .35s ease-out">
+              <div style="display:flex;justify-content:space-between;font:600 13px Figtree;opacity:.9"><span>Closer Card</span><span>•••• 4821</span></div>
+              <div><div style="font:400 12px Figtree;opacity:.85">Current balance</div><div style="font:700 32px Figtree;font-variant-numeric:tabular-nums">$1,364<span style="font-weight:400;font-size:22px">.20</span></div></div>
+            </div>
+            <sc-for list="{{ loadedRows }}" as="x" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:18px;background:#fff;border:1px solid #EDEAE3;animation:mk-pop .35s both;animation-delay:{{ x.delay }}">
+                <div style="width:40px;height:40px;flex:none;border-radius:13px;background:{{ x.t }};color:{{ x.i }};font:700 15px/40px Figtree;text-align:center">{{ x.m }}</div>
+                <div style="flex:1"><div style="font:700 15px Figtree">{{ x.name }}</div><div style="font:400 12px Figtree;color:#5B6B82">{{ x.meta }}</div></div>
+                <div style="font:700 15px Figtree;font-variant-numeric:tabular-nums">{{ x.amt }}</div>
+              </div>
+            </sc-for>
+          </sc-if>
+        </div>
+        <div style="padding:16px"><button onClick="{{ skelReload }}" style="width:100%;height:44px;border-radius:999px;border:1px solid #D9D4C9;background:#fff;color:#14213D;font:700 14px Figtree;box-shadow:0 2px 0 #E6E1D6;cursor:pointer" style-active="transform:translateY(2px);box-shadow:none">Reload</button></div>
+      </div>
+    </div>
+
+    <!-- 08 TYPING -->
+    <div data-screen-label="08 Typing" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:10px"><div style="font:700 13px Figtree;color:#5B6B82">08</div><div style="font:700 18px Figtree">Finn typing</div><div style="font:400 13px Figtree;color:#5B6B82">Ask · think · answer</div></div>
+      <div style="position:relative;height:520px;border-radius:28px;background:#FAF8F3;overflow:hidden;box-shadow:0 0 0 1px #E2DDD2,0 24px 48px -30px rgba(20,33,61,.35);display:flex;flex-direction:column">
+        <div style="flex:1;padding:20px 16px;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;overflow:hidden">
+          <sc-for list="{{ chat }}" as="m" hint-placeholder-count="1">
+            <div style="display:flex;justify-content:{{ m.jc }};align-items:flex-end;gap:8px;animation:mk-pop .3s ease-out">
+              <sc-if value="{{ m.finn }}" hint-placeholder-val="{{ true }}"><div style="width:30px;height:30px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:0 3px 8px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-happy.png" alt="Finn" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div></sc-if>
+              <div style="max-width:78%;padding:10px 14px;border-radius:{{ m.r }};background:{{ m.bg }};border:{{ m.bd }};font:400 15px/1.4 Figtree">{{ m.text }}</div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ typing }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:flex-end;gap:8px;animation:mk-pop .25s ease-out">
+              <div style="width:30px;height:30px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:0 3px 8px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center;transform-origin:50% 90%;animation:mk-bob 1.6s ease-in-out infinite"><img src="assets/finn/head-curious.png" alt="Finn is thinking" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+              <div style="display:flex;gap:5px;padding:14px 16px;border-radius:20px 20px 20px 6px;background:#fff;border:1px solid #EDEAE3"><span style="width:8px;height:8px;border-radius:50%;background:#2563EB;animation:mk-dot 1.2s infinite"></span><span style="width:8px;height:8px;border-radius:50%;background:#C3CCDA;animation:mk-dot 1.2s .15s infinite"></span><span style="width:8px;height:8px;border-radius:50%;background:#C3CCDA;animation:mk-dot 1.2s .3s infinite"></span></div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="display:flex;gap:8px;padding:12px 16px 18px;flex-wrap:wrap;border-top:1px solid #EDEAE3;background:#fff">
+          <sc-for list="{{ askChips }}" as="c" hint-placeholder-count="3"><button onClick="{{ c.pick }}" style="height:38px;padding:0 14px;border-radius:999px;border:none;background:linear-gradient(180deg,#F1F5FF,#E3ECFD);color:#1E4FD0;font:700 14px Figtree;box-shadow:inset 0 1px 0 #fff,0 1px 0 #CBD9F8,0 3px 6px -3px rgba(37,99,235,.25);cursor:pointer;opacity:{{ c.op }}" style-active="transform:scale(.96)">{{ c.text }}</button></sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- 09 EMPTY -->
+    <div data-screen-label="09 Empty states" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:10px"><div style="font:700 13px Figtree;color:#5B6B82">09</div><div style="font:700 18px Figtree">Empty states</div><div style="font:400 13px Figtree;color:#5B6B82">Three contexts</div></div>
+      <div style="position:relative;height:520px;border-radius:28px;background:#FAF8F3;overflow:hidden;box-shadow:0 0 0 1px #E2DDD2,0 24px 48px -30px rgba(20,33,61,.35);display:flex;flex-direction:column">
+        <div style="margin:16px;padding:4px;border-radius:999px;background:#F1EEE7;display:flex;box-shadow:inset 0 2px 4px rgba(20,33,61,.1)">
+          <sc-for list="{{ emptyTabs }}" as="t" hint-placeholder-count="3"><button onClick="{{ t.pick }}" style="flex:1;height:36px;border-radius:999px;border:none;background:{{ t.bg }};box-shadow:{{ t.sh }};color:{{ t.fg }};font:700 13px Figtree;cursor:pointer;transition:all .2s">{{ t.label }}</button></sc-for>
+        </div>
+        <sc-for list="{{ emptyNow }}" as="e" hint-placeholder-count="1">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:0 28px 30px;text-align:center;animation:mk-pop .35s ease-out">
+            <div style="position:relative;width:220px;height:190px;display:flex;align-items:center;justify-content:center">
+              <div style="position:absolute;width:170px;height:170px;border-radius:50%;background:{{ e.t1 }}"></div>
+              <div style="position:absolute;left:4px;top:18px;width:38px;height:38px;border-radius:13px;background:{{ e.t2 }};transform:rotate(-12deg)"></div>
+              <div style="position:absolute;right:8px;top:6px;width:22px;height:22px;border-radius:50%;background:{{ e.c2 }};opacity:.75"></div>
+              <div style="position:absolute;right:14px;bottom:22px;width:30px;height:30px;border-radius:10px;background:{{ e.t3 }};transform:rotate(14deg)"></div>
+              <div style="position:absolute;left:30px;bottom:12px;width:14px;height:14px;border-radius:50%;background:{{ e.c3 }};opacity:.8"></div>
+              <img src="{{ e.img }}" alt="{{ e.alt }}" style="position:relative;width:160px;height:160px;object-fit:cover;mix-blend-mode:multiply;animation:mk-float 3.5s ease-in-out infinite">
+            </div>
+            <div style="font:700 22px/1.2 Figtree">{{ e.title }}</div>
+            <div style="font:400 15px/1.45 Figtree;color:#5B6B82;text-wrap:pretty">{{ e.sub }}</div>
+            <button style="height:44px;padding:0 18px;border-radius:999px;border:1px solid #D9D4C9;background:#fff;color:#14213D;font:700 15px Figtree;box-shadow:0 2px 0 #E6E1D6;cursor:pointer" style-active="transform:translateY(2px);box-shadow:none">{{ e.cta }}</button>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- 10 LOADING -->
+    <div data-screen-label="10 Loading" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:10px"><div style="font:700 13px Figtree;color:#5B6B82">10</div><div style="font:700 18px Figtree">Loading state</div><div style="font:400 13px Figtree;color:#5B6B82">First analysis</div></div>
+      <div style="position:relative;height:520px;border-radius:28px;background:#FAF8F3;overflow:hidden;box-shadow:0 0 0 1px #E2DDD2,0 24px 48px -30px rgba(20,33,61,.35);display:flex;flex-direction:column">
+        <div style="flex:1;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:18px">
+          <div style="position:relative;width:180px;height:170px;display:flex;align-items:center;justify-content:center">
+            <div style="position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px;border-radius:50%;background:#2563EB;animation:mk-orbit 3.2s linear infinite"></div>
+            <div style="position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;background:#2563EB;opacity:.7;animation:mk-orbit 3.2s -.8s linear infinite"></div>
+            <div style="position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px;border-radius:50%;background:#2563EB;opacity:.5;animation:mk-orbit 3.2s -1.6s linear infinite"></div>
+            <div style="position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4.5px;border-radius:50%;background:#2563EB;opacity:.3;animation:mk-orbit 3.2s -2.4s linear infinite"></div>
+            <img src="assets/finn/pose-laptop.png" alt="Finn is thinking" style="width:130px;height:130px;object-fit:cover;mix-blend-mode:multiply">
+          </div>
+          <div style="width:100%;height:10px;border-radius:999px;background:#F1EEE7;overflow:hidden;box-shadow:inset 0 1px 2px rgba(20,33,61,.12)"><div style="height:100%;width:{{ loadPct }};border-radius:999px;background:linear-gradient(90deg,#3D78F2,#2563EB);transition:width .5s ease-out"></div></div>
+          <div style="width:100%;display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ loadSteps }}" as="s" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:12px;opacity:{{ s.op }};transition:opacity .3s">
+                <div style="width:26px;height:26px;flex:none;border-radius:50%;background:{{ s.bg }};border:{{ s.bd }};box-sizing:border-box;display:flex;align-items:center;justify-content:center;transition:all .3s">
+                  <sc-if value="{{ s.done }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" style="animation:mk-bigpop .3s"><path d="M5 12l5 5 9-10"></path></svg></sc-if>
+                  <sc-if value="{{ s.active }}" hint-placeholder-val="{{ false }}"><div style="width:8px;height:8px;border-radius:50%;background:{{ s.c }};animation:mk-dot 1s infinite"></div></sc-if>
+                </div>
+                <div style="font:600 15px Figtree">{{ s.text }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="padding:16px"><button onClick="{{ loadRun }}" style="width:100%;height:44px;border-radius:999px;border:1px solid #D9D4C9;background:#fff;color:#14213D;font:700 14px Figtree;box-shadow:0 2px 0 #E6E1D6;cursor:pointer" style-active="transform:translateY(2px);box-shadow:none">Run again</button></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;reduceMotion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;confetti&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.3,&quot;max&quot;:2,&quot;step&quot;:0.1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;}}">
+const PAL={coral:{c:'#FF6B57',t:'#FFEDE9',i:'#B23A28'},sun:{c:'#FFB020',t:'#FFF5DC',i:'#8A5A00'},mint:{c:'#22B98A',t:'#E1F7EF',i:'#137255'},lilac:{c:'#7C6CF2',t:'#EFEDFE',i:'#4E3FC4'},sky:{c:'#1FA8E8',t:'#E2F4FC',i:'#0B6E9C'},cobalt:{c:'#2563EB',t:'#E8F0FE',i:'#1E4FD0'}};
+const CONF=['#FF6B57','#FFB020','#22B98A','#7C6CF2','#1FA8E8','#2563EB','#FFD66B'];
+const RAISED='inset 0 -2px 0 rgba(20,33,61,.05),0 2px 0 #E6E1D6,0 4px 8px -4px rgba(20,33,61,.12)';
+const CHECK='M5 12l5 5 9-10';
+const TOAST={ok:{c:'#22B98A',ic:'#fff',d:CHECK,text:'Moved $50 to Hawaii Fund.'},warn:{c:'#FFB020',ic:'#14213D',d:'M12 8v5M12 17h.01',text:'Rent is due in 2 days.'},err:{c:'#FF6B57',ic:'#fff',d:'M7 7l10 10M17 7L7 17',text:'Couldn\u2019t reach Capital One. Nothing moved.'},undo:{c:'#2563EB',ic:'#fff',d:'M7 7h7a4 4 0 0 1 0 8H8M7 7l3-3M7 7l3 3',text:'Nudge dismissed.',undo:true}};
+const MILE={25:{p:'mint',title:'A quarter of the way.',sub:'$600 saved. At this pace you hit Hawaii by May.',tag:'25% · $600',cta:'Keep going'},50:{p:'mint',title:'Halfway there!',sub:'$1,200 saved. You are two weeks ahead of plan.',tag:'50% · $1,200',cta:'Nice'},75:{p:'mint',title:'Three quarters done.',sub:'$1,800 saved. Only $600 to go.',tag:'75% · $1,800',cta:'Almost'},100:{p:'mint',title:'Hawaii Fund complete.',sub:'You saved $2,400. Book that flight.',tag:'100% · $2,400',cta:'Celebrate'}};
+const TX0=[{m:'Sp',name:'Spotify',meta:'Oct 14 · Subscriptions',amt:'\u2212$14.99',p:'mint'},{m:'TJ',name:'Trader Joe\u2019s',meta:'Oct 13 · Groceries',amt:'\u2212$62.18',p:'coral'},{m:'Sh',name:'Shell',meta:'Oct 12 · Gas',amt:'\u2212$41.00',p:'sun'},{m:'Pr',name:'Payroll',meta:'Oct 11 · Income',amt:'+$1,612.40',p:'sky'},{m:'Ch',name:'Chipotle',meta:'Oct 10 · Dining',amt:'\u2212$12.85',p:'lilac'}];
+const TXNEW=[{m:'Ub',name:'Uber',meta:'Oct 17 · Transport',amt:'\u2212$18.30',p:'lilac'},{m:'Ve',name:'Venmo from Sam',meta:'Oct 17 · Transfer',amt:'+$25.00',p:'mint'},{m:'Ta',name:'Target',meta:'Oct 17 · Shopping',amt:'\u2212$33.47',p:'coral'}];
+const EMPTY=[{label:'Activity',title:'Nothing needs you.',sub:'No bills due this week and no odd charges. I\u2019ll ping you if that changes.',cta:'See past activity',img:'assets/finn/pose-thumbsup.png',alt:'Finn gives a thumbs up',a:'mint',b:'mint',c:'mint'},{label:'Goals',title:'No goals yet.',sub:'Pick something worth saving for and I\u2019ll do the math.',cta:'Start a goal',img:'assets/finn/pose-wave.png',alt:'Finn waves',a:'sky',b:'sky',c:'sky'},{label:'Search',title:'No matches for \u201cbagels\u201d.',sub:'Try a store name or an amount like 12.50.',cta:'Clear search',img:'assets/finn/pose-laptop.png',alt:'Finn is thinking',a:'lilac',b:'lilac',c:'lilac'}];
+const LOAD=[{text:'Reading 90 days of transactions',p:'cobalt'},{text:'Finding subscriptions',p:'cobalt'},{text:'Checking upcoming bills',p:'cobalt'},{text:'Spotting ways to save',p:'cobalt'}];
+const ASK=[{q:'What\u2019s due?',a:'Two bills this week: Electric $84.20 on Friday and Phone $45.00 on Sunday. Both are covered.'},{q:'Am I on track?',a:'Yes. Hawaii Fund is at 62%, about two weeks ahead of plan.'},{q:'Any odd charges?',a:'One: Spotify charged you twice on Oct 14. Want me to dispute the $14.99?'}];
+const money=n=>'$'+Math.round(n).toLocaleString('en-US');
+
+class Component extends DCLogic {
+  state={toasts:[],sheet:false,sheetAmt:50,sheetSaved:1488,goalPct:20,mile:null,spendShow:true,spend:'open',bill:'idle',hold:0,banner:true,pull:0,dragging:false,refreshing:false,txns:TX0,fresh:0,stamp:'Updated 9:41',skel:true,chat:[{finn:true,text:'Hi Gabe. Ask me anything about your money.'}],typing:false,emptyTab:0,load:0};
+  cv={goal:React.createRef(),bill:React.createRef()};
+  raf={}; tm=[]; tid=0;
+  later(fn,ms){const t=setTimeout(fn,ms);this.tm.push(t);return t}
+  componentDidMount(){this.later(()=>this.setState({skel:false}),1600);this.runLoad()}
+  componentWillUnmount(){this.tm.forEach(clearTimeout);Object.values(this.raf).forEach(cancelAnimationFrame);clearInterval(this.li);cancelAnimationFrame(this.hr)}
+  burst(k,big,oy){
+    const cv=this.cv[k].current; if(!cv||this.props.reduceMotion) return;
+    const ctx=cv.getContext('2d'); const W=cv.width=cv.offsetWidth*2, H=cv.height=cv.offsetHeight*2;
+    const n=Math.round((big?170:80)*(this.props.confetti??1)); const ps=[]; const cc={goal:'#22B98A',bill:'#22B98A'}[k]; const CONF=[cc,cc,cc+'99','#2563EB','#F4E9D2'];
+    for(let i=0;i<n;i++){const a=-Math.PI/2+(Math.random()-.5)*(big?2.4:1.6), sp=(big?22:16)+Math.random()*16;
+      ps.push({x:W/2+(Math.random()-.5)*60,y:H*(oy??.35),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:Math.random()*6,vr:(Math.random()-.5)*.35,w:10+Math.random()*10,h:6+Math.random()*7,c:CONF[i%CONF.length],s:Math.random()<.28?1:Math.random()<.15?2:0,ph:Math.random()*6});}
+    let t=0; const T=big?170:120;
+    const step=()=>{ctx.clearRect(0,0,W,H); t++;
+      for(const p of ps){p.vy+=.55;p.vx*=.975;p.vy*=.975;p.x+=p.vx+Math.sin(t/9+p.ph)*.8;p.y+=p.vy;p.r+=p.vr;
+        ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.globalAlpha=Math.max(0,Math.min(1,(T-t)/30));ctx.fillStyle=p.c;
+        if(p.s===1){ctx.beginPath();ctx.arc(0,0,p.h*.6,0,7);ctx.fill()}
+        else if(p.s===2){ctx.strokeStyle=p.c;ctx.lineWidth=4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-8,0);ctx.quadraticCurveTo(-3,-7,2,0);ctx.quadraticCurveTo(6,7,10,0);ctx.stroke()}
+        else ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h*Math.abs(Math.cos(p.r*1.5))+1);
+        ctx.restore();}
+      if(t<T) this.raf[k]=requestAnimationFrame(step); else ctx.clearRect(0,0,W,H);};
+    cancelAnimationFrame(this.raf[k]); step();
+  }
+  toast(kind){
+    const id=++this.tid;
+    this.setState(s=>({toasts:[...s.toasts.slice(-2),{id,kind,leaving:false}]}));
+    this.later(()=>this.dropToast(id),3000);
+  }
+  dropToast(id){
+    this.setState(s=>({toasts:s.toasts.map(t=>t.id===id?{...t,leaving:true}:t)}));
+    this.later(()=>this.setState(s=>({toasts:s.toasts.filter(t=>t.id!==id)})),220);
+  }
+  runLoad(){clearInterval(this.li);this.setState({load:0});this.li=setInterval(()=>this.setState(s=>{if(s.load>=4){clearInterval(this.li);return null}return {load:s.load+1}}),1100)}
+  holdStart=()=>{if(this.state.bill==='paid')return;const t0=performance.now()-this.state.hold*600;this.setState({bill:'holding'});
+    const tick=()=>{const h=Math.min(1,(performance.now()-t0)/600);this.setState({hold:h});if(h>=1){this.setState({bill:'paid',hold:0});this.burst('bill',false,.3);return}this.hr=requestAnimationFrame(tick)};cancelAnimationFrame(this.hr);tick()};
+  holdEnd=()=>{if(this.state.bill!=='holding')return;cancelAnimationFrame(this.hr);
+    const h0=this.state.hold,t0=performance.now();const drain=()=>{const h=Math.max(0,h0-(performance.now()-t0)/250*h0);this.setState({hold:h,bill:h>0?'holding':'idle'});if(h>0)this.hr=requestAnimationFrame(drain)};drain()};
+  pullDown=e=>{if(this.state.refreshing)return;e.currentTarget.setPointerCapture(e.pointerId);this.py=e.clientY;this.setState({dragging:true})};
+  pullMove=e=>{if(!this.state.dragging)return;const d=Math.max(0,e.clientY-this.py);this.setState({pull:Math.min(120,d*.55)})};
+  pullUp=()=>{if(!this.state.dragging)return;const go=this.state.pull>=70;this.setState({dragging:false,pull:go?76:0,refreshing:go});
+    if(go)this.later(()=>{const n=TXNEW[this.state.fresh%TXNEW.length];this.setState(s=>({refreshing:false,pull:0,fresh:s.fresh+1,txns:[{...n,isNew:true,key:s.fresh},...s.txns.map(x=>({...x,isNew:false}))].slice(0,5),stamp:'Updated just now'}))},1400)};
+  ask(i){if(this.state.typing)return;const a=ASK[i];this.setState(s=>({chat:[...s.chat,{finn:false,text:a.q}].slice(-4)}));
+    this.later(()=>this.setState({typing:true}),300);this.later(()=>this.setState(s=>({typing:false,chat:[...s.chat,{finn:true,text:a.a}].slice(-4)})),2100)}
+  renderVals(){
+    const st=this.state;
+    const sheetAmts=[25,50,100].map(v=>{const on=st.sheetAmt===v,p=PAL.cobalt;return {label:'$'+v,bg:on?p.t:'#fff',bd:on?'1.5px solid '+p.c:'1px solid #D9D4C9',fg:on?p.i:'#14213D',sh:on?'0 2px 0 '+p.c:RAISED,pick:()=>this.setState({sheetAmt:v})}});
+    const gp=st.goalPct, mileKey=st.mile, M=mileKey?MILE[mileKey]:null, wc=gp>=100?PAL.mint:{c:'#9DB8F7'};
+    const billPaid=st.bill==='paid';
+    const pr=Math.min(1,st.pull/70);
+    const doneLoad=st.load>=4;
+    const E=EMPTY[st.emptyTab];
+    return {
+      cvGoal:this.cv.goal,cvBill:this.cv.bill,
+      toasts:st.toasts.map(t=>{const T=TOAST[t.kind];return {...T,undo:!!T.undo,anim:t.leaving?'mk-out .22s ease-in forwards':'mk-drop .36s cubic-bezier(.34,1.4,.64,1)',onUndo:()=>{this.dropToast(t.id);this.later(()=>this.toast('ok'),240)}}}),
+      toastOk:()=>this.toast('ok'),toastWarn:()=>this.toast('warn'),toastErr:()=>this.toast('err'),toastUndo:()=>this.toast('undo'),
+      sheetSaved:money(st.sheetSaved),sheetAmts,sheetAmtFmt:'$'+st.sheetAmt,sheetAfter:money(st.sheetSaved+st.sheetAmt),
+      scrimOp:st.sheet?1:0,scrimPe:st.sheet?'auto':'none',sheetTf:st.sheet?'translateY(0)':'translateY(105%)',
+      openSheet:()=>this.setState({sheet:true}),closeSheet:()=>this.setState({sheet:false}),
+      confirmSheet:()=>this.setState(s=>({sheet:false,sheetSaved:Math.min(2400,s.sheetSaved+s.sheetAmt)})),
+      goalH:gp+'%',goalW1:wc.c+'99',goalW2:wc.c,goalPctLabel:gp+'%',goalSaved:money(gp*24),goalBd:gp>=100?'1.5px solid #22B98A':'1px solid #EDEAE3',
+      goalMarks:[25,50,75,100].map(m=>{const p=PAL[MILE[m].p];return {label:m+'%',bg:gp>=m?p.c:'#F1EEE7',fg:gp>=m?p.i:'#7D8AA0'}}),
+      goalAdd:()=>{if(gp>=100)return;const n=gp+10;const hit=[25,50,75,100].find(m=>gp<m&&n>=m);this.setState({goalPct:n,mile:hit||null});if(hit)this.later(()=>this.burst('goal',hit===100,.3),120)},
+      goalReset:()=>this.setState({goalPct:20,mile:null}),
+      mileShow:!!M,mileClose:()=>this.setState({mile:null}),
+      mileC:M?PAL[M.p].c:'#2563EB',mileT:M?PAL[M.p].t:'#fff',mileI:M?PAL[M.p].i:'#14213D',mileDeg:(mileKey||0)*3.6+'deg',
+      mileHead:mileKey===100?'assets/finn/head-love.png':'assets/finn/head-excited.png',
+      mileTitle:M?M.title:'',mileSub:M?M.sub:'',mileTag:M?M.tag:'',mileCta:M?M.cta:'',
+      spendShow:st.spendShow,spendOpen:st.spend==='open',spendDone:st.spend!=='open',
+      spendBars:[['Aug',30,'#C9D6F5'],['Sep',26,'#C9D6F5'],['Oct 2',32,'#C9D6F5'],['Oct 9',28,'#C9D6F5'],['Avg',29,'#7D8AA0'],['Today',100,'#FF6B57']].map(([l,h,c],i)=>({l,h:h+'%',c,delay:(.25+i*.06).toFixed(2)+'s'})),
+      spendMe:()=>this.setState({spend:'me'}),spendFlag:()=>this.setState({spend:'flag'}),
+      spendDoneBg:st.spend==='me'?'#E1F7EF':'#FFEDE9',spendDoneC:st.spend==='me'?'#137255':'#B23A28',
+      spendDoneText:st.spend==='me'?'Got it. I\u2019ll treat big orders as normal.':'Flagged. I\u2019ll help you dispute it.',
+      spendReplay:()=>{this.setState({spendShow:false,spend:'open'});this.later(()=>this.setState({spendShow:true}),60)},
+      bannerShow:st.banner,billPaid,billUnpaid:!billPaid,
+      billRingC:billPaid?'#22B98A':'#FFB020',billRingDeg:billPaid?'360deg':'256deg',
+      billMeta:billPaid?'Paid today':'Due Friday, Oct 23',
+      holdW:(st.hold*100).toFixed(1)+'%',holdFg:st.hold>.5?'#fff':'#14213D',holdLabel:st.bill==='holding'?'Keep holding\u2026':'Hold to pay $84.20',
+      holdStart:this.holdStart,holdEnd:this.holdEnd,
+      billReset:()=>{this.setState({bill:'idle',hold:0,banner:false});this.later(()=>this.setState({banner:true}),60)},
+      pullPx:st.pull+'px',pullTr:st.dragging?'none':'transform .3s cubic-bezier(.2,.8,.3,1)',
+      pullOp:Math.min(1,st.pull/30),pullScale:(.6+.4*pr).toFixed(3),
+      pullAnim:st.refreshing?'mk-bob .9s ease-in-out infinite':'none',
+      pullHead:st.refreshing?'assets/finn/head-curious.png':pr>=1?'assets/finn/head-excited.png':'assets/finn/head-happy.png',
+      tick1:(10*(1-pr)).toFixed(2),tick2:(8*(1-Math.max(0,(pr-.4)/.6))).toFixed(2),
+      pullDown:this.pullDown,pullMove:this.pullMove,pullUp:this.pullUp,pullStamp:st.refreshing?'Checking\u2026':st.stamp,
+      txns:st.txns.map(x=>({...x,t:'#F1EEE7',i:'#14213D',bg:x.isNew?'#F5FBF8':'#fff',anim:x.isNew?'mk-pop .4s cubic-bezier(.34,1.4,.64,1)':'none'})),
+      skelOn:st.skel,skelOff:!st.skel,
+      skelRows:[['#F1EEE7','#FAF8F3','70%'],['#F1EEE7','#FAF8F3','55%'],['#F1EEE7','#FAF8F3','62%']].map(([a,b,w])=>({a,b,w})),
+      loadedRows:TX0.slice(0,3).map((x,i)=>({...x,t:'#F1EEE7',i:'#14213D',delay:(i*.07+.1).toFixed(2)+'s'})),
+      skelReload:()=>{this.setState({skel:true});this.later(()=>this.setState({skel:false}),1600)},
+      chat:st.chat.map(m=>({...m,jc:m.finn?'flex-start':'flex-end',r:m.finn?'20px 20px 20px 6px':'20px 20px 6px 20px',bg:m.finn?'#fff':'#E8F0FE',bd:m.finn?'1px solid #EDEAE3':'1px solid #E8F0FE'})),
+      typing:st.typing,
+      askChips:ASK.map((a,i)=>({text:a.q,op:st.typing?.5:1,pick:()=>this.ask(i)})),
+      emptyTabs:EMPTY.map((e,i)=>({label:e.label,bg:st.emptyTab===i?'#fff':'transparent',sh:st.emptyTab===i?'0 1px 0 #fff inset,0 2px 4px rgba(20,33,61,.12)':'none',fg:st.emptyTab===i?'#14213D':'#5B6B82',pick:()=>this.setState({emptyTab:i})})),
+      emptyNow:[{...E,t1:PAL[E.a].t,t2:PAL[E.b].t,t3:PAL[E.c].t,c2:PAL[E.b].c,c3:PAL[E.c].c}],
+      loadPct:(st.load/4*100)+'%',
+      loadSteps:LOAD.map((s,i)=>{const done=i<st.load,active=i===st.load,p=PAL[s.p];return {text:doneLoad&&i===3?'Found 3 ways to save':s.text,done,active,c:p.c,op:done||active?1:.45,bg:done?p.c:'#fff',bd:done?'none':'2px solid '+(active?p.c:'#D9D4C9')}}),
+      loadRun:()=>this.runLoad()
+    };
+  }
+}
+</script>
+</body>
+</html>

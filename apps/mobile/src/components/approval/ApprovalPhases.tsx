@@ -1,3 +1,6 @@
+import { HoldToConfirm } from '@/components/feedback/HoldToConfirm';
+import { useConfetti } from '@/components/confetti/ConfettiOverlay';
+import { confettiColors, palette } from '@/theme/palette';
 import type { PendingAction, PendingActionType } from '@finni/shared';
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
@@ -63,7 +66,7 @@ export function ReviewPhase({ action, onApprove, onNotNow }: { action: PendingAc
         </View>
       ) : null}
 
-      <HoldToApprove onApprove={onApprove} onHoldStart={finn.holdSquash} onHoldCancel={finn.release} />
+      {action.type === 'bill_payment' && action.amountCents != null ? <HoldToConfirm amountCents={action.amountCents} onConfirm={onApprove} /> : <HoldToApprove onApprove={onApprove} onHoldStart={finn.holdSquash} onHoldCancel={finn.release} />}
       <Button label="Not now" variant="ghost" onPress={onNotNow} />
     </View>
   );
@@ -124,11 +127,13 @@ export function ExecutedPhase({
 }) {
   const finn = useFinnReaction();
   const { hop } = finn;
+  const burst = useConfetti();
 
   useEffect(() => {
     haptics.success();
     hop();
-  }, [hop]);
+    if (action.type === 'bill_payment') burst({ originY: .3, colors: confettiColors(palette.mint.base) });
+  }, [hop, burst, action.type]);
 
   return (
     <View style={[styles.phase, styles.center]}>
@@ -146,7 +151,7 @@ export function ExecutedPhase({
           <FinnTicks count={3} animated size={28} />
         </View>
       </View>
-      <Text style={styles.done}>Done.</Text>
+      <Text style={styles.done}>{action.type === 'bill_payment' ? 'Paid. One less thing.' : 'Done.'}</Text>
       {action.resultLine ? <Text style={[styles.body, styles.centerText]}>{action.resultLine}</Text> : null}
       <Text style={styles.meta}>
         Confirmation {action.reference ?? `#${action.id.slice(-6).toUpperCase()}`} ·{' '}

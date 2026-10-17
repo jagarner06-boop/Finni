@@ -12,6 +12,8 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { Text, View } from 'react-native';
+import { Button } from '@/components/ui/Button';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -19,6 +21,8 @@ import { queryClient } from '@/api/queries';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { ToastHost } from '@/components/ui/ToastHost';
 import { colors } from '@/theme/tokens';
+import { OnboardingProvider, useOnboarding } from '@/features/onboarding/OnboardingProvider';
+import { ConfettiProvider } from '@/components/confetti/ConfettiOverlay';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,7 +32,11 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <RootNavigator />
+            <OnboardingProvider>
+              <ConfettiProvider>
+                <RootNavigator />
+              </ConfettiProvider>
+            </OnboardingProvider>
             <ToastHost />
             <StatusBar style="dark" />
           </AuthProvider>
@@ -40,8 +48,9 @@ export default function RootLayout() {
 
 function RootNavigator() {
   const { status } = useAuth();
+  const onboarding = useOnboarding();
   const [fontsLoaded, fontError] = useFonts({ Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold, Figtree_700Bold });
-  const ready = (fontsLoaded || !!fontError) && status !== 'loading';
+  const ready = (fontsLoaded || !!fontError) && status !== 'loading' && onboarding.ready;
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
@@ -53,11 +62,15 @@ function RootNavigator() {
   }, [status]);
 
   if (!ready) return null;
+  if (onboarding.loadFailed) return <View style={{ flex: 1, justifyContent: 'center', padding: 24, gap: 20, backgroundColor: colors.canvas }}><Text style={{ color: colors.ink }}>{onboarding.error}</Text><Button label="Try again" onPress={onboarding.retry} /></View>;
 
   const signedIn = status === 'signedIn';
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }}>
-      <Stack.Protected guard={signedIn}>
+      <Stack.Protected guard={signedIn && !onboarding.complete}>
+        <Stack.Screen name="(onboarding)" />
+      </Stack.Protected>
+      <Stack.Protected guard={signedIn && onboarding.complete}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="approve/[id]"

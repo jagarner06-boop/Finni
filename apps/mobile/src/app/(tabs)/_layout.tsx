@@ -1,3 +1,4 @@
+import { FirstAnalysisGate } from '@/components/session/FirstAnalysisGate';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,7 +10,7 @@ import { colors, fonts } from '@/theme/tokens';
 export default function TabsLayout() {
   return (
     <SessionGate>
-      <SignedInTabs />
+      <FirstAnalysisGate><SignedInTabs /></FirstAnalysisGate>
     </SessionGate>
   );
 }

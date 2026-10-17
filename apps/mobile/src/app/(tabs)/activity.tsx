@@ -1,8 +1,11 @@
+import { EmptyState } from '@/components/feedback/EmptyState';
+import { Delayed, Skeleton } from '@/components/feedback/Skeleton';
+import { UnusualSpendCard } from '@/components/feedback/UnusualSpendCard';
 import { Feather } from '@expo/vector-icons';
 import type { LedgerEntry, Nudge } from '@finni/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useActOnNudge, useDismissNudge, useMarkNudgeRead, useNudges, useTransactions } from '@/api/queries';
 import { NudgeItem } from '@/components/activity/NudgeItem';
@@ -61,12 +64,15 @@ export default function ActivityScreen() {
   const fresh = nudges.filter((n) => !n.readAt && !n.resolvedAt);
   const earlier = nudges.filter((n) => n.readAt || n.resolvedAt);
   const unread = nudges.filter((n) => !n.readAt).length;
-  const entries = transactions.data?.entries ?? [];
+  const [search, setSearch] = useState('');
+  const entries = (transactions.data?.entries ?? []).filter(e => !search.trim() || e.title.toLowerCase().includes(search.trim().toLowerCase()) || (Math.abs(e.amountCents) / 100).toFixed(2).includes(search.trim()));
   const filterLabel = accountId ? entries.find((e) => e.accountId === accountId)?.accountLabel : undefined;
 
   const actOn = (n: Nudge) => act.mutate(n.id, { onSuccess: (res) => router.push(`/approve/${res.action.id}`) });
 
-  const item = (n: Nudge) => (
+  const item = (n: Nudge) => !n.resolvedAt && n.rule === 'spending_spike' ? (
+    <UnusualSpendCard key={n.id} title={n.title} body={n.body} amount={n.highlight ?? undefined} onDismiss={() => dismiss.mutateAsync(n.id)} onFlag={() => n.action ? actOn(n) : router.push({ pathname: '/finn', params: { q: `Help me review this alert: ${n.title}` } })} />
+  ) : (
     <NudgeItem
       key={n.id}
       nudge={n}
@@ -121,10 +127,13 @@ export default function ActivityScreen() {
             {fresh.map(item)}
             {earlier.length > 0 && <Text style={styles.section}>Earlier</Text>}
             {earlier.map(item)}
-            {!nudgesQuery.isLoading && nudges.length === 0 && <Text style={styles.empty}>Nothing from Finn right now.</Text>}
+            {nudgesQuery.isLoading && <Delayed><Skeleton /><Skeleton /></Delayed>}
+            {!nudgesQuery.isLoading && nudges.length === 0 && <EmptyState pose="thumbsup" color="mint" title="Nothing needs you." sub="No bills due this week and no odd charges. I'll ping you if that changes." cta="See past activity" onPress={() => switchSegment('transactions')} />}
           </>
         ) : (
           <>
+            <TextInput accessibilityLabel="Search transactions" placeholder="Search transactions" placeholderTextColor={colors.placeholder} value={search} onChangeText={setSearch} style={{ minHeight: 48, borderRadius: 14, paddingHorizontal: 16, backgroundColor: colors.surface, color: colors.ink, fontFamily: fonts.regular, fontSize: 15 }} />
+            {transactions.isLoading && <Delayed><Skeleton /><Skeleton /></Delayed>}
             {accountId && filterLabel && (
               <Pressable
                 accessibilityRole="button"
@@ -145,7 +154,7 @@ export default function ActivityScreen() {
             ))}
             {transactions.isError && <Text style={styles.empty}>Couldn&apos;t load transactions.</Text>}
             {!transactions.isLoading && !transactions.isError && entries.length === 0 && (
-              <Text style={styles.empty}>No transactions yet.</Text>
+              search.trim() ? <EmptyState pose="laptop" color="lilac" title={`No matches for "${search}".`} sub="Try a store name or an amount like 12.50." cta="Clear search" onPress={() => setSearch('')} /> : <Text style={styles.empty}>No transactions yet.</Text>
             )}
           </>
         )}
