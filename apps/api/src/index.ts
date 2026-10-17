@@ -5,6 +5,7 @@ import { checkJwt, getSub } from "./auth.js";
 import { env } from "./env.js";
 import { chatRouter } from "./routes/chat.js";
 import { meRouter } from "./routes/me.js";
+import { moneyRouter } from "./routes/money.js";
 
 const app = express();
 app.use(cors());
@@ -27,6 +28,7 @@ app.get("/whoami", (req, res) => {
 
 app.use(meRouter);
 app.use(chatRouter);
+app.use(moneyRouter);
 
 const onError: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof ZodError) {

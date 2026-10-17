@@ -2,6 +2,8 @@ import { eq } from "drizzle-orm";
 import { db, schema } from "../db/client.js";
 import type { User } from "../db/schema.js";
 import { nessie } from "../nessie/client.js";
+import { alexPlan, openingChecking, type PersonaPlan } from "../seed/personas/alex.js";
+import { seedPersona } from "./seed.js";
 
 export class HttpError extends Error {
   constructor(
@@ -23,23 +25,27 @@ export async function requireUser(sub: string): Promise<User> {
   return user;
 }
 
-// Opening balances. Nessie can't change a balance after creation, so these are the ledger's starting point.
-const OPENING_CHECKING = 1240;
-const OPENING_SAVINGS = 400;
-
-/** Idempotent first-login setup: one Nessie customer + Checking + Savings per Auth0 user. */
-export async function bootstrapUser(sub: string, profile: { firstName?: string; email?: string }): Promise<User> {
-  const existing = await findUserBySub(sub);
-  if (existing) return existing;
-
-  const firstName = profile.firstName?.trim() || "Friend";
+/** A new Nessie customer with Checking + Savings opened so the persona's history lands on its target balances. */
+export async function createPersonaCustomer(firstName: string, plan: PersonaPlan) {
   const customer = await nessie.createCustomer({
     first_name: firstName,
     last_name: "Finni",
     address: { street_number: "1", street_name: "University Ave", city: "Gainesville", state: "FL", zip: "32601" },
   });
-  const checking = await nessie.createAccount(customer._id, { type: "Checking", nickname: "Everyday", rewards: 0, balance: OPENING_CHECKING });
-  const savings = await nessie.createAccount(customer._id, { type: "Savings", nickname: "Rainy Day", rewards: 0, balance: OPENING_SAVINGS });
+  // Nessie balances are fixed at creation; the opening balance is chosen so history lands on the persona's target.
+  const checking = await nessie.createAccount(customer._id, { type: "Checking", nickname: "Everyday", rewards: 0, balance: openingChecking(plan) });
+  const savings = await nessie.createAccount(customer._id, { type: "Savings", nickname: "Rainy Day", rewards: 0, balance: plan.savingsTarget });
+  return { nessieCustomerId: customer._id, checkingAccountId: checking._id, savingsAccountId: savings._id };
+}
+
+/** Idempotent first-login setup: one Nessie customer + Checking + Savings per Auth0 user, then persona seeding in the background. */
+export async function bootstrapUser(sub: string, profile: { firstName?: string; email?: string }): Promise<{ user: User; created: boolean }> {
+  const existing = await findUserBySub(sub);
+  if (existing) return { user: existing, created: false };
+
+  const plan = alexPlan();
+  const firstName = profile.firstName?.trim() || "Friend";
+  const nessieIds = await createPersonaCustomer(firstName, plan);
 
   // A concurrent bootstrap may have won the race; keep the first row.
   const [row] = await db
@@ -48,14 +54,14 @@ export async function bootstrapUser(sub: string, profile: { firstName?: string; 
       auth0Sub: sub,
       email: profile.email ?? null,
       firstName,
-      nessieCustomerId: customer._id,
-      checkingAccountId: checking._id,
-      savingsAccountId: savings._id,
-      personaTemplate: "skeleton",
-      // Persona history seeding (Seed plan) will set this when it finishes; skeleton has no history to seed.
-      seededAt: new Date(),
+      ...nessieIds,
+      personaTemplate: "alex",
     })
     .onConflictDoNothing({ target: schema.users.auth0Sub })
     .returning();
-  return row ?? (await requireUser(sub));
+  if (!row) return { user: await requireUser(sub), created: false };
+
+  // Not awaited: the app polls GET /me until `seeded` flips (seedPersona always sets seededAt).
+  void seedPersona(row, plan);
+  return { user: row, created: true };
 }

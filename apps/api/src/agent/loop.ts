@@ -11,14 +11,17 @@ import { functionDeclarations, runTool, type ToolContext } from "./tools.js";
 const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
 const MAX_TOOL_ROUNDS = 5;
 const HISTORY_TURNS = 20;
+const MAX_RETRY_WAIT_S = 15;
 
 export interface AgentReply {
   text: string;
   mood: Mood;
   cards: Card[];
+  /** Pending actions proposed this turn. */
+  actionIds: string[];
 }
 
-const FALLBACK: AgentReply = { text: "Glub… my brain's a little foggy. Try me again in a sec? 🫧", mood: "worried", cards: [] };
+const FALLBACK = { text: "Glub… my brain's a little foggy. Try me again in a sec? 🫧", mood: "worried" as Mood };
 
 export function parseMood(raw: string): { mood: Mood; text: string } {
   const m = raw.match(/^\s*\[mood:\s*(\w+)\s*\]\s*/i);
@@ -50,14 +53,18 @@ async function generate(contents: Content[], system: string) {
   } catch (err) {
     const status = (err as { status?: number }).status ?? 0;
     if (status !== 429 && status < 500) throw err;
-    await new Promise((r) => setTimeout(r, 1500));
+    // Per-minute 429s say how long to wait ("retry in 12.3s"); daily-quota ones say hours, so give up on those.
+    const retryIn = Number(/retry in ([\d.]+)s/i.exec((err as Error).message)?.[1] ?? 1.5);
+    if (retryIn > MAX_RETRY_WAIT_S || /PerDay/.test((err as Error).message)) throw err;
+    await new Promise((r) => setTimeout(r, retryIn * 1000 + 250));
     return request();
   }
 }
 
 /** One user turn: history + tool loop → Finn's reply with mood and any cards the tools emitted. */
-export async function runAgent(user: User, message: string, opts: { location?: LatLng; useDemoLocation?: boolean } = {}): Promise<AgentReply> {
-  const ctx: ToolContext = { user, cards: [], ...opts };
+export async function runAgent(user: User, message: string, opts: { location?: LatLng } = {}): Promise<AgentReply> {
+  const ctx: ToolContext = { user, cards: [], actionIds: [], location: opts.location };
+  const done = (reply: { text: string; mood: Mood }): AgentReply => ({ ...reply, cards: ctx.cards, actionIds: ctx.actionIds });
   try {
     const [history, accounts] = await Promise.all([loadHistory(user.id), listAccounts(user)]);
     const system = systemPrompt(user, accounts);
@@ -68,8 +75,7 @@ export async function runAgent(user: User, message: string, opts: { location?: L
       const calls = res.functionCalls ?? [];
       if (calls.length === 0 || round === MAX_TOOL_ROUNDS) {
         const raw = res.text ?? "";
-        if (!raw.trim()) return { ...FALLBACK, cards: ctx.cards };
-        return { ...parseMood(raw), cards: ctx.cards };
+        return done(raw.trim() ? parseMood(raw) : FALLBACK);
       }
       // Keep the model's turn verbatim (Gemini 3 needs its thought signatures echoed back).
       contents.push(res.candidates![0].content!);
@@ -80,9 +86,9 @@ export async function runAgent(user: User, message: string, opts: { location?: L
       );
       contents.push({ role: "user", parts: responses });
     }
-    return { ...FALLBACK, cards: ctx.cards };
+    return done(FALLBACK);
   } catch (err) {
     console.error("agent failed", err);
-    return { ...FALLBACK, cards: ctx.cards };
+    return done(FALLBACK);
   }
 }
