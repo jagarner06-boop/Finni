@@ -6,6 +6,7 @@ import { daysUntil } from "../lib/dates.js";
 import { listAccounts } from "../services/accounts.js";
 import { createAction, toApprovalCard } from "../services/actions.js";
 import { findNearbyAtms } from "../services/atms.js";
+import { balanceHistoryChart, incomeVsSpendingChart, spendingBreakdownChart, spendingOverTimeChart, type ChartCard } from "../services/charts.js";
 import { listBills } from "../services/bills.js";
 import { listGoals } from "../services/goals.js";
 import { ownedAccount } from "../services/ownership.js";
@@ -19,6 +20,8 @@ export interface ToolContext {
   cards: Card[];
   /** Pending actions proposed this turn, linked to Finn's reply once it's saved. */
   actionIds: string[];
+  /** Every number (in cents) a tool returned this turn; custom charts may only use these. */
+  seenCents: Set<number>;
 }
 
 interface Tool<A extends z.ZodTypeAny = z.ZodTypeAny> {
@@ -29,9 +32,10 @@ interface Tool<A extends z.ZodTypeAny = z.ZodTypeAny> {
 
 const tool = <A extends z.ZodTypeAny>(t: Tool<A>) => t;
 
-/** One card per type per turn (the model sometimes re-calls a tool); approvals always stack. */
+/** One card per type per turn (the model sometimes re-calls a tool); approvals stack, charts are one per title. */
 function addCard(ctx: ToolContext, card: Card) {
-  const i = card.type === "approval" ? -1 : ctx.cards.findIndex((c) => c.type === card.type);
+  const same = (c: Card) => c.type === card.type && (c.type !== "chart" || card.type !== "chart" || c.title === card.title);
+  const i = card.type === "approval" ? -1 : ctx.cards.findIndex(same);
   if (i >= 0) ctx.cards[i] = card;
   else ctx.cards.push(card);
 }
@@ -164,6 +168,79 @@ export const TOOLS: Record<string, Tool> = {
     },
   }),
 
+  make_chart: tool({
+    declaration: {
+      name: "make_chart",
+      description:
+        "Draw a chart from the user's real data and show it under your reply. Use for 'show me', 'chart', 'graph', 'visualize', 'trend', 'over time'. " +
+        "spending_breakdown = donut by category/merchant; spending_over_time = bars per day (up to 14 days) or week; balance_history = line of the checking balance; income_vs_spending = weekly in vs out bars.",
+      parameters: {
+        type: Type.OBJECT,
+        properties: {
+          chart: { type: Type.STRING, enum: ["spending_breakdown", "spending_over_time", "balance_history", "income_vs_spending"] },
+          days: { type: Type.INTEGER, description: "Look-back window in days (default 30, max 90). 'this week' = 7." },
+          group_by: { type: Type.STRING, enum: ["category", "merchant"], description: "Only for spending_breakdown (default category)." },
+        },
+        required: ["chart"],
+      },
+    },
+    args: z.object({
+      chart: z.enum(["spending_breakdown", "spending_over_time", "balance_history", "income_vs_spending"]),
+      days: days(30),
+      group_by: z.enum(["category", "merchant"]).default("category"),
+    }),
+    run: async (a, ctx) => {
+      const card =
+        a.chart === "spending_breakdown"
+          ? await spendingBreakdownChart(ctx.user, a.days, a.group_by)
+          : a.chart === "spending_over_time"
+            ? await spendingOverTimeChart(ctx.user, a.days)
+            : a.chart === "balance_history"
+              ? await balanceHistoryChart(ctx.user, a.days)
+              : await incomeVsSpendingChart(ctx.user, Math.max(1, Math.ceil(a.days / 7)));
+      addCard(ctx, card);
+      return chartSummary(card);
+    },
+  }),
+
+  make_custom_chart: tool({
+    declaration: {
+      name: "make_custom_chart",
+      description:
+        "Chart other data you already fetched THIS turn with another tool (e.g. bills by amount, goal progress, account balances). " +
+        "Every value must be a number a tool returned this turn. Prefer make_chart when it covers the request.",
+      parameters: {
+        type: Type.OBJECT,
+        properties: {
+          title: { type: Type.STRING },
+          kind: { type: Type.STRING, enum: ["bar", "donut", "line"] },
+          labels: { type: Type.ARRAY, items: { type: Type.STRING } },
+          values: { type: Type.ARRAY, items: { type: Type.NUMBER }, description: "Dollars, one per label." },
+          series_name: { type: Type.STRING },
+        },
+        required: ["title", "kind", "labels", "values"],
+      },
+    },
+    args: z
+      .object({
+        title: z.string().min(1).max(60),
+        kind: z.enum(["bar", "donut", "line"]),
+        labels: z.array(z.string().max(40)).min(1).max(12),
+        values: z.array(z.number().nonnegative()).min(1).max(12),
+        series_name: z.string().max(30).optional(),
+      })
+      .refine((a) => a.labels.length === a.values.length, "labels and values must have the same length"),
+    run: async (a, ctx) => {
+      const valuesCents = a.values.map((v) => Math.round(v * 100));
+      const unknown = a.values.filter((_, i) => !ctx.seenCents.has(valuesCents[i]));
+      if (unknown.length) return { error: `Only chart numbers you got from a tool this turn. Not found: ${unknown.join(", ")}` };
+      const card: ChartCard = { type: "chart", kind: a.kind, title: a.title, labels: a.labels, series: [{ name: a.series_name ?? a.title, valuesCents }] };
+      if (a.kind === "donut") card.totalCents = valuesCents.reduce((s, v) => s + v, 0);
+      addCard(ctx, card);
+      return { charted: true, points: a.labels.length };
+    },
+  }),
+
   propose_transfer: tool({
     declaration: {
       name: "propose_transfer",
@@ -235,6 +312,28 @@ async function propose(ctx: ToolContext, req: Parameters<typeof createAction>[1]
   return { proposed: true, title: action.title, amount: action.amountCents === null ? null : usd(action.amountCents), requiresStepUp: action.requiresStepUp };
 }
 
+/** A few numbers about a chart so Finn can say one sentence about what stands out. */
+function chartSummary(card: ChartCard) {
+  const values = card.series[0].valuesCents;
+  const peak = values.indexOf(Math.max(...values));
+  const sum = (xs: number[]) => usd(xs.reduce((s, v) => s + v, 0));
+  return {
+    title: card.title,
+    kind: card.kind,
+    total: card.totalCents === undefined ? undefined : usd(card.totalCents),
+    biggest: { label: card.labels[peak], amount: usd(values[peak]) },
+    ...(card.kind === "line" ? { start: usd(values[0]), end: usd(values[values.length - 1]) } : {}),
+    ...(card.series[1] ? { totals: { [card.series[0].name]: sum(values), [card.series[1].name]: sum(card.series[1].valuesCents) } } : {}),
+  };
+}
+
+/** Records every number in a tool result (as cents) so make_custom_chart can only plot real data. */
+function recordNumbers(value: unknown, into: Set<number>) {
+  if (typeof value === "number") into.add(Math.round(value * 100));
+  else if (Array.isArray(value)) value.forEach((v) => recordNumbers(v, into));
+  else if (value && typeof value === "object") Object.values(value).forEach((v) => recordNumbers(v, into));
+}
+
 export const functionDeclarations = Object.values(TOOLS).map((t) => t.declaration);
 
 export async function runTool(name: string, rawArgs: unknown, ctx: ToolContext): Promise<unknown> {
@@ -243,7 +342,9 @@ export async function runTool(name: string, rawArgs: unknown, ctx: ToolContext):
   const parsed = t.args.safeParse(rawArgs ?? {});
   if (!parsed.success) return { error: "Invalid arguments", details: parsed.error.flatten() };
   try {
-    return await t.run(parsed.data, ctx);
+    const result = await t.run(parsed.data, ctx);
+    recordNumbers(result, ctx.seenCents);
+    return result;
   } catch (err) {
     console.error(`tool ${name} failed`, err);
     return { error: (err as Error).message };

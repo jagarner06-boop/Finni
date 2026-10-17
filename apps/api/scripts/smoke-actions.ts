@@ -1,6 +1,6 @@
 // Approval flow check without Auth0 or Gemini: fresh seeded user → propose → approve/reject → verify Nessie.
 import type { Request } from "express";
-import { MFA_AT_CLAIM } from "@finni/shared";
+import { ID_TOKEN_HEADER, MFA_AT_CLAIM } from "@finni/shared";
 import { desc, eq } from "drizzle-orm";
 import { requireStepUp } from "../src/auth.js";
 import { db, schema } from "../src/db/client.js";
@@ -46,9 +46,11 @@ check("bill paid", pay.status === "executed" && (await listBills(user)).find((b)
 // Large transfer requires step-up; the route checks the MFA claim.
 const big = await createAction(user, { type: "transfer", fromAccountId: checking.id, toAccountId: savings.id, amountCents: 20000 }, "ui");
 check("$200 transfer requires step-up", big.requiresStepUp);
-const fakeReq = (payload: Record<string, unknown>) => ({ auth: { payload } }) as unknown as Request;
-check("no MFA claim → 403", (await rejects((async () => requireStepUp(fakeReq({})))())) === "step_up_required");
-check("fresh MFA claim passes", (await rejects((async () => requireStepUp(fakeReq({ [MFA_AT_CLAIM]: Math.floor(Date.now() / 1000) })))())) === null);
+const fakeReq = (payload: Record<string, unknown>, headers: Record<string, string> = {}) =>
+  ({ auth: { payload: { sub: user.auth0Sub, ...payload } }, header: (name: string) => headers[name.toLowerCase()] }) as unknown as Request;
+check("no proof → 403", (await rejects(requireStepUp(fakeReq({})))) === "step_up_required");
+check("fresh MFA claim passes", (await rejects(requireStepUp(fakeReq({ [MFA_AT_CLAIM]: Math.floor(Date.now() / 1000) })))) === null);
+check("garbage ID token → 403", (await rejects(requireStepUp(fakeReq({}, { [ID_TOKEN_HEADER]: "not.a.jwt" })))) === "step_up_required");
 check("reject works", (await rejectAction(user, big.id)).status === "rejected");
 
 // Over-balance proposals are refused up front.

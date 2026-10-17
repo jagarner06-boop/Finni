@@ -4,7 +4,9 @@
 export interface AuthHandlers {
   /** Valid access token (refreshed if needed), or null when signed out. */
   getAccessToken: () => Promise<string | null>;
-  /** Re-authenticate with MFA; resolves to the new access token or null if cancelled. */
+  /** Auth0 ID token from the last login (its auth_time proves a recent step-up), or null. */
+  getIdToken: () => Promise<string | null>;
+  /** Re-authenticate (fresh login); resolves to the new access token or null if cancelled. */
   stepUp: () => Promise<string | null>;
   /** Called on a 401: drop the session and go back to Welcome. */
   onUnauthorized: () => void;
@@ -12,6 +14,7 @@ export interface AuthHandlers {
 
 const signedOut: AuthHandlers = {
   getAccessToken: async () => null,
+  getIdToken: async () => null,
   stepUp: async () => null,
   onUnauthorized: () => {},
 };
@@ -26,6 +29,7 @@ export const authBridge = {
     };
   },
   getAccessToken: () => handlers.getAccessToken(),
+  getIdToken: () => handlers.getIdToken(),
   stepUp: () => handlers.stepUp(),
   onUnauthorized: () => handlers.onUnauthorized(),
 };

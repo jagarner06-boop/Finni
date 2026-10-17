@@ -46,6 +46,17 @@ export function CardRenderer({ card }: { card: Card }) {
       return <Rows title={card.note} rows={card.atms.map((a) => [a.id, a.name, a.address, a.distanceMiles != null ? `${a.distanceMiles} mi` : ''])} />;
     case 'approval':
       return <ApprovalCard card={card} />;
+    case 'chart':
+      // Placeholder until the drawn ChartCard lands with the mobile-design merge: one row per point.
+      return (
+        <Rows
+          title={[card.title, card.subtitle].filter(Boolean).join(' · ')}
+          rows={card.labels.map((label, i) => [`${label}-${i}`, label, '', card.series.map((s) => formatCents(s.valuesCents[i] ?? 0)).join(' / ')])}
+        />
+      );
+    default:
+      // Newer API card types render nothing instead of breaking the chat.
+      return null;
   }
 }
 

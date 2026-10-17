@@ -134,6 +134,14 @@ export interface SpendingItem {
   percent: number;
 }
 
+export type ChartKind = 'bar' | 'line' | 'donut';
+
+export interface ChartSeries {
+  name: string;
+  /** One value per label. */
+  valuesCents: Cents[];
+}
+
 export type Card =
   | { type: 'account_list'; accounts: Account[] }
   | { type: 'transaction_list'; title?: string; transactions: Transaction[] }
@@ -164,6 +172,17 @@ export type Card =
       requiresStepUp: boolean;
       status: PendingActionStatus;
       expiresAt: ISODateTime;
+    }
+  | {
+      type: 'chart';
+      kind: ChartKind;
+      title: string;
+      subtitle?: string;
+      /** X-axis labels (bar/line) or slice labels (donut). */
+      labels: string[];
+      /** Donut and line use series[0]; bar may have 2 series (grouped). */
+      series: ChartSeries[];
+      totalCents?: Cents;
     };
 
 export type CardType = Card['type'];

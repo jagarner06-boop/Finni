@@ -82,7 +82,7 @@ export function alexPlan(): PersonaPlan {
       ...[2, 16, 30, 44, 58].map((daysAgo) => ({ amount: 620, daysAgo, description: "Campus job" })),
       ...[5, 35].map((daysAgo) => ({ amount: 250, daysAgo, description: "From Mom 💛" })),
     ],
-    withdrawals: [16, 46].map((daysAgo) => ({ amount: 750, daysAgo, description: "Rent · Gainesville Place" })),
+    withdrawals: [15, 43].map((daysAgo) => ({ amount: 750, daysAgo, description: "Rent · Gainesville Place" })),
     purchases,
     bills: [
       { payee: "Gainesville Place", nickname: "Rent", amount: 750, recurringDay: 1 },

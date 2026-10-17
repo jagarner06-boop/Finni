@@ -43,7 +43,7 @@ const realApi = {
   createAction: (body: CreateActionRequest) =>
     apiFetch<ActionResponse>('/actions', { method: 'POST', body }),
   approveAction: (id: string) =>
-    apiFetch<ActionResponse>(`/actions/${id}/approve`, { method: 'POST' }),
+    apiFetch<ActionResponse>(`/actions/${id}/approve`, { method: 'POST', withIdToken: true }),
   rejectAction: (id: string) =>
     apiFetch<ActionResponse>(`/actions/${id}/reject`, { method: 'POST' }),
 

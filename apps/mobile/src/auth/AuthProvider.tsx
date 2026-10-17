@@ -10,7 +10,6 @@ import {
 } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { jwtDecode } from 'jwt-decode';
-import { MFA_ACR } from '@finni/shared';
 import {
   createContext,
   useCallback,
@@ -192,7 +191,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const stepUp = useCallback(async () => {
     if (config.useMocks) return 'mock-token-mfa';
     if (!discovery) return null;
-    steppingUp.current ??= authorize(discovery, { acr_values: MFA_ACR }, true)
+    // max_age=0 makes Auth0 show the login screen and stamp a fresh auth_time on the ID token,
+    // which the API checks for large approvals.
+    steppingUp.current ??= authorize(discovery, { max_age: '0' }, true)
       .catch(() => null)
       .finally(() => {
         steppingUp.current = null;
@@ -204,6 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () =>
       authBridge.register({
         getAccessToken,
+        getIdToken: async () => tokensRef.current?.idToken ?? null,
         stepUp,
         onUnauthorized: () => void saveTokens(null),
       }),

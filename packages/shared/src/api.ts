@@ -17,6 +17,8 @@ import type {
 
 /** Error code the API returns (403) when an action needs a fresh MFA login. */
 export const STEP_UP_REQUIRED = 'step_up_required';
+/** Header carrying the Auth0 ID token on approvals; its auth_time proves a recent re-login. */
+export const ID_TOKEN_HEADER = 'x-finni-id-token';
 /** Custom access-token claim stamped by the Auth0 post-login Action after MFA. */
 export const MFA_AT_CLAIM = 'https://finni.app/mfa_at';
 /** acr_values the client sends to Auth0 to request MFA. */
