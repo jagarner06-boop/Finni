@@ -11,6 +11,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { entrance, type Entrance } from "@/theme/onboardingMotion";
+import { loopFrame } from '@/theme/onboardingLoops';
 
 export function MotionView({
   effect = "pop",
@@ -29,18 +30,19 @@ export function LoopView({
   fast = false,
   ...props
 }: ViewProps & {
-  kind?: "float" | "bob" | "dot" | "shimmer" | "orbit";
+  kind?: "float" | "bob" | "dot" | "shimmer" | "orbit" | "pulse";
   delay?: number;
   fast?: boolean;
 }) {
   const reduced = useReducedMotion();
-  const phase = useSharedValue(0);
+  const orbitOffset = kind === 'orbit' ? delay / 3200 : 0;
+  const phase = useSharedValue(orbitOffset);
   useEffect(() => {
     if (!reduced)
       phase.value = withDelay(
-        delay,
+        kind === 'orbit' ? 0 : delay,
         withRepeat(
-          withTiming(1, {
+          withTiming(orbitOffset + 1, {
             duration:
               kind === "float"
                 ? 3500
@@ -59,25 +61,20 @@ export function LoopView({
         ),
       );
     return () => cancelAnimation(phase);
-  }, [delay, fast, kind, phase, reduced]);
+  }, [delay, fast, kind, orbitOffset, phase, reduced]);
   const style = useAnimatedStyle(() => {
-    if (reduced) return {};
+    if (reduced) return kind === 'orbit' ? { transform: [{ rotate: `${orbitOffset * 360}deg` }] } : {};
     const p = phase.value;
     if (kind === "shimmer")
       return { transform: [{ translateX: -180 + p * 540 }] };
     if (kind === "orbit") return { transform: [{ rotate: `${p * 360}deg` }] };
-    const y =
-      kind === "float"
-        ? -3 + 3 * Math.cos(p * Math.PI * 2)
-        : kind === "dot"
-          ? p < 0.6
-            ? -4 * Math.sin((p / 0.6) * Math.PI)
-            : 0
-          : -3 * Math.sin(p * Math.PI * 2);
+    if (kind === 'pulse') return { opacity: 0.55 + 0.45 * Math.cos(p * Math.PI * 2) };
+    const { y, rotation } = loopFrame(kind, p);
     return {
+      ...(kind === 'bob' ? { transformOrigin: '50% 90%' } : {}),
       transform: [
         { translateY: y },
-        { rotate: `${kind === "bob" ? -6 * Math.sin(p * Math.PI * 2) : 0}deg` },
+        { rotate: `${rotation}deg` },
       ],
     };
   });

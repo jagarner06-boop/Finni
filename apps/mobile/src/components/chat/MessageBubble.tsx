@@ -5,7 +5,7 @@ import Animated, { Easing, Keyframe, FadeIn, useReducedMotion } from 'react-nati
 import { CardRenderer } from '@/components/cards/CardRenderer';
 import type { BubblePosition } from '@/components/chat/grouping';
 import { FinnAvatar } from '@/components/finn/FinnAvatar';
-import { FinnTyping } from '@/components/finn/FinnTyping';
+import { FinnTyping } from '@/components/feedback/FinnTyping';
 import { colors, fonts, motion, radius, shadow } from '@/theme/tokens';
 
 const AVATAR = 32;
@@ -72,16 +72,7 @@ export function MessageBubble({
 }
 
 export function TypingBubble() {
-  return (
-    <View style={[styles.finnRow, { marginTop: GROUP_GAP }]}>
-      <View style={styles.avatarSlot}>
-        <FinnAvatar mood="thinking" size={AVATAR} />
-      </View>
-      <View style={[styles.bubble, styles.finn, finnCorners('solo')]}>
-        <FinnTyping />
-      </View>
-    </View>
-  );
+  return <FinnTyping />;
 }
 
 // The 6pt corner points at the speaker; grouped bubbles tuck in on the speaker's side.

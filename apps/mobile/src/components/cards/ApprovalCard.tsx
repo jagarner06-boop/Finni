@@ -1,6 +1,7 @@
 import { formatCents, type Card, type PendingActionStatus } from '@finni/shared';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
@@ -19,8 +20,14 @@ const STATUS: Record<Exclude<PendingActionStatus, 'pending'>, { text: string; do
 /** Summary of a proposed money move. Approval itself happens in the approve/[id] sheet. */
 export function ApprovalCard({ card }: { card: Extract<Card, { type: 'approval' }> }) {
   const route = [card.fromLabel, card.toLabel].filter(Boolean).join(' → ');
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (card.status !== 'pending') return;
+    const timer = setTimeout(() => setNow(Date.now()), Math.min(2_147_483_647, Math.max(0, Date.parse(card.expiresAt) - Date.now() + 1)));
+    return () => clearTimeout(timer);
+  }, [card.status, card.expiresAt]);
   // The card saved in chat history keeps saying `pending` after its 15-minute window; don't offer a dead Review.
-  const status = card.status === 'pending' && Date.parse(card.expiresAt) < Date.now() ? 'expired' : card.status;
+  const status = card.status === 'pending' && Date.parse(card.expiresAt) <= now ? 'expired' : card.status;
 
   return (
     <Surface style={styles.card}>
