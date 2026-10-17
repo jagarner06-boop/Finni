@@ -1,4 +1,5 @@
 import * as fallback from '@/components/finn/FinnRiveFallback';
+import { isExpoGo } from '@/lib/runtime';
 import type * as native from '@/components/finn/FinnRiveImpl';
 
 export type { FinnRiveHandle } from '@/components/finn/FinnRiveFallback';
@@ -6,6 +7,8 @@ export type { FinnRiveHandle } from '@/components/finn/FinnRiveFallback';
 // The Rive runtime needs the NitroModules native module. Dev builds have it; Expo Go doesn't, and
 // there loading the runtime throws. Try the real thing once and fall back to static PNG Finn.
 function load(): typeof fallback {
+  // Expo Go: don't even try; the package may import fine and only fail at render.
+  if (isExpoGo) return fallback;
   try {
     return require('@/components/finn/FinnRiveImpl') as typeof native;
   } catch (err) {

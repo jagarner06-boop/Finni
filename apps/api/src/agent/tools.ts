@@ -8,6 +8,9 @@ import { createAction, toApprovalCard } from "../services/actions.js";
 import { findNearbyAtms } from "../services/atms.js";
 import { balanceHistoryChart, incomeVsSpendingChart, spendingBreakdownChart, spendingOverTimeChart, type ChartCard } from "../services/charts.js";
 import { listBills } from "../services/bills.js";
+import { getCardSummary } from "../services/card.js";
+import { planCardPayment } from "../domain/card.js";
+import { listNudges } from "../services/nudges.js";
 import { listGoals } from "../services/goals.js";
 import { ownedAccount } from "../services/ownership.js";
 import { spendingSummary } from "../services/spending.js";
@@ -62,6 +65,55 @@ export const TOOLS: Record<string, Tool> = {
     },
   }),
 
+  get_card: tool({
+    declaration: {
+      name: "get_card",
+      description: "The user's credit card: amount owed, limit, utilization, statement close date, and the payment that gets utilization to 9% before it closes.",
+      parameters: { type: Type.OBJECT, properties: {} },
+    },
+    args: z.object({}),
+    run: async (_a, ctx) => {
+      const card = await getCardSummary(ctx.user);
+      if (!card) return { error: "The user has no credit card." };
+      const accounts = await listAccounts(ctx.user);
+      const checking = accounts.find((a) => a.id === ctx.user.checkingAccountId);
+      const cardAccount = accounts.find((a) => a.id === card.accountId);
+      if (cardAccount) addCard(ctx, { type: "account_list", accounts: [cardAccount] });
+      const plan = planCardPayment({ balanceCents: card.balanceCents, limitCents: card.limitCents, availableCents: checking?.balanceCents ?? 0 });
+      return {
+        nickname: card.nickname,
+        owed: usd(card.balanceCents),
+        limit: usd(card.limitCents),
+        utilization_percent: card.utilization,
+        statement_closes: card.statementCloseDate,
+        days_until_close: card.closesInDays,
+        payment_to_reach_9_percent: plan > 0 ? usd(plan) : null,
+      };
+    },
+  }),
+
+  get_alerts: tool({
+    declaration: {
+      name: "get_alerts",
+      description: "What Finn has noticed: duplicate charges, converted free trials, high utilization, bills due, spending spikes, low balance, goal contributions due. Each has ids for the matching propose_* tool.",
+      parameters: { type: Type.OBJECT, properties: {} },
+    },
+    args: z.object({}),
+    run: async (_a, ctx) => {
+      const open = (await listNudges(ctx.user)).filter((n) => !n.resolvedAt);
+      return {
+        alerts: open.map((n) => ({
+          title: n.title,
+          detail: n.meta,
+          body: n.body,
+          ...(n.action?.type === "propose_dispute" ? { purchase_id: n.action.purchaseId } : {}),
+          ...(n.action?.type === "propose_cancel_subscription" || n.action?.type === "propose_bill_payment" ? { bill_id: n.action.billId } : {}),
+          ...(n.action?.type === "propose_card_payment" ? { suggested_payment: usd(n.action.amountCents) } : {}),
+        })),
+      };
+    },
+  }),
+
   get_recent_purchases: tool({
     declaration: {
       name: "get_recent_purchases",
@@ -85,7 +137,7 @@ export const TOOLS: Record<string, Tool> = {
       return {
         count: all.length,
         total: usd(all.reduce((s, t) => s + t.amountCents, 0)),
-        purchases: shown.map((t) => ({ date: t.date, merchant: t.merchantName, category: t.category, amount: usd(t.amountCents) })),
+        purchases: shown.map((t) => ({ id: t.id, date: t.date, merchant: t.merchantName, category: t.category, amount: usd(t.amountCents) })),
       };
     },
   }),
@@ -280,6 +332,46 @@ export const TOOLS: Record<string, Tool> = {
     run: async (a, ctx) => propose(ctx, { type: "bill_payment", billId: a.bill_id, fromAccountId: a.from_account_id }),
   }),
 
+  propose_card_payment: tool({
+    declaration: {
+      name: "propose_card_payment",
+      description: "Propose paying the credit card from Checking. Leave amount out to use the plan that gets utilization to 9% before the statement closes. Creates an approval card.",
+      parameters: { type: Type.OBJECT, properties: { amount: { type: Type.NUMBER, description: "Whole dollars (optional)." } } },
+    },
+    args: z.object({ amount: z.number().positive().optional() }),
+    run: async (a, ctx) => {
+      let amountCents = a.amount ? Math.round(a.amount) * 100 : 0;
+      if (!amountCents) {
+        const card = await getCardSummary(ctx.user);
+        if (!card) return { error: "The user has no credit card." };
+        const checking = (await listAccounts(ctx.user)).find((x) => x.id === ctx.user.checkingAccountId);
+        amountCents = planCardPayment({ balanceCents: card.balanceCents, limitCents: card.limitCents, availableCents: checking?.balanceCents ?? 0 });
+        if (!amountCents) return { error: `Utilization is already ${card.utilization}% or Checking can't cover a payment right now.` };
+      }
+      return propose(ctx, { type: "card_payment", amountCents });
+    },
+  }),
+
+  propose_dispute: tool({
+    declaration: {
+      name: "propose_dispute",
+      description: "Propose getting a duplicate charge refunded. Call get_alerts first: the duplicate's purchase_id is on its alert. Creates an approval card.",
+      parameters: { type: Type.OBJECT, properties: { purchase_id: { type: Type.STRING } }, required: ["purchase_id"] },
+    },
+    args: z.object({ purchase_id: z.string().min(1) }),
+    run: (a, ctx) => propose(ctx, { type: "dispute_charge", purchaseId: a.purchase_id }),
+  }),
+
+  propose_cancel_subscription: tool({
+    declaration: {
+      name: "propose_cancel_subscription",
+      description: "Propose cancelling a recurring subscription (e.g. a free trial that converted). Get the bill_id from get_bills or get_alerts. Creates an approval card.",
+      parameters: { type: Type.OBJECT, properties: { bill_id: { type: Type.STRING } }, required: ["bill_id"] },
+    },
+    args: z.object({ bill_id: z.string().min(1) }),
+    run: (a, ctx) => propose(ctx, { type: "cancel_subscription", billId: a.bill_id }),
+  }),
+
   propose_goal: tool({
     declaration: {
       name: "propose_goal",
@@ -291,6 +383,8 @@ export const TOOLS: Record<string, Tool> = {
           target_amount: { type: Type.NUMBER, description: "Whole dollars." },
           target_date: { type: Type.STRING, description: "Optional YYYY-MM-DD." },
           icon: { type: Type.STRING, enum: ["sun", "tool", "shield", "home", "book", "gift"], description: "sun = trip, tool = repair, shield = emergency, home, book = school, gift." },
+          cadence: { type: Type.STRING, enum: ["weekly", "biweekly", "monthly"], description: "How often to save, if the user said." },
+          contribution_amount: { type: Type.NUMBER, description: "Whole dollars per cadence, if the user said." },
         },
         required: ["name", "target_amount"],
       },
@@ -300,9 +394,15 @@ export const TOOLS: Record<string, Tool> = {
       target_amount: z.number().positive(),
       target_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
       icon: z.enum(["sun", "tool", "shield", "home", "book", "gift"]).optional(),
+      cadence: z.enum(["weekly", "biweekly", "monthly"]).optional(),
+      contribution_amount: z.number().positive().optional(),
     }),
     run: async (a, ctx) =>
-      propose(ctx, { type: "create_goal", name: a.name, targetCents: Math.round(a.target_amount) * 100, targetDate: a.target_date, icon: a.icon }),
+      propose(ctx, { type: "create_goal", name: a.name, targetCents: Math.round(a.target_amount) * 100, targetDate: a.target_date,
+        icon: a.icon,
+        cadence: a.contribution_amount ? a.cadence : undefined,
+        contributionCents: a.cadence && a.contribution_amount ? Math.round(a.contribution_amount) * 100 : undefined,
+      }),
   }),
 };
 

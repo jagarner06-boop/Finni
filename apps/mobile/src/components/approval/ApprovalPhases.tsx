@@ -1,10 +1,10 @@
-import type { PendingAction } from '@finni/shared';
+import type { PendingAction, PendingActionType } from '@finni/shared';
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, Keyframe, useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 
-import { AMOUNT_LABEL, successLine } from '@/components/approval/copy';
+import { AMOUNT_LABEL } from '@/components/approval/copy';
 import { HoldToApprove } from '@/components/approval/HoldToApprove';
 import { FinnAvatar, type FinnAvatarSize } from '@/components/finn/FinnAvatar';
 import { FinnTicks } from '@/components/finn/FinnTicks';
@@ -21,7 +21,8 @@ import { colors, fonts, motion } from '@/theme/tokens';
 export function ReviewPhase({ action, onApprove, onNotNow }: { action: PendingAction; onApprove: () => void; onNotNow: () => void }) {
   const [whyOpen, setWhyOpen] = useState(false);
   const finn = useFinnReaction();
-  const amount = action.amountCents != null ? splitMoney(action.amountCents) : null;
+  const label = AMOUNT_LABEL[action.type];
+  const amount = label && action.amountCents != null ? splitMoney(action.amountCents) : null;
 
   return (
     <View style={styles.phase}>
@@ -32,7 +33,7 @@ export function ReviewPhase({ action, onApprove, onNotNow }: { action: PendingAc
 
       {amount && (
         <View>
-          <Text style={styles.micro}>{AMOUNT_LABEL[action.type]}</Text>
+          <Text style={styles.micro}>{label}</Text>
           <Text style={styles.amount}>
             {amount.whole}
             <Text style={styles.cents}>{amount.cents}</Text>
@@ -42,8 +43,8 @@ export function ReviewPhase({ action, onApprove, onNotNow }: { action: PendingAc
 
       {(action.fromLabel || action.toLabel) && (
         <View style={styles.details}>
-          {action.fromLabel && <Detail label="From" value={action.fromLabel} />}
-          {action.toLabel && <Detail label="To" value={action.toLabel} />}
+          {action.fromLabel && <Detail label="From" value={action.fromLabel} sub={action.fromDetail} />}
+          {action.toLabel && <Detail label="To" value={action.toLabel} sub={action.toDetail} />}
         </View>
       )}
 
@@ -68,11 +69,14 @@ export function ReviewPhase({ action, onApprove, onNotNow }: { action: PendingAc
   );
 }
 
-function Detail({ label, value }: { label: string; value: string }) {
+function Detail({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <View style={styles.detail}>
       <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={styles.detailValue}>{value}</Text>
+      <View style={styles.detailRight}>
+        <Text style={styles.detailValue}>{value}</Text>
+        {sub ? <Text style={styles.detailSub}>{sub}</Text> : null}
+      </View>
     </View>
   );
 }
@@ -109,7 +113,15 @@ const pop = new Keyframe({
   100: { transform: [{ scale: 1 }], opacity: 1, easing: ease.overshoot },
 }).duration(motion.hero);
 
-export function ExecutedPhase({ action, onDone }: { action: PendingAction; onDone: () => void }) {
+export function ExecutedPhase({
+  action,
+  onDone,
+  onViewActivity,
+}: {
+  action: PendingAction;
+  onDone: () => void;
+  onViewActivity: () => void;
+}) {
   const finn = useFinnReaction();
   const { hop } = finn;
 
@@ -124,16 +136,24 @@ export function ExecutedPhase({ action, onDone }: { action: PendingAction; onDon
         <View style={styles.ticksLeft}>
           <FinnTicks count={3} animated size={28} />
         </View>
-        <Animated.View entering={pop} style={finn.style}>
-          <FinnAvatar mood="celebrating" size={88} />
+        {/* The pop and Finn's hop both use transform, so they sit on separate views. */}
+        <Animated.View entering={pop}>
+          <Animated.View style={finn.style}>
+            <FinnAvatar mood="celebrating" size={88} />
+          </Animated.View>
         </Animated.View>
         <View style={styles.ticksRight}>
           <FinnTicks count={3} animated size={28} />
         </View>
       </View>
       <Text style={styles.done}>Done.</Text>
-      <Text style={[styles.body, styles.centerText]}>{successLine(action)}</Text>
-      <Text style={styles.meta}>Confirmation #{action.id.slice(-6).toUpperCase()} · View in Activity</Text>
+      {action.resultLine ? <Text style={[styles.body, styles.centerText]}>{action.resultLine}</Text> : null}
+      <Text style={styles.meta}>
+        Confirmation {action.reference ?? `#${action.id.slice(-6).toUpperCase()}`} ·{' '}
+        <Text accessibilityRole="link" onPress={onViewActivity} style={styles.link}>
+          View in Activity
+        </Text>
+      </Text>
       <View style={styles.fullWidth}>
         <Button label="Done" onPress={onDone} />
       </View>
@@ -143,7 +163,7 @@ export function ExecutedPhase({ action, onDone }: { action: PendingAction; onDon
 
 // ---------- Failed ----------
 
-export function FailedPhase({ onRetry, onNotNow }: { onRetry: () => void; onNotNow: () => void }) {
+export function FailedPhase({ type, onRetry, onNotNow }: { type: PendingActionType; onRetry: () => void; onNotNow: () => void }) {
   const reduced = useReducedMotion();
   const x = useSharedValue(0);
 
@@ -161,7 +181,9 @@ export function FailedPhase({ onRetry, onNotNow }: { onRetry: () => void; onNotN
       <FinnAvatar mood="worried" size={88} ring />
       <Text style={styles.title}>That didn’t go through.</Text>
       <Text style={[styles.body, styles.centerText]}>
-        Capital One didn’t respond. <Text style={styles.strong}>Nothing was moved.</Text> You can try again now, or Finn will remind you tomorrow.
+        Capital One didn’t respond.{' '}
+        <Text style={styles.strong}>{type === 'cancel_subscription' ? 'Nothing was changed.' : 'Nothing was moved.'}</Text> You can try
+        again now, or Finn will remind you tomorrow.
       </Text>
       <View style={styles.fullWidth}>
         <Button label="Try again" onPress={onRetry} />
@@ -200,12 +222,15 @@ const styles = StyleSheet.create({
   details: { borderTopWidth: 1, borderColor: colors.hairline },
   detail: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderColor: colors.hairline },
   detailLabel: { fontFamily: fonts.regular, fontSize: 14, color: colors.muted },
+  detailRight: { flexShrink: 1, alignItems: 'flex-end', gap: 2 },
   detailValue: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
+  detailSub: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted, fontVariant: ['tabular-nums'] },
   why: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 24 },
   whyLabel: { fontFamily: fonts.semibold, fontSize: 14, color: colors.accent },
   body: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 21, color: colors.muted, marginTop: 6 },
   strong: { fontFamily: fonts.bold, color: colors.ink },
-  meta: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted },
+  meta: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted, textAlign: 'center' },
+  link: { fontFamily: fonts.semibold, color: colors.accent },
   badge: {
     position: 'absolute',
     right: -4,

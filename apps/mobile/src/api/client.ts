@@ -18,7 +18,7 @@ export class ApiError extends Error {
   }
 }
 
-type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 interface RequestOptions {
   method?: Method;
@@ -28,6 +28,8 @@ interface RequestOptions {
   anonymous?: boolean;
   /** Attach the Auth0 ID token (approvals: proves a recent re-login for step-up). */
   withIdToken?: boolean;
+  /** 'auto' runs the step-up on a 403 step_up_required and retries; 'none' throws it to the caller. */
+  stepUp?: 'auto' | 'none';
   signal?: AbortSignal;
 }
 
@@ -83,7 +85,7 @@ async function toError(res: Response): Promise<ApiError> {
 /**
  * Authenticated JSON fetch against the Finni API.
  * - 401 → session is dropped (back to Welcome) and an ApiError is thrown.
- * - 403 step_up_required → runs MFA step-up once, then retries with the new token.
+ * - 403 step_up_required → runs step-up once, then retries with the new token (unless `stepUp: 'none'`).
  */
 export async function apiFetch<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   let token: string | null = null;
@@ -99,7 +101,7 @@ export async function apiFetch<T>(path: string, opts: RequestOptions = {}): Prom
 
   if (res.status === 403) {
     const err = await toError(res);
-    if (!err.isStepUpRequired) throw err;
+    if (!err.isStepUpRequired || opts.stepUp === 'none') throw err;
     const stepped = await authBridge.stepUp();
     if (!stepped) throw err; // user cancelled MFA
     res = await send(path, opts, stepped);

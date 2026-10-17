@@ -1,19 +1,22 @@
 import { Tabs } from 'expo-router';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useSession } from '@/auth/useSession';
+import { ActivityIcon, FinnGlyph, HomeIcon, SettingsIcon } from '@/components/nav/TabIcons';
+import { SessionGate } from '@/components/session/SessionGate';
 import { useNudgeNotifier } from '@/lib/useNudgeNotifier';
 import { colors, fonts } from '@/theme/tokens';
 
 export default function TabsLayout() {
-  const session = useSession();
-
-  if (session.phase !== 'ready') return <SessionLoading phase={session.phase} onRetry={session.retry} />;
-  return <SignedInTabs />;
+  return (
+    <SessionGate>
+      <SignedInTabs />
+    </SessionGate>
+  );
 }
 
 function SignedInTabs() {
   const unread = useNudgeNotifier();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -21,44 +24,51 @@ function SignedInTabs() {
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.muted,
-        tabBarLabelStyle: { fontFamily: fonts.bold },
-        // Icons TBD in the design pass; labels only for now.
-        tabBarIconStyle: { display: 'none' },
+        tabBarLabelStyle: { fontFamily: fonts.semibold, fontSize: 11 },
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopWidth: 1,
+          borderTopColor: colors.hairline,
+          height: Math.max(76, 52 + insets.bottom),
+          elevation: 0,
+          shadowOpacity: 0,
+        },
         sceneStyle: { backgroundColor: colors.canvas },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Chat' }} />
-      <Tabs.Screen name="goals" options={{ title: 'Goals' }} />
-      <Tabs.Screen name="money" options={{ title: 'Money' }} />
       <Tabs.Screen
-        name="inbox"
+        name="index"
+        options={{ title: 'Home', tabBarIcon: ({ color, size }) => <HomeIcon color={String(color)} size={size} /> }}
+      />
+      <Tabs.Screen
+        name="finn"
         options={{
-          title: 'Inbox',
-          tabBarBadge: unread > 0 ? unread : undefined,
-          tabBarBadgeStyle: { backgroundColor: colors.accent },
+          title: 'Finn',
+          tabBarIcon: ({ color, size }) => <FinnGlyph color={String(color)} size={size} />,
+          tabBarAccessibilityLabel: 'Finn, chat with your money buddy',
         }}
       />
+      <Tabs.Screen
+        name="activity"
+        options={{
+          title: 'Activity',
+          tabBarIcon: ({ color, size }) => <ActivityIcon color={String(color)} size={size} />,
+          tabBarBadge: unread > 0 ? unread : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: colors.accent,
+            color: colors.surface,
+            fontFamily: fonts.bold,
+            fontSize: 11,
+            minWidth: 18,
+            height: 18,
+            borderRadius: 9,
+          },
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{ title: 'Settings', tabBarIcon: ({ color, size }) => <SettingsIcon color={String(color)} size={size} /> }}
+      />
     </Tabs>
-  );
-}
-
-// Placeholder for "Finn is setting up your tank…" (design pass).
-function SessionLoading({ phase, onRetry }: { phase: string; onRetry: () => void }) {
-  return (
-    <View className="flex-1 items-center justify-center gap-4 bg-canvas px-6">
-      {phase === 'error' ? (
-        <>
-          <Text className="font-bold text-lg text-ink">Glub… couldn't reach Finn's tank.</Text>
-          <Pressable onPress={onRetry} className="rounded-full bg-accent px-6 py-3">
-            <Text className="font-bold text-white">Try again</Text>
-          </Pressable>
-        </>
-      ) : (
-        <>
-          <ActivityIndicator color={colors.accent} />
-          <Text className="font-regular text-muted">Finn is setting up your tank…</Text>
-        </>
-      )}
-    </View>
   );
 }

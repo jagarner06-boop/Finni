@@ -23,7 +23,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#F3FAFF"
+          "backgroundColor": "#FAF8F3"
         }
       ],
       "expo-image",
@@ -33,7 +33,13 @@
           "locationWhenInUsePermission": "Finn uses your location to find ATMs near you."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Finn uses Face ID to confirm it's you before moving more than $100."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

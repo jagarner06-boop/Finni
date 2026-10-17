@@ -31,3 +31,30 @@ jest.mock('@rive-app/react-native', () => {
     useRiveTrigger: (path: string) => ({ error: null, trigger: () => r.trigger(path) }),
   };
 });
+
+jest.mock('expo-local-authentication', () => ({
+  hasHardwareAsync: jest.fn(() => Promise.resolve(false)),
+  isEnrolledAsync: jest.fn(() => Promise.resolve(false)),
+  authenticateAsync: jest.fn(() => Promise.resolve({ success: true })),
+}));
+
+require('react-native-gesture-handler/jestSetup');
+
+jest.mock('expo-crypto', () => ({
+  randomUUID: () => require('node:crypto').randomUUID(),
+}));
+
+// Uniwind ships untranspiled TS; screens only need the passthrough.
+jest.mock('uniwind', () => ({ withUniwind: (component: unknown) => component }));
+
+// ReanimatedSwipeable mixes worklet and JS callbacks, which the Jest Reanimated mock flags; render children only.
+jest.mock('react-native-gesture-handler/ReanimatedSwipeable', () => {
+  const { forwardRef } = require('react');
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: forwardRef(function Swipeable({ children }: { children: unknown }, _ref: unknown) {
+      return <View>{children}</View>;
+    }),
+  };
+});
