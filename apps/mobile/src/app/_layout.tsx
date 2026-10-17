@@ -19,6 +19,8 @@ import { queryClient } from '@/api/queries';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { ToastHost } from '@/components/ui/ToastHost';
 import { colors } from '@/theme/tokens';
+import { OnboardingProvider } from '@/features/onboarding/OnboardingProvider';
+import { ConfettiProvider } from '@/components/confetti/ConfettiOverlay';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,7 +30,11 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <RootNavigator />
+            <OnboardingProvider>
+              <ConfettiProvider>
+                <RootNavigator />
+              </ConfettiProvider>
+            </OnboardingProvider>
             <ToastHost />
             <StatusBar style="dark" />
           </AuthProvider>
