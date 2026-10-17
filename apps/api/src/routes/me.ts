@@ -8,11 +8,13 @@ import { env } from "../env.js";
 import { resetPersona } from "../services/reset.js";
 import type { User } from "../db/schema.js";
 import { listAccounts } from "../services/accounts.js";
-import { bootstrapUser, findUserBySub, HttpError, requireUser } from "../services/users.js";
+import { bootstrapUser, findUserBySub, HttpError, requireUser, saveProfile } from "../services/users.js";
+
+import { finnProfileSchema } from "../domain/profile.js";
 
 export const meRouter = Router();
 
-const bootstrapBody = z.object({ firstName: z.string().max(60).optional(), email: z.string().email().optional() });
+const bootstrapBody = z.object({ firstName: z.string().max(60).optional(), email: z.string().email().optional(), profile: finnProfileSchema.optional() });
 
 const toMe = async (user: User): Promise<Me> => ({
   id: user.id,
@@ -23,14 +25,15 @@ const toMe = async (user: User): Promise<Me> => ({
 });
 
 meRouter.post("/me/bootstrap", async (req, res) => {
-  const profile = bootstrapBody.parse(req.body ?? {});
+  const body = bootstrapBody.parse(req.body ?? {});
   const sub = getSub(req);
-  // The app sends no body; fill the profile from Auth0, but only on the first call.
+  // Fill identity from Auth0 only on the first call.
   const isNew = !(await findUserBySub(sub));
-  const fromAuth0 = isNew && !profile.firstName && env.AUTH_MODE === "auth0" ? await fetchUserInfo(req) : {};
-  const { user, created } = await bootstrapUser(sub, { ...fromAuth0, ...profile });
-  const body: BootstrapResponse = { me: await toMe(user), created };
-  res.json(body);
+  const fromAuth0 = isNew && !body.firstName && env.AUTH_MODE === "auth0" ? await fetchUserInfo(req) : {};
+  let { user, created } = await bootstrapUser(sub, { ...fromAuth0, firstName: body.firstName ?? fromAuth0.firstName, email: body.email ?? fromAuth0.email });
+  if (body.profile) user = await saveProfile(user.id, body.profile);
+  const response: BootstrapResponse = { me: await toMe(user), created };
+  res.json(response);
 });
 
 // Demo mode: the app confirmed with Face ID on the device; large approvals pass for 5 minutes.

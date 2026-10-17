@@ -4,6 +4,7 @@ import type {
   Bill,
   CardSummary,
   GoalCadence,
+  FinnProfile,
   GoalIcon,
   LedgerEntry,
   Prefs,
@@ -109,6 +110,7 @@ export interface NudgeScanResponse {
 
 export interface BootstrapRequest {
   firstName?: string;
+  profile?: FinnProfile;
 }
 
 export interface HomeResponse {
