@@ -63,7 +63,7 @@ export function toApprovalCard(a: PendingAction): Card {
 
 // ---------- Create ----------
 
-export async function createAction(user: User, req: CreateActionRequest, source: PendingActionSource): Promise<PendingAction> {
+export async function createAction(user: User, req: CreateActionRequest, source: PendingActionSource, opts: { nudgeId?: string } = {}): Promise<PendingAction> {
   let payload: ActionPayload;
   let amountCents: number | null;
 
@@ -126,6 +126,7 @@ export async function createAction(user: User, req: CreateActionRequest, source:
       amountCents,
       requiresStepUp: amountCents !== null && amountCents >= env.STEP_UP_THRESHOLD * 100,
       source,
+      nudgeId: opts.nudgeId ?? null,
       expiresAt: new Date(Date.now() + EXPIRY_MS),
     })
     .returning();

@@ -7,6 +7,7 @@ import { activityRouter } from "./routes/activity.js";
 import { chatRouter } from "./routes/chat.js";
 import { meRouter } from "./routes/me.js";
 import { moneyRouter } from "./routes/money.js";
+import { nudgesRouter } from "./routes/nudges.js";
 
 const app = express();
 app.use(cors());
@@ -31,6 +32,7 @@ app.use(meRouter);
 app.use(chatRouter);
 app.use(moneyRouter);
 app.use(activityRouter);
+app.use(nudgesRouter);
 
 const onError: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof ZodError) {
