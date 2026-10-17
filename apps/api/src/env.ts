@@ -6,7 +6,7 @@ const schema = z.object({
   GEMINI_API_KEY: z.string().min(1),
   GEMINI_MODEL: z.string().default("gemini-3.1-flash-lite"),
   // Tried once when the primary model is overloaded (503) or rate-limited (429).
-  GEMINI_FALLBACK_MODEL: z.string().default("gemini-2.5-flash"),
+  GEMINI_FALLBACK_MODEL: z.string().default("gemini-3.8-flash"),
   AUTH0_DOMAIN: z.string().min(1),
   AUTH0_AUDIENCE: z.string().min(1),
   // demo = any device signs in with `Bearer demo.<deviceId>` (Expo Go, hackathon demos). Never deploy it.

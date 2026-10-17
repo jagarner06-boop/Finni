@@ -14,6 +14,8 @@ function defaultApiUrl(): string {
 }
 
 export const config = {
+  authMode: (process.env.EXPO_PUBLIC_AUTH_MODE === 'auth0' ? 'auth0' : 'demo') as 'demo' | 'auth0',
+  demoName: process.env.EXPO_PUBLIC_DEMO_NAME || undefined,
   apiUrl: (process.env.EXPO_PUBLIC_API_URL || defaultApiUrl()).replace(/\/$/, ''),
   auth0: {
     domain: process.env.EXPO_PUBLIC_AUTH0_DOMAIN || 'dev-qfcvf4rkm3dp8xsh.us.auth0.com',

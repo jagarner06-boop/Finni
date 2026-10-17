@@ -22,7 +22,9 @@ import {
 } from 'react';
 
 import { config } from '@/config';
+import { api } from '@/api/endpoints';
 import { authBridge } from './authBridge';
+import { clearDemoDevice, confirmWithDevice, getDemoToken } from './demoAuth';
 import { tokenStore, type StoredTokens } from './tokenStore';
 
 // Closes the Auth0 popup on web and hands the result back to the opener.
@@ -79,7 +81,59 @@ function toStored(res: TokenResponse, prev?: StoredTokens | null): StoredTokens 
   };
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+/** Expo Go demo: no login. A device id is the identity; Face ID confirms large approvals. */
+function DemoAuthProvider({ children }: { children: ReactNode }) {
+  const [status, setStatus] = useState<AuthStatus>('loading');
+
+  useEffect(() => {
+    let alive = true;
+    getDemoToken().then(() => alive && setStatus('signedIn'));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const getAccessToken = useCallback(() => getDemoToken(), []);
+
+  const stepUp = useCallback(async () => {
+    if (!(await confirmWithDevice())) return null;
+    await api.stepUp();
+    return getDemoToken();
+  }, []);
+
+  const logout = useCallback(async () => {
+    await clearDemoDevice();
+    setStatus('signedOut');
+  }, []);
+
+  // Signed out only after logout; signing in again makes a new device id.
+  const login = useCallback(async () => {
+    await getDemoToken();
+    setStatus('signedIn');
+    return true;
+  }, []);
+
+  useEffect(
+    () =>
+      authBridge.register({
+        getAccessToken,
+        getIdToken: async () => null,
+        stepUp,
+        onUnauthorized: () => setStatus('signedOut'),
+      }),
+    [getAccessToken, stepUp],
+  );
+
+  const value = useMemo<AuthContextValue>(
+    () => ({ status, user: null, ready: true, login, logout, getAccessToken, stepUp }),
+    [status, login, logout, getAccessToken, stepUp],
+  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export const AuthProvider = config.authMode === 'demo' ? DemoAuthProvider : Auth0Provider;
+
+function Auth0Provider({ children }: { children: ReactNode }) {
   const discovery = useAutoDiscovery(`https://${config.auth0.domain}`);
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [user, setUser] = useState<AuthUser | null>(null);

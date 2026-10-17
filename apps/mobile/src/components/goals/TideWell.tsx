@@ -24,7 +24,8 @@ const CREST_PATH = (() => {
 const WATER = `linear-gradient(180deg, ${colors.tideWater[0]}, ${colors.tideWater[1]})`;
 
 /** Tide fill: water rises with the goal; on a rise the crest drifts one half-wavelength and back. */
-export function TideWell({ percent }: { percent: number }) {
+/** `scale` draws the same well larger (goal detail) without changing the wave math. */
+export function TideWell({ percent, scale = 1 }: { percent: number; scale?: number }) {
   const reduced = useReducedMotion();
   const level = useSharedValue(tideHeight(percent, H));
   const drift = useSharedValue(0);
@@ -47,7 +48,7 @@ export function TideWell({ percent }: { percent: number }) {
   const crestStyle = useAnimatedStyle(() => ({ transform: [{ translateX: drift.value - WAVE / 2 }] }));
   const pct = Math.round(Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0)));
 
-  return (
+  const well = (
     <View style={styles.well} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
       <Animated.View style={[styles.water, waterStyle]}>
         {pct > 0 && pct < 100 && (
@@ -59,6 +60,12 @@ export function TideWell({ percent }: { percent: number }) {
         )}
       </Animated.View>
       <Text style={styles.label}>{pct}%</Text>
+    </View>
+  );
+  if (scale === 1) return well;
+  return (
+    <View style={{ width: W * scale, height: H * scale, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ transform: [{ scale }] }}>{well}</View>
     </View>
   );
 }
