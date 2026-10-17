@@ -31,7 +31,8 @@ chatRouter.post("/chat", async (req, res) => {
     .values({ userId: user.id, role: "finn", text: reply.text, mood: reply.mood, cards: reply.cards })
     .returning();
 
-  const body: ChatResponse = { reply: toMessage(finn) };
+  const finnMessage = toMessage(finn);
+  const body: ChatResponse = { reply: finnMessage, cards: finnMessage.cards };
   res.json(body);
 });
 

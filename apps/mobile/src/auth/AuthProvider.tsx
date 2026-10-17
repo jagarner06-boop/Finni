@@ -1,161 +1,230 @@
-import * as AuthSession from 'expo-auth-session';
+import {
+  AuthRequest,
+  Prompt,
+  exchangeCodeAsync,
+  makeRedirectUri,
+  refreshAsync,
+  useAutoDiscovery,
+  type DiscoveryDocument,
+  type TokenResponse,
+} from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { jwtDecode } from 'jwt-decode';
+import { MFA_ACR } from '@finni/shared';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
-import { tokenStore } from './tokenStore';
+import { config } from '@/config';
+import { authBridge } from './authBridge';
+import { tokenStore, type StoredTokens } from './tokenStore';
 
+// Closes the Auth0 popup on web and hands the result back to the opener.
 WebBrowser.maybeCompleteAuthSession();
 
-const DOMAIN = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
-const CLIENT_ID = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID!;
-const AUDIENCE = process.env.EXPO_PUBLIC_AUTH0_AUDIENCE!;
-
-const ACCESS_KEY = 'finni.accessToken';
-const ID_KEY = 'finni.idToken';
-
-const MFA_ACR = 'http://schemas.openid.net/pape/policies/2007/06/multi-factor';
+export type AuthStatus = 'loading' | 'signedOut' | 'signedIn';
 
 export interface AuthUser {
   sub: string;
+  email?: string;
   name?: string;
   givenName?: string;
-  email?: string;
+  picture?: string;
 }
 
 interface AuthContextValue {
-  ready: boolean;
-  accessToken: string | null;
+  status: AuthStatus;
   user: AuthUser | null;
-  redirectUri: string;
-  signIn: () => Promise<void>;
-  /** Re-authenticate with MFA; resolves to the new access token (or null if cancelled). */
+  /** False until Auth0 discovery has loaded; disable the sign-in button until then. */
+  ready: boolean;
+  login: (opts?: { forcePrompt?: boolean }) => Promise<boolean>;
+  logout: () => Promise<void>;
+  getAccessToken: () => Promise<string | null>;
+  /** MFA re-auth for large approvals; resolves to the new access token or null. */
   stepUp: () => Promise<string | null>;
-  signOut: () => Promise<void>;
-  error: string | null;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function decodeJwt(token: string): Record<string, unknown> {
-  const part = token.split('.')[1] ?? '';
-  const b64 = part.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(part.length / 4) * 4, '=');
-  const utf8 = Array.from(atob(b64), (c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
-  return JSON.parse(decodeURIComponent(utf8));
-}
+const SCOPES = ['openid', 'profile', 'email', 'offline_access'];
+const EXPIRY_SKEW_S = 60;
 
-function userFromIdToken(idToken: string | null): AuthUser | null {
+export const redirectUri = makeRedirectUri({ scheme: 'finni' });
+
+const MOCK_USER: AuthUser = { sub: 'mock|alex', email: 'alex@finni.app', name: 'Alex', givenName: 'Alex' };
+
+function userFromIdToken(idToken?: string): AuthUser | null {
   if (!idToken) return null;
   try {
-    const c = decodeJwt(idToken);
-    return { sub: String(c.sub), name: c.name as string, givenName: c.given_name as string, email: c.email as string };
+    const c = jwtDecode<Record<string, string>>(idToken);
+    return { sub: c.sub, email: c.email, name: c.name, givenName: c.given_name, picture: c.picture };
   } catch {
     return null;
   }
 }
 
-function isExpired(accessToken: string): boolean {
-  try {
-    const { exp } = decodeJwt(accessToken) as { exp?: number };
-    return !exp || exp * 1000 < Date.now() + 60_000;
-  } catch {
-    return true;
-  }
+function toStored(res: TokenResponse, prev?: StoredTokens | null): StoredTokens {
+  return {
+    accessToken: res.accessToken,
+    // Refresh responses may omit these; keep the previous ones.
+    idToken: res.idToken ?? prev?.idToken,
+    refreshToken: res.refreshToken ?? prev?.refreshToken,
+    expiresAt: res.issuedAt + (res.expiresIn ?? 3600),
+  };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const discovery = AuthSession.useAutoDiscovery(`https://${DOMAIN}`);
-  const redirectUri = useMemo(() => AuthSession.makeRedirectUri({ scheme: 'finni', path: 'callback' }), []);
-
-  const [ready, setReady] = useState(false);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const discovery = useAutoDiscovery(`https://${config.auth0.domain}`);
+  const [status, setStatus] = useState<AuthStatus>('loading');
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const loginHint = useRef<string | undefined>(undefined);
+  const tokensRef = useRef<StoredTokens | null>(null);
+  // Shared in-flight promises so concurrent callers don't double-refresh or double-prompt.
+  const refreshing = useRef<Promise<string | null> | null>(null);
+  const steppingUp = useRef<Promise<string | null> | null>(null);
 
-  // Restore session on launch.
-  useEffect(() => {
-    (async () => {
-      const [at, it] = await Promise.all([tokenStore.get(ACCESS_KEY), tokenStore.get(ID_KEY)]);
-      if (at && !isExpired(at)) {
-        setAccessToken(at);
-        setUser(userFromIdToken(it));
-      }
-      setReady(true);
-    })();
+  const saveTokens = useCallback(async (tokens: StoredTokens | null) => {
+    tokensRef.current = tokens;
+    if (tokens) {
+      await tokenStore.set(tokens);
+      setUser(userFromIdToken(tokens.idToken));
+      setStatus('signedIn');
+    } else {
+      await tokenStore.clear();
+      setUser(null);
+      setStatus('signedOut');
+    }
   }, []);
 
-  // One authorize + PKCE code exchange; extraParams lets step-up add acr_values/prompt.
+  // Restore the session on launch.
+  useEffect(() => {
+    if (config.useMocks) {
+      setUser(MOCK_USER);
+      setStatus('signedIn');
+      return;
+    }
+    tokenStore.get().then((tokens) => {
+      tokensRef.current = tokens;
+      setUser(userFromIdToken(tokens?.idToken));
+      setStatus(tokens ? 'signedIn' : 'signedOut');
+    });
+  }, []);
+
+  /** Runs the Auth0 Universal Login flow (PKCE) and stores the resulting tokens. */
   const authorize = useCallback(
-    async (extraParams: Record<string, string> = {}) => {
-      if (!discovery) throw new Error('Auth0 discovery not loaded yet');
-      setError(null);
-      const request = new AuthSession.AuthRequest({
-        clientId: CLIENT_ID,
+    async (disc: DiscoveryDocument, extraParams: Record<string, string> = {}, forcePrompt = false) => {
+      const request = new AuthRequest({
+        clientId: config.auth0.clientId,
         redirectUri,
-        scopes: ['openid', 'profile', 'email'],
-        extraParams: { audience: AUDIENCE, ...extraParams },
+        scopes: SCOPES,
+        usePKCE: true,
+        prompt: forcePrompt ? Prompt.Login : undefined,
+        extraParams: { audience: config.auth0.audience, ...extraParams },
       });
-      const result = await request.promptAsync(discovery);
-      if (result.type !== 'success') {
-        if (result.type === 'error') setError(result.error?.message ?? 'Login failed');
-        return null;
-      }
-      const tokens = await AuthSession.exchangeCodeAsync(
+      const result = await request.promptAsync(disc);
+      if (result.type !== 'success') return null;
+
+      const res = await exchangeCodeAsync(
         {
-          clientId: CLIENT_ID,
+          clientId: config.auth0.clientId,
           code: result.params.code,
           redirectUri,
           extraParams: { code_verifier: request.codeVerifier ?? '' },
         },
-        discovery,
+        disc,
       );
-      await tokenStore.set(ACCESS_KEY, tokens.accessToken);
-      if (tokens.idToken) await tokenStore.set(ID_KEY, tokens.idToken);
-      const u = userFromIdToken(tokens.idToken ?? null);
-      loginHint.current = u?.email;
-      setAccessToken(tokens.accessToken);
-      setUser(u);
+      const tokens = toStored(res);
+      await saveTokens(tokens);
       return tokens.accessToken;
     },
-    [discovery, redirectUri],
+    [saveTokens],
   );
 
-  const signIn = useCallback(async () => {
-    try {
-      await authorize();
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }, [authorize]);
+  const login = useCallback(
+    async (opts?: { forcePrompt?: boolean }) => {
+      if (config.useMocks) {
+        setUser(MOCK_USER);
+        setStatus('signedIn');
+        return true;
+      }
+      if (!discovery) return false;
+      return (await authorize(discovery, {}, opts?.forcePrompt)) !== null;
+    },
+    [authorize, discovery],
+  );
+
+  const logout = useCallback(async () => {
+    // Local sign-out only. Use login({ forcePrompt: true }) to switch accounts.
+    await saveTokens(null);
+  }, [saveTokens]);
+
+  const getAccessToken = useCallback(async () => {
+    if (config.useMocks) return 'mock-token';
+    const tokens = tokensRef.current;
+    if (!tokens) return null;
+    if (tokens.expiresAt - EXPIRY_SKEW_S > Date.now() / 1000) return tokens.accessToken;
+    if (!tokens.refreshToken || !discovery) return null;
+
+    refreshing.current ??= refreshAsync(
+      { clientId: config.auth0.clientId, refreshToken: tokens.refreshToken },
+      discovery,
+    )
+      .then(async (res) => {
+        const next = toStored(res, tokens);
+        await saveTokens(next);
+        return next.accessToken;
+      })
+      .catch(() => null)
+      .finally(() => {
+        refreshing.current = null;
+      });
+    return refreshing.current;
+  }, [discovery, saveTokens]);
 
   const stepUp = useCallback(async () => {
-    try {
-      return await authorize({
-        acr_values: MFA_ACR,
-        prompt: 'login',
-        ...(loginHint.current || user?.email ? { login_hint: (loginHint.current ?? user?.email)! } : {}),
+    if (config.useMocks) return 'mock-token-mfa';
+    if (!discovery) return null;
+    steppingUp.current ??= authorize(discovery, { acr_values: MFA_ACR }, true)
+      .catch(() => null)
+      .finally(() => {
+        steppingUp.current = null;
       });
-    } catch (e) {
-      setError((e as Error).message);
-      return null;
-    }
-  }, [authorize, user?.email]);
+    return steppingUp.current;
+  }, [authorize, discovery]);
 
-  const signOut = useCallback(async () => {
-    await Promise.all([tokenStore.remove(ACCESS_KEY), tokenStore.remove(ID_KEY)]);
-    setAccessToken(null);
-    setUser(null);
-  }, []);
+  useEffect(
+    () =>
+      authBridge.register({
+        getAccessToken,
+        stepUp,
+        onUnauthorized: () => void saveTokens(null),
+      }),
+    [getAccessToken, stepUp, saveTokens],
+  );
 
   const value = useMemo<AuthContextValue>(
-    () => ({ ready: ready && !!discovery, accessToken, user, redirectUri, signIn, stepUp, signOut, error }),
-    [ready, discovery, accessToken, user, redirectUri, signIn, stepUp, signOut, error],
+    () => ({
+      status,
+      user,
+      ready: config.useMocks || discovery !== null,
+      login,
+      logout,
+      getAccessToken,
+      stepUp,
+    }),
+    [status, user, discovery, login, logout, getAccessToken, stepUp],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
   return ctx;
