@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+@import 'uniwind';
+
+/* Design tokens (Component Plan 4). Mirror of src/theme/tokens.ts; keep in sync. */
+@theme {
+  --color-deep: #0b2545;
+  --color-muted: #5b6b82;
+  --color-foam: #f3faff;
+  --color-surface: #ffffff;
+  --color-ocean: #2563eb;
+  --color-lagoon: #22c1c3;
+  --color-coral: #ff7a59;
+  --color-sun: #ffc845;
+  --color-kelp: #2fb37f;
+  --color-berry: #e5486a;
+
+  /* RN needs one family name per weight, so weights are separate families. */
+  --font-body: 'Nunito_400Regular';
+  --font-bold: 'Nunito_700Bold';
+  --font-heavy: 'Nunito_800ExtraBold';
+
+  --radius-card: 20px;
+  --radius-bubble: 22px;
+}

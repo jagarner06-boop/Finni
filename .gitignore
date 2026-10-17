@@ -22,3 +22,15 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Planning docs & markdown (root readme.md stays for the public repo / Devpost)
+Plans/
+*.md
+!/readme.md
+
+# AI assistant files
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+AGENTS.md
+graphify-out/

@@ -1,0 +1,13 @@
+{
+  "name": "finni",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "mobile": "npm run start -w @finni/mobile",
+    "mobile:web": "npm run web -w @finni/mobile",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}
