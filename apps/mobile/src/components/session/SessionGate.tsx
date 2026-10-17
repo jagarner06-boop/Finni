@@ -21,15 +21,13 @@ export function SessionGate({ children }: { children: ReactNode }) {
         </>
       ) : (
         <>
-          {/* Hero moment: the one plush Finn on this screen. Multiply hides the placeholder art's background. */}
-          <View style={{ mixBlendMode: 'multiply' }}>
-            <Image
-              accessibilityRole="image"
-              accessibilityLabel="Finn waves"
-              source={FINN_PLUSH.loading}
-              style={{ width: 200, height: 200 }}
-            />
-          </View>
+          {/* Hero moment: the one plush Finn on this screen. */}
+          <Image
+            accessibilityRole="image"
+            accessibilityLabel="Finn waves"
+            source={FINN_PLUSH.loading}
+            style={{ width: 200, height: 200 }}
+          />
           <ActivityIndicator color={colors.accent} />
           <Text className="font-regular text-muted">Finn is getting your accounts ready…</Text>
         </>

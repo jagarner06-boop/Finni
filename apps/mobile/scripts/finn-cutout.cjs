@@ -3,12 +3,15 @@
 //
 //   npm run finn:cutout -- assets/finn/3d            # every .png in a folder, in place
 //   npm run finn:cutout -- a.png b.png --out tmp/    # specific files, written elsewhere
+//   npm run finn:cutout -- assets/finn/plush-*.png --no-pockets   # lit 3D renders (see below)
 //
 // How: flood fill from the image border through "background" pixels only — close to the border's
 // colour AND not warmer than it (the belly is the same brightness but warmer, r−b ≈ 15–20 vs ≈ 8,
 // and sometimes touches the background with no outline). The fill only travels through 5px-wide
 // gaps so it can't leak through hairline breaks in the outline, then cool background pockets
 // (e.g. between a flipper and the tail) are cleared too. Edges get a soft alpha ramp.
+// --no-pockets skips that last step: on lit 3D renders the face highlights are as cool and pale as
+// the background, so they'd be cleared as "pockets" and leave holes in Finn's face.
 const fs = require('fs');
 const path = require('path');
 const { PNG } = require('pngjs');
@@ -19,7 +22,7 @@ const R = 2; // gap rule radius (fill passes only through (2R+1)px-wide backgrou
 const POCKET = 60; // enclosed background patches at least this big are cleared (eye shines are smaller)
 
 /** Returns a new RGBA PNG with the background made transparent. */
-function cutout(src) {
+function cutout(src, { pockets = true } = {}) {
   const { width: w, height: h, data } = src;
   const out = new PNG({ width: w, height: h });
   data.copy(out.data);
@@ -57,7 +60,7 @@ function cutout(src) {
   while (stack.length) for (const q of neighbours(stack.pop())) if (q >= 0 && !filled[q] && open[q]) { filled[q] = 1; stack.push(q); }
 
   const seen = new Uint8Array(w * h);
-  for (let s = 0; s < w * h; s++) {
+  for (let s = 0; pockets && s < w * h; s++) {
     if (!open[s] || filled[s] || seen[s]) continue;
     const members = [s];
     seen[s] = 1;
@@ -90,7 +93,8 @@ if (require.main === module) {
   const args = process.argv.slice(2);
   const outIdx = args.indexOf('--out');
   const outDir = outIdx >= 0 ? args[outIdx + 1] : null;
-  const inputs = args.filter((a, i) => a !== '--out' && (outIdx < 0 || i !== outIdx + 1));
+  const pockets = !args.includes('--no-pockets');
+  const inputs = args.filter((a, i) => !a.startsWith('--') && (outIdx < 0 || i !== outIdx + 1));
   const files = inputs.flatMap((p) => (fs.statSync(p).isDirectory() ? fs.readdirSync(p).filter((f) => f.endsWith('.png')).map((f) => path.join(p, f)) : [p]));
   if (files.length === 0) {
     console.error('Usage: finn-cutout <folder | file.png ...> [--out <dir>]');
@@ -98,7 +102,7 @@ if (require.main === module) {
   }
   if (outDir) fs.mkdirSync(outDir, { recursive: true });
   for (const file of files) {
-    const result = cutout(PNG.sync.read(fs.readFileSync(file)));
+    const result = cutout(PNG.sync.read(fs.readFileSync(file)), { pockets });
     const dest = outDir ? path.join(outDir, path.basename(file)) : file;
     fs.writeFileSync(dest, PNG.sync.write(result, { colorType: 6 }));
     console.log(`cut out ${path.relative(process.cwd(), dest)}`);

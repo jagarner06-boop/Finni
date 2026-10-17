@@ -2,8 +2,7 @@ import type { Mood } from '@finni/shared';
 
 import { HEAD_3D, POSE_3D } from '@/components/finn/art3d';
 
-// Flat Finn art. PNGs are downscaled placeholders (cream background, drawn with
-// multiply) until the transparent re-exports with cobalt ticks land.
+// Finn art. PNGs have transparent backgrounds (made with `npm run finn:cutout`).
 
 export const FINN_HEAD = {
   happy: require('../../../assets/finn/head-happy.png'),
