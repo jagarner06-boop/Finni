@@ -13,7 +13,7 @@ export const settingsRouter = Router();
 
 const patchBody = z.object({
   firstName: z.string().trim().min(1).max(40).optional(),
-  prefs: z.object({ notifications: z.boolean(), hideBalance: z.boolean() }).partial().optional(),
+  prefs: z.object({ notifications: z.boolean(), hideBalance: z.boolean(), monthlySavingsBudgetCents: z.number().int().min(0).max(100_000_000).multipleOf(100).nullable() }).partial().optional(),
 });
 
 const toSettings = async (user: User): Promise<SettingsResponse> => ({

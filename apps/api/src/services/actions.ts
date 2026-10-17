@@ -1,5 +1,5 @@
 import { formatCents, type Account, type Card, type CreateActionRequest, type Goal, type PendingAction, type PendingActionSource, type PendingActionStatus } from "@finni/shared";
-import { and, desc, eq, gt, inArray, lt } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, lt, sql } from "drizzle-orm";
 import { db, schema } from "../db/client.js";
 import type {
   ActionPayload,
@@ -29,6 +29,7 @@ import { scanNudges } from "./nudges.js";
 import { ownedAccount, ownedBill } from "./ownership.js";
 import { listPurchases } from "./transactions.js";
 import { HttpError } from "./users.js";
+import { requireContribution } from './contributions.js';
 
 // Pending actions: the only way money moves. Chat tools and UI buttons create them; nothing touches
 // Nessie until the user approves (and passes step-up MFA for large amounts).
@@ -96,6 +97,7 @@ export async function createAction(user: User, req: CreateActionRequest, source:
 
   switch (req.type) {
     case "transfer": {
+      if (!Number.isSafeInteger(req.amountCents) || req.amountCents % 100 !== 0) throw new HttpError(400, 'invalid_amount', 'Enter a positive amount in whole dollars.');
       amountCents = wholeDollars(req.amountCents);
       if (amountCents <= 0) throw new HttpError(400, "invalid_amount", "Amount must be at least $1");
       if (req.fromAccountId === req.toAccountId) throw new HttpError(400, "same_account", "From and to accounts must differ");
@@ -104,6 +106,7 @@ export async function createAction(user: User, req: CreateActionRequest, source:
       const to = await ownedAccount(user, req.toAccountId, accounts);
       requireFunds(from, amountCents);
       const goalRow = to.isGoal ? await findGoalRow(user, { nessieAccountId: to.id }) : undefined;
+      if (goalRow) await requireContribution(user, from, amountCents);
       payload = {
         fromAccountId: from.id,
         toAccountId: to.id,
@@ -289,6 +292,18 @@ interface Execution {
 const isUniqueViolation = (err: unknown) => (err as { code?: string }).code === "23505" || (err as { cause?: { code?: string } }).cause?.code === "23505";
 
 export async function approveAction(user: User, id: string): Promise<PendingAction> {
+  // Serialize a user's approvals across API processes: two proposals must not spend the same funds/budget.
+  // Try rather than queue, so waiting approvals never exhaust the connection pool.
+  return db.transaction(async (tx) => {
+    const [lock] = await tx.execute<{ locked: boolean }>(sql`select pg_try_advisory_xact_lock(hashtext(${user.id})) as locked`);
+    if (!lock?.locked) throw new HttpError(409, 'approval_in_progress', 'Another approval is finishing. Please try again in a moment.');
+    const fresh = await tx.query.users.findFirst({ where: eq(schema.users.id, user.id) });
+    if (!fresh) throw new HttpError(404, 'user_not_found', 'User not found');
+    return approveActionLocked(fresh, id);
+  });
+}
+
+async function approveActionLocked(user: User, id: string): Promise<PendingAction> {
   // Atomic claim: only one request can move pending → executing, so an action never runs twice.
   // A unique index also stops two different dispute actions for one purchase from both claiming.
   const claim = db
@@ -387,6 +402,9 @@ async function executeTransfer(user: User, row: ActionRow, p: TransferPayload): 
   const to = await ownedAccount(user, p.toAccountId, accounts);
   // Balances may have changed since the proposal.
   if (from.balanceCents < amountCents) throw new Error(`Not enough in ${from.nickname} (${formatCents(from.balanceCents)})`);
+
+  const destinationGoal = await findGoalRow(user, { nessieAccountId: to.id });
+  if (destinationGoal) await requireContribution(user, from, amountCents);
 
   const moved = await moveMoney({ fromAccountId: from.id, toAccountId: to.id, amountCents, fromLabel: from.nickname, toLabel: to.nickname, ref: row.id });
   const ref = `${moved.withdrawalId},${moved.depositId}`;
