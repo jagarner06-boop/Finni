@@ -76,7 +76,7 @@ const full: HomeResponse = {
 };
 
 function wrap(ui: ReactNode) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { retry: false, gcTime: Infinity } } });
   return <QueryClientProvider client={client}>{ui}</QueryClientProvider>;
 }
 
