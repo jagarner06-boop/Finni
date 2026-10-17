@@ -1,76 +1,117 @@
 import type { ChatMessage } from '@finni/shared';
-import { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, type TextInput } from 'react-native';
 import { LayoutAnimationConfig } from 'react-native-reanimated';
 
-import { useChatHistory, useSendChat } from '@/api/queries';
+import { useChatHistory, useMe, useScanNudges, useSendChat } from '@/api/queries';
 import { AgentHeader } from '@/components/chat/AgentHeader';
+import { Composer } from '@/components/chat/Composer';
 import { groupPositions } from '@/components/chat/grouping';
 import { MessageBubble, TypingBubble } from '@/components/chat/MessageBubble';
-import { Button } from '@/components/ui/Button';
+import { SuggestionChips } from '@/components/chat/SuggestionChips';
 import { SafeAreaView } from '@/components/ui/SafeAreaView';
-import { colors, fonts, radius } from '@/theme/tokens';
+import { showToast } from '@/lib/toast';
+import { colors, fonts } from '@/theme/tokens';
 
-// Agent: chat with Finn. Expressive element: the 64pt Finn header. Composer redesign comes later.
-export default function ChatScreen() {
+/** Mirrors the server's DEFAULT_CHIPS for the local greeting. */
+const DEFAULT_CHIPS = ['What’s due?', 'Check charges', 'How’s my card?'];
+
+const local = (id: string, role: ChatMessage['role'], text: string, chips: string[] = []): ChatMessage => ({
+  id,
+  role,
+  text,
+  mood: role === 'finn' ? 'happy' : null,
+  cards: [],
+  chips,
+  createdAt: new Date().toISOString(),
+});
+
+// Finn: chat with your money buddy. Expressive element: the 64pt Finn header.
+export default function FinnScreen() {
+  const params = useLocalSearchParams<{ focus?: string; q?: string }>();
   const history = useChatHistory();
+  const me = useMe();
   const send = useSendChat();
+  const scan = useScanNudges();
   const [draft, setDraft] = useState('');
   const scroll = useRef<ScrollView>(null);
+  const input = useRef<TextInput>(null);
+  const sentQuery = useRef<string | null>(null);
 
   const messages = history.data?.messages ?? [];
-  // Show the user's message right away while Finn thinks.
-  const pending: ChatMessage | null = send.isPending
-    ? { id: 'pending', role: 'user', text: send.variables ?? '', mood: null, cards: [], chips: [], createdAt: new Date().toISOString() }
-    : null;
-  const shown = pending ? [...messages, pending] : messages;
+  const greeting =
+    history.isSuccess && messages.length === 0
+      ? local('greeting', 'finn', `Hi ${me.data?.firstName ?? 'there'}. Ask me about your card, bills, or goals.`, DEFAULT_CHIPS)
+      : null;
+  // The user's message shows right away while Finn thinks, and stays (marked) if it didn't send.
+  const outgoing = (send.isPending || send.isError) && send.variables ? local('outgoing', 'user', send.variables) : null;
+  const shown = [...(greeting ? [greeting] : []), ...messages, ...(outgoing ? [outgoing] : [])];
   const positions = groupPositions(shown);
-  const replyMood = messages.findLast((m) => m.role === 'finn')?.mood ?? 'happy';
+  const lastFinn = [...(greeting ? [greeting] : []), ...messages].findLast((m) => m.role === 'finn');
+  const replyMood = lastFinn?.mood ?? 'happy';
+
+  const sendText = (text: string) => {
+    const message = text.trim();
+    if (!message || send.isPending) return;
+    send.mutate(message);
+  };
 
   const submit = () => {
-    const text = draft.trim();
-    if (!text || send.isPending) return;
+    if (!draft.trim() || send.isPending) return;
+    sendText(draft);
     setDraft('');
-    send.mutate(text);
   };
+
+  // ?focus=1 puts the keyboard up; ?q= asks once. Clear them so returning to the tab doesn't repeat.
+  useEffect(() => {
+    if (params.focus !== '1') return;
+    input.current?.focus();
+    router.setParams({ focus: undefined });
+  }, [params.focus]);
+
+  useEffect(() => {
+    const q = params.q?.trim();
+    if (!q || sentQuery.current === q) return;
+    sentQuery.current = q;
+    send.mutate(q);
+    router.setParams({ q: undefined });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- send once per new ?q=
+  }, [params.q]);
+
+  // Demo trigger: long-press Finn to run the nudge scan.
+  const checkAccounts = () =>
+    scan.mutate(undefined, { onSuccess: () => showToast('Finn checked your accounts.') });
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
-      <AgentHeader sending={send.isPending} replyMood={replyMood} />
+      <Pressable onLongPress={checkAccounts} accessibilityHint="Long press to have Finn check your accounts">
+        <AgentHeader sending={send.isPending} replyMood={replyMood} />
+      </Pressable>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           ref={scroll}
           style={styles.flex}
           contentContainerStyle={styles.list}
           onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}
-          keyboardShouldPersistTaps="handled"
-        >
-          {shown.length === 0 && (
-            <Text style={styles.empty}>{history.isLoading ? 'Loading…' : 'Say hi to Finn. Try “How much money do I have?”'}</Text>
-          )}
+          keyboardShouldPersistTaps="handled">
+          {history.isLoading && <Text style={styles.empty}>Loading…</Text>}
           {/* History renders in place; only messages that arrive later animate in. */}
           <LayoutAnimationConfig skipEntering>
             {shown.map((m, i) => (
-              <MessageBubble key={m.id} message={m} position={positions[i]} />
+              <MessageBubble
+                key={m.id}
+                message={m}
+                position={positions[i]}
+                onRetry={m.id === 'outgoing' && send.isError ? () => sendText(m.text) : undefined}
+              />
             ))}
           </LayoutAnimationConfig>
           {send.isPending && <TypingBubble />}
-          {send.isError && <Text style={styles.error}>Couldn’t reach Finn. Try again?</Text>}
         </ScrollView>
 
-        <View style={styles.composer}>
-          <TextInput
-            style={styles.input}
-            value={draft}
-            onChangeText={setDraft}
-            placeholder="Ask Finn"
-            placeholderTextColor={colors.placeholder}
-            onSubmitEditing={submit}
-            returnKeyType="send"
-            editable={!send.isPending}
-          />
-          <Button label="Send" size="sm" onPress={submit} disabled={!draft.trim() || send.isPending} />
-        </View>
+        {!send.isPending && <SuggestionChips chips={lastFinn?.chips ?? []} onPick={sendText} />}
+        <Composer ref={input} value={draft} onChange={setDraft} onSend={submit} sending={send.isPending} />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -81,27 +122,4 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   list: { paddingHorizontal: 20, paddingBottom: 16, paddingTop: 4 },
   empty: { textAlign: 'center', color: colors.muted, fontFamily: fonts.regular, fontSize: 14, marginTop: 40 },
-  error: { textAlign: 'center', color: colors.dangerInk, fontFamily: fonts.semibold, fontSize: 12, marginTop: 8 },
-  composer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderColor: colors.hairline,
-    backgroundColor: colors.surface,
-  },
-  input: {
-    flex: 1,
-    borderRadius: radius.bubble,
-    borderWidth: 1,
-    borderColor: colors.hairline,
-    backgroundColor: colors.canvas,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 16,
-    fontFamily: fonts.regular,
-    color: colors.ink,
-  },
 });

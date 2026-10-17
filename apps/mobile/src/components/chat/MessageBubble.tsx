@@ -1,5 +1,5 @@
 import type { ChatMessage } from '@finni/shared';
-import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 
 import { CardRenderer } from '@/components/cards/CardRenderer';
@@ -27,13 +27,29 @@ const finnIn = new Keyframe({
 
 const grouped = (p: BubblePosition) => p === 'middle' || p === 'last';
 
-export function MessageBubble({ message, position = 'solo' }: { message: ChatMessage; position?: BubblePosition }) {
+export function MessageBubble({
+  message,
+  position = 'solo',
+  onRetry,
+}: {
+  message: ChatMessage;
+  position?: BubblePosition;
+  /** Set on a user message that didn't send; shows "Not sent · Retry". */
+  onRetry?: () => void;
+}) {
   const spacing = { marginTop: grouped(position) ? GROUPED_GAP : GROUP_GAP };
 
   if (message.role === 'user') {
     return (
-      <Animated.View entering={userIn} style={[styles.bubble, styles.user, userCorners(position), spacing]}>
-        <Text style={styles.text}>{message.text}</Text>
+      <Animated.View entering={userIn} style={[styles.userColumn, spacing]}>
+        <View style={[styles.bubble, styles.user, userCorners(position)]}>
+          <Text style={styles.text}>{message.text}</Text>
+        </View>
+        {onRetry && (
+          <Pressable accessibilityRole="button" hitSlop={10} onPress={onRetry}>
+            <Text style={styles.failed}>Not sent · Retry</Text>
+          </Pressable>
+        )}
       </Animated.View>
     );
   }
@@ -78,7 +94,9 @@ function userCorners(p: BubblePosition): ViewStyle {
 
 const styles = StyleSheet.create({
   bubble: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: radius.bubble },
-  user: { alignSelf: 'flex-end', backgroundColor: colors.accentTint, maxWidth: '78%' },
+  userColumn: { alignSelf: 'flex-end', alignItems: 'flex-end', gap: 4, maxWidth: '78%' },
+  user: { backgroundColor: colors.accentTint },
+  failed: { fontFamily: fonts.semibold, fontSize: 12, color: colors.dangerInk },
   finn: { alignSelf: 'flex-start', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairline, boxShadow: shadow.card },
   text: { color: colors.ink, fontFamily: fonts.regular, fontSize: 16, lineHeight: 22 },
   finnRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, maxWidth: '92%' },
