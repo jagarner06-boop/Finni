@@ -131,6 +131,7 @@ export const TOOLS: Record<string, Tool> = {
           body: n.body,
           ...(n.action?.type === "propose_dispute" ? { purchase_id: n.action.purchaseId } : {}),
           ...(n.action?.type === "propose_cancel_subscription" || n.action?.type === "propose_bill_payment" ? { bill_id: n.action.billId } : {}),
+          ...(n.action?.type === "propose_transfer" ? { transfer: { from_account_id: n.action.fromAccountId, to_account_id: n.action.toAccountId, amount: usd(n.action.amountCents) } } : {}),
           ...(n.action?.type === "propose_card_payment" ? { suggested_payment: usd(n.action.amountCents) } : {}),
         })),
       };
