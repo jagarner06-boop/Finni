@@ -74,6 +74,7 @@ export function paydayLabels(schedule: PaySchedule, now = new Date()): string[] 
 
 const STYLE_IDS = ["fresh_start", "free_spirit", "steady", "planner"] as const;
 export function toFinnProfile(p: OnboardingProfile, now = new Date()): FinnProfile {
-  return { lifeStage: p.lifeStage, paySchedule: p.paySchedule, nextPayday: paydayDates(p.paySchedule, now)[p.nextPayday],
+  const reference = p.paydayReferenceDate ? new Date(`${p.paydayReferenceDate}T00:00:00`) : now;
+  return { lifeStage: p.lifeStage, paySchedule: p.paySchedule, nextPayday: paydayDates(p.paySchedule, reference)[p.nextPayday],
     style: STYLE_IDS[p.habits.filter((a) => a === "a").length], handsOn: p.handsOn };
 }

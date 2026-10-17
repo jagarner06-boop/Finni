@@ -1,5 +1,5 @@
 import type { CreateActionRequest, Nudge, PendingAction } from "@finni/shared";
-import { and, asc, desc, eq, gt, isNull, isNotNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNull, isNotNull, or, sql } from "drizzle-orm";
 import { db, schema } from "../db/client.js";
 import type { NudgeRow, User } from "../db/schema.js";
 import { cadenceLabel } from "../domain/goals.js";
@@ -51,23 +51,36 @@ export async function scanNudges(user: User): Promise<{ created: number }> {
   const checking = accounts.find((a) => a.id === user.checkingAccountId) ?? null;
   const candidates = buildNudges({ today: isoDay(), card, checking, bills, purchases, refunded, goals, forecast, savings: accounts.find((a) => a.id === user.savingsAccountId) ?? null });
 
-  const inserted = candidates.length
+  const other = candidates.filter((c) => c.rule !== "cash_short");
+  const inserted = other.length
     ? await db
         .insert(schema.nudges)
-        .values(candidates.map((c) => ({ ...c, userId: user.id })))
+        .values(other.map((c) => ({ ...c, userId: user.id })))
         .onConflictDoNothing({ target: [schema.nudges.userId, schema.nudges.dedupeKey] })
         .returning({ id: schema.nudges.id })
     : [];
+
+  // The same paycheck window can change or recur; refresh its cover and reopen a resolved warning.
+  const cash = candidates.find((c) => c.rule === "cash_short");
+  let cashCreated = 0;
+  if (cash) {
+    const previous = await db.query.nudges.findFirst({ where: and(eq(schema.nudges.userId, user.id), eq(schema.nudges.dedupeKey, cash.dedupeKey)) });
+    await db.insert(schema.nudges).values({ ...cash, userId: user.id }).onConflictDoUpdate({
+      target: [schema.nudges.userId, schema.nudges.dedupeKey],
+      set: { ...cash, resolvedAt: null, ...(previous?.resolvedAt ? { readAt: null, dismissedAt: null, notifiedAt: null, createdAt: new Date() } : {}) },
+    });
+    if (!previous) cashCreated = 1;
+  }
 
   const live = new Set(candidates.map((c) => c.dedupeKey));
   const open = await db
     .select({ id: schema.nudges.id, dedupeKey: schema.nudges.dedupeKey })
     .from(schema.nudges)
-    .where(and(eq(schema.nudges.userId, user.id), isNull(schema.nudges.resolvedAt), isNotNull(schema.nudges.action)));
+    .where(and(eq(schema.nudges.userId, user.id), isNull(schema.nudges.resolvedAt), or(isNotNull(schema.nudges.action), eq(schema.nudges.rule, "cash_short"))));
   for (const n of open) if (!live.has(n.dedupeKey)) await db.update(schema.nudges).set({ resolvedAt: new Date() }).where(eq(schema.nudges.id, n.id));
 
   await db.update(schema.users).set({ lastNudgeScanAt: new Date() }).where(eq(schema.users.id, user.id));
-  return { created: inserted.length };
+  return { created: inserted.length + cashCreated };
 }
 
 /** Undismissed nudges: open ones first, then by severity, newest first. Scans first when the last scan is stale. */
@@ -95,14 +108,26 @@ export async function markNudge(user: User, id: string, field: "readAt" | "notif
 
 /** The approval a nudge's button opens. Tapping twice returns the same pending action. */
 export async function actOnNudge(user: User, id: string): Promise<PendingAction> {
-  const nudge = await ownedNudge(user, id);
+  let nudge = await ownedNudge(user, id);
+  if (nudge.rule === "cash_short") {
+    await scanNudges(user);
+    nudge = await ownedNudge(user, id);
+  }
   if (!nudge.action) throw new HttpError(409, "nudge_not_actionable", "Nothing to do for this one");
   if (nudge.resolvedAt) throw new HttpError(409, "nudge_resolved", "This is already taken care of");
 
   const existing = await db.query.pendingActions.findFirst({
     where: and(eq(schema.pendingActions.nudgeId, id), eq(schema.pendingActions.status, "pending"), gt(schema.pendingActions.expiresAt, new Date())),
   });
-  if (existing) return toPendingAction(existing);
+  if (existing) {
+    const a = nudge.action;
+    const staleCover = nudge.rule === "cash_short" && a.type === "propose_transfer" &&
+      (existing.amountCents !== a.amountCents || (existing.payload as { fromAccountId?: string }).fromAccountId !== a.fromAccountId || (existing.payload as { toAccountId?: string }).toAccountId !== a.toAccountId);
+    if (!staleCover) return toPendingAction(existing);
+    const expired = await db.update(schema.pendingActions).set({ status: "expired" })
+      .where(and(eq(schema.pendingActions.id, existing.id), eq(schema.pendingActions.status, "pending"))).returning({ id: schema.pendingActions.id });
+    if (!expired.length) throw new HttpError(409, "action_in_progress", "The earlier transfer is being approved. Refresh before trying again.");
+  }
 
   const a = nudge.action;
   let req: CreateActionRequest;

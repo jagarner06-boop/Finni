@@ -1,3 +1,4 @@
+import { toFinnProfile } from "../logic";
 import {
   loadOnboarding,
   saveOnboarding,
@@ -50,4 +51,20 @@ it("restarts safely after corrupted or missing saved profile", async () => {
   expect((await loadOnboarding(store)).complete).toBe(false);
   store.data.set("finni.onboarding.v1", "{}");
   expect((await loadOnboarding(store)).complete).toBe(false);
+});
+
+it("keeps the selected payday after a later app launch", async () => {
+  jest.useFakeTimers().setSystemTime(new Date(2026, 9, 17));
+  try {
+    const store = memory();
+    await saveOnboarding(store, { ...initialProfile(), nextPayday: 0 });
+    const { profile } = await loadOnboarding(store);
+    expect(toFinnProfile(profile, new Date(2026, 9, 24)).nextPayday).toBe("2026-10-23");
+  } finally { jest.useRealTimers(); }
+});
+it("retains the reference date from the payday selection", async () => {
+  const store = memory();
+  await saveOnboarding(store, { ...initialProfile(), paydayReferenceDate: "2026-10-17" });
+  const { profile } = await loadOnboarding(store);
+  expect(toFinnProfile(profile, new Date(2026, 10, 1)).nextPayday).toBe("2026-10-23");
 });
