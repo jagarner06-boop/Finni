@@ -9,6 +9,7 @@ import { listAccounts } from "./accounts.js";
 import { createAction, toPendingAction } from "./actions.js";
 import { refundedPurchaseIds } from "./activity.js";
 import { listBills } from "./bills.js";
+import { getCashflow } from "./cashflow.js";
 import { getCardSummary } from "./card.js";
 import { findGoalRow, listGoals } from "./goals.js";
 import { listPurchases } from "./transactions.js";
@@ -38,16 +39,17 @@ export const toNudge = (r: NudgeRow): Nudge => ({
 });
 
 export async function scanNudges(user: User): Promise<{ created: number }> {
-  const [card, accounts, bills, purchases, refunded, goals] = await Promise.all([
+  const [card, accounts, bills, purchases, refunded, goals, forecast] = await Promise.all([
     getCardSummary(user),
     listAccounts(user),
     listBills(user),
     listPurchases(user, { days: 60 }),
     refundedPurchaseIds(user),
     listGoals(user),
+    getCashflow(user),
   ]);
   const checking = accounts.find((a) => a.id === user.checkingAccountId) ?? null;
-  const candidates = buildNudges({ today: isoDay(), card, checking, bills, purchases, refunded, goals });
+  const candidates = buildNudges({ today: isoDay(), card, checking, bills, purchases, refunded, goals, forecast, savings: accounts.find((a) => a.id === user.savingsAccountId) ?? null });
 
   const inserted = candidates.length
     ? await db
@@ -105,6 +107,9 @@ export async function actOnNudge(user: User, id: string): Promise<PendingAction>
   const a = nudge.action;
   let req: CreateActionRequest;
   switch (a.type) {
+    case "propose_transfer":
+      req = { type: "transfer", fromAccountId: a.fromAccountId, toAccountId: a.toAccountId, amountCents: a.amountCents, reason: "Cover upcoming bills" };
+      break;
     case "propose_bill_payment":
       req = { type: "bill_payment", billId: a.billId };
       break;

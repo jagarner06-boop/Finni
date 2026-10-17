@@ -12,6 +12,7 @@ export const actionStatusEnum = pgEnum("action_status", ["pending", "executing",
 export const actionSourceEnum = pgEnum("action_source", ["chat", "ui", "nudge"]);
 export const roleEnum = pgEnum("chat_role", ["user", "finn"]);
 export const nudgeRuleEnum = pgEnum("nudge_rule", [
+  "cash_short",
   "bill_due",
   "spending_spike",
   "goal_milestone",

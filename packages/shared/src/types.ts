@@ -154,6 +154,7 @@ export interface PendingAction {
 }
 
 export type NudgeRule =
+  | 'cash_short'
   | 'bill_due'
   | 'spending_spike'
   | 'goal_milestone'
@@ -168,6 +169,7 @@ export type NudgeSeverity = 'danger' | 'warning' | 'info';
 export type NudgeFace = 'surprised' | 'skeptical';
 
 export type NudgeAction =
+  | { type: 'propose_transfer'; fromAccountId: string; toAccountId: string; amountCents: Cents; label: string }
   | { type: 'propose_bill_payment'; billId: string; label: string }
   | { type: 'propose_card_payment'; amountCents: Cents; label: string }
   | { type: 'propose_dispute'; purchaseId: string; label: string }
