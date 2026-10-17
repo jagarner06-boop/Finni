@@ -37,3 +37,10 @@ export const neutral = {
 // Confetti colors = [deck/card color x2, deck color at 60% alpha, cobalt, cream]
 export const confettiColors = (base: string) =>
   [base, base, base + '99', '#2563EB', neutral.confettiCream] as const;
+
+export const onboardingVisual = {
+  personalityGradient: 'linear-gradient(135deg, #9487F7, #6152DE)',
+  personalityShadow: 'inset 0 1px 0 rgba(255,255,255,.25), 0 3px 0 #4A3CB8, 0 18px 30px -14px rgba(124,108,242,.5)',
+  presetGradient: 'linear-gradient(180deg, #FFFBF0, #FFF1CC)',
+  selectedHabitShadow: '0 3px 0 #5A4BD0, 0 8px 16px -8px rgba(124,108,242,.6)',
+} as const;
