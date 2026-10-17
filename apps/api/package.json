@@ -21,7 +21,8 @@
     "smoke:live": "tsx --env-file=.env scripts/smoke-live.ts",
     "smoke:race": "tsx --env-file=.env scripts/smoke-race.ts",
     "smoke:cashflow": "tsx --env-file=.env scripts/smoke-cashflow.ts",
-    "demo:short": "tsx --env-file=.env scripts/demo-short.ts"
+    "demo:short": "tsx --env-file=.env scripts/demo-short.ts",
+    "db:migrate:cashflow": "node --env-file=.env --import tsx scripts/migrate-cashflow.ts"
   },
   "dependencies": {
     "@finni/shared": "*",
