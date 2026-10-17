@@ -18,6 +18,50 @@ export function namesToolInsteadOfCalling(raw: string, toolNames: readonly strin
   return toolNames.some((name) => new RegExp(`\\b${name}\\b`).test(raw));
 }
 
+/**
+ * True when Finn says he completed something with money ("I've paid your bill", "Done! Moved $50").
+ * He never can: every money move is a proposal the user approves, so this is always a hallucination.
+ * "I've proposed paying it" / "I've set that up for you to review" are fine.
+ */
+const I_DID = /\bI(?:'ve| have)?\s+(?:just\s+|already\s+|now\s+)?(?:paid|sent|transferred|moved|deposited|cancell?ed|refunded|disputed|withdrew|added|put|contributed|funded)\b/i;
+const DONE = /^\s*(?:done|all done|paid|sent)\b\s*[!.,:]/i;
+const IT_IS_DONE = /\b(?:is|has been|have been) (?:now )?(?:paid|sent|transferred|cancell?ed|refunded)\b(?! once you approve| when you approve| after you approve)/i;
+
+export function claimsCompletedAction(text: string): boolean {
+  return I_DID.test(text) || DONE.test(text) || IT_IS_DONE.test(text);
+}
+
+/** True when Finn says an approval is ready ("I've set up the payment… Tap Review"). Checked against what was actually created. */
+const SAYS_PROPOSED = /\b(?:tap review|i(?:'ve| have) (?:set (?:it|that|this|up)|proposed|prepared|created a (?:proposal|request))|set (?:it|that) up for you to (?:review|approve)|ready for you to (?:review|approve))\b/i;
+
+export function claimsProposal(text: string): boolean {
+  return SAYS_PROPOSED.test(text);
+}
+
+/**
+ * Finn's bubble shows plain text, so Markdown would appear as raw symbols (it once answered with a
+ * "| Account | Balance |" table). Tables are dropped (the cards show that data), list markers and
+ * emphasis are removed, and lines are joined into sentences.
+ */
+export function plainText(text: string): string {
+  return text
+    .split("\n")
+    .filter((line) => !/^\s*\|.*\|\s*$/.test(line)) // table rows and separators
+    .map((line) =>
+      line
+        .replace(/^\s{0,3}#{1,6}\s+/, "") // headings
+        .replace(/^\s*(?:[-*•]|\d+[.)])\s+/, "") // list markers
+        .replace(/(\*\*|__)(.+?)\1/g, "$2") // bold
+        .replace(/(^|[^\w*])\*(?!\s)(.+?)\*(?!\w)/g, "$1$2") // italics
+        .replace(/`([^`]*)`/g, "$1") // inline code
+        .trim(),
+    )
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export function parseReply(raw: string): { mood: Mood; text: string; chips: string[] } {
   const m = raw.match(/^\s*\[mood:\s*(\w+)\s*\]\s*/i);
   const mood = (m && (MOODS as readonly string[]).includes(m[1].toLowerCase()) ? m[1].toLowerCase() : "happy") as Mood;
@@ -34,6 +78,6 @@ export function parseReply(raw: string): { mood: Mood; text: string; chips: stri
   if (c) text = text.slice(0, c.index);
 
   // Strip any stray tags the model repeats mid-reply, including tool names it wrote instead of calling.
-  text = text.replace(/\[mood:\s*\w+\s*\]/gi, "").replace(/\[chips:[^\]]*\]/gi, "").replace(TOOL_TAG, "").trim();
+  text = plainText(text.replace(/\[mood:\s*\w+\s*\]/gi, "").replace(/\[chips:[^\]]*\]/gi, "").replace(TOOL_TAG, ""));
   return { mood, text, chips: chips.length ? chips : DEFAULT_CHIPS };
 }

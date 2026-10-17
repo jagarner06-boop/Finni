@@ -80,6 +80,8 @@ export const chatMessages = pgTable(
     mood: moodEnum("mood"),
     cards: jsonb("cards").$type<Card[]>().notNull().default([]),
     chips: text("chips").array().notNull().default([]),
+    /** reply = Finn's own answer; result = app line after a chat proposal executed; fallback = error reply. Only replies are replayed to Gemini. */
+    kind: text("kind").$type<"reply" | "result" | "fallback">().notNull().default("reply"),
     createdAt: createdAt(),
   },
   (t) => [index("chat_user_created_idx").on(t.userId, t.createdAt.desc())],

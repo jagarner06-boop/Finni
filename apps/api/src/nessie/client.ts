@@ -1,4 +1,5 @@
 import { env } from "../env.js";
+import { isoDay } from "../lib/dates.js";
 import type {
   NessieAccount,
   NessieAccountType,
@@ -87,7 +88,7 @@ function unwrap<T>(res: T[] | { data: T[] }): T[] {
   return Array.isArray(res) ? res : (res?.data ?? []);
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => isoDay();
 const list = <T>(path: string, query?: Record<string, string | number | undefined>) => request<T[]>("GET", path, { query, emptyList: true });
 
 export const nessie = {

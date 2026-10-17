@@ -25,6 +25,8 @@ export interface ToolContext {
   actionIds: string[];
   /** Every number (in cents) a tool returned this turn; custom charts may only use these. */
   seenCents: Set<number>;
+  /** The user asked for an action (or said yes to Finn's offer) this turn; see agent/intent.ts. */
+  canPropose: boolean;
 }
 
 interface Tool<A extends z.ZodTypeAny = z.ZodTypeAny> {
@@ -61,7 +63,19 @@ export const TOOLS: Record<string, Tool> = {
     run: async (_args, ctx) => {
       const accounts = await listAccounts(ctx.user);
       addCard(ctx, { type: "account_list", accounts });
-      return { accounts: accounts.map((a) => ({ id: a.id, nickname: a.nickname, type: a.type, balance: usd(a.balanceCents), isGoal: a.isGoal })) };
+      // Totals are computed here so Finn never adds balances himself (he once said $3,084 for $4,084).
+      const sum = (xs: typeof accounts) => xs.reduce((s, a) => s + a.balanceCents, 0);
+      const debit = accounts.filter((a) => a.type !== "Credit Card");
+      const cardOwed = sum(accounts.filter((a) => a.type === "Credit Card"));
+      return {
+        accounts: accounts.map((a) => ({ id: a.id, nickname: a.nickname, type: a.type, balance: usd(a.balanceCents), isGoal: a.isGoal, ...(a.type === "Credit Card" ? { owed: true } : {}) })),
+        totals: {
+          cash: usd(sum(debit.filter((a) => !a.isGoal))),
+          savedInGoals: usd(sum(debit.filter((a) => a.isGoal))),
+          cardOwed: usd(cardOwed),
+          netWorth: usd(sum(debit) - cardOwed),
+        },
+      };
     },
   }),
 
@@ -407,6 +421,8 @@ export const TOOLS: Record<string, Tool> = {
 };
 
 async function propose(ctx: ToolContext, req: Parameters<typeof createAction>[1]) {
+  // Only create approval requests the user asked for. Otherwise Finn offers instead of proposing.
+  if (!ctx.canPropose) return { error: "The user didn't ask for this. Describe it in one line and ask if they want you to set it up." };
   const action = await createAction(ctx.user, req, "chat");
   ctx.actionIds.push(action.id);
   addCard(ctx, toApprovalCard(action));

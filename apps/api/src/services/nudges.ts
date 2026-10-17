@@ -1,5 +1,5 @@
 import type { CreateActionRequest, Nudge, PendingAction } from "@finni/shared";
-import { and, asc, desc, eq, gt, isNull, isNotNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, isNotNull, or, sql } from "drizzle-orm";
 import { db, schema } from "../db/client.js";
 import type { NudgeRow, User } from "../db/schema.js";
 import { cadenceLabel } from "../domain/goals.js";
@@ -38,6 +38,9 @@ export const toNudge = (r: NudgeRow): Nudge => ({
 });
 
 export async function scanNudges(user: User): Promise<{ created: number }> {
+  // Mid-seed (new account or demo reset) the ledger is half-built: purchases and rent can land before
+  // the paychecks, so Checking briefly reads negative. Scanning then created a false "Checking is low".
+  if (!user.seededAt) return { created: 0 };
   const [card, accounts, bills, purchases, refunded, goals] = await Promise.all([
     getCardSummary(user),
     listAccounts(user),
@@ -58,10 +61,18 @@ export async function scanNudges(user: User): Promise<{ created: number }> {
     : [];
 
   const live = new Set(candidates.map((c) => c.dedupeKey));
+  // A nudge auto-resolved earlier whose condition is true again comes back (dedupe keys would
+  // otherwise keep it hidden for the rest of its period). Dismissed ones stay dismissed.
+  if (live.size)
+    await db
+      .update(schema.nudges)
+      .set({ resolvedAt: null })
+      .where(and(eq(schema.nudges.userId, user.id), inArray(schema.nudges.dedupeKey, [...live]), isNotNull(schema.nudges.resolvedAt), isNull(schema.nudges.dismissedAt)));
   const open = await db
     .select({ id: schema.nudges.id, dedupeKey: schema.nudges.dedupeKey })
     .from(schema.nudges)
-    .where(and(eq(schema.nudges.userId, user.id), isNull(schema.nudges.resolvedAt), isNotNull(schema.nudges.action)));
+    // Actionable nudges, plus low balance (a state, not an event): resolve once the condition is gone.
+    .where(and(eq(schema.nudges.userId, user.id), isNull(schema.nudges.resolvedAt), or(isNotNull(schema.nudges.action), eq(schema.nudges.rule, "low_balance"))));
   for (const n of open) if (!live.has(n.dedupeKey)) await db.update(schema.nudges).set({ resolvedAt: new Date() }).where(eq(schema.nudges.id, n.id));
 
   await db.update(schema.users).set({ lastNudgeScanAt: new Date() }).where(eq(schema.users.id, user.id));

@@ -14,11 +14,12 @@
     "spike:gemini": "tsx --env-file=.env scripts/spike-gemini.ts",
     "demo:reset": "tsx --env-file=.env scripts/demo-reset.ts",
     "smoke:seed": "tsx --env-file=.env scripts/smoke-seed.ts",
-    "smoke:actions": "AUTH_MODE=auth0 tsx --env-file=.env scripts/smoke-actions.ts",
+    "smoke:actions": "tsx --env-file=.env scripts/smoke-actions.ts",
     "smoke:charts": "tsx --env-file=.env scripts/smoke-charts.ts",
     "smoke:agent": "tsx --env-file=.env scripts/smoke-agent.ts",
     "test": "vitest run",
     "smoke:live": "tsx --env-file=.env scripts/smoke-live.ts",
+    "smoke:consistency": "tsx --env-file=.env scripts/smoke-consistency.ts",
     "smoke:race": "tsx --env-file=.env scripts/smoke-race.ts"
   },
   "dependencies": {
