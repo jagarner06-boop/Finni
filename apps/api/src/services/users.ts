@@ -2,7 +2,8 @@ import { eq } from "drizzle-orm";
 import { db, schema } from "../db/client.js";
 import type { User } from "../db/schema.js";
 import { nessie } from "../nessie/client.js";
-import { alexPlan, openingChecking, type PersonaPlan } from "../seed/personas/alex.js";
+import { isoDay } from "../lib/dates.js";
+import { alexPlan, openingCard, openingChecking, type PersonaPlan } from "../seed/personas/alex.js";
 import { seedPersona } from "./seed.js";
 
 export class HttpError extends Error {
@@ -25,7 +26,7 @@ export async function requireUser(sub: string): Promise<User> {
   return user;
 }
 
-/** A new Nessie customer with Checking + Savings opened so the persona's history lands on its target balances. */
+/** A new Nessie customer with Checking, Savings and the Closer Card, opened so the persona's history lands on its target balances. */
 export async function createPersonaCustomer(firstName: string, plan: PersonaPlan) {
   const customer = await nessie.createCustomer({
     first_name: firstName,
@@ -35,7 +36,15 @@ export async function createPersonaCustomer(firstName: string, plan: PersonaPlan
   // Nessie balances are fixed at creation; the opening balance is chosen so history lands on the persona's target.
   const checking = await nessie.createAccount(customer._id, { type: "Checking", nickname: "Everyday", rewards: 0, balance: openingChecking(plan) });
   const savings = await nessie.createAccount(customer._id, { type: "Savings", nickname: "Rainy Day", rewards: 0, balance: plan.savingsTarget });
-  return { nessieCustomerId: customer._id, checkingAccountId: checking._id, savingsAccountId: savings._id };
+  const card = await nessie.createAccount(customer._id, { type: "Credit Card", nickname: plan.card.nickname, rewards: 0, balance: openingCard(plan) });
+  return {
+    nessieCustomerId: customer._id,
+    checkingAccountId: checking._id,
+    savingsAccountId: savings._id,
+    creditAccountId: card._id,
+    creditLimitCents: plan.card.limit * 100,
+    statementDay: Number(isoDay(plan.card.statementInDays).slice(8)),
+  };
 }
 
 /** Idempotent first-login setup: one Nessie customer + Checking + Savings per Auth0 user, then persona seeding in the background. */

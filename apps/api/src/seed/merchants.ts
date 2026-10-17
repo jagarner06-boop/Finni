@@ -4,7 +4,7 @@ import type { NessieMerchant } from "../nessie/types.js";
 // Our own Nessie merchants, so names and categories are reliable. Created once per Nessie key by
 // `npm run seed:merchants`, which writes their IDs to merchants.generated.json.
 
-export const MERCHANT_KEYS = ["publix", "starbucks", "doordash", "chipotle", "wawa", "spotify", "netflix", "amc", "ufBookstore", "target", "uber"] as const;
+export const MERCHANT_KEYS = ["publix", "starbucks", "doordash", "chipotle", "wawa", "spotify", "netflix", "amc", "ufBookstore", "target", "uber", "hulu"] as const;
 export type MerchantKey = (typeof MERCHANT_KEYS)[number];
 
 const gnv = (street_number: string, street_name: string, lat: number, lng: number) => ({
@@ -24,6 +24,7 @@ export const MERCHANT_SEEDS: Record<MerchantKey, Omit<NessieMerchant, "_id">> = 
   ufBookstore: { name: "UF Bookstore", category: "School", ...gnv("1", "Museum Rd", 29.6465, -82.3479) },
   target: { name: "Target", category: "Shopping", ...gnv("3970", "SW Archer Rd", 29.6205, -82.3803) },
   uber: { name: "Uber", category: "Transport", ...gnv("1", "Online", 29.6516, -82.3248) },
+  hulu: { name: "Hulu", category: "Subscriptions", ...gnv("1", "Online", 29.6516, -82.3248) },
 };
 
 export const MERCHANTS_FILE = new URL("./merchants.generated.json", import.meta.url);
