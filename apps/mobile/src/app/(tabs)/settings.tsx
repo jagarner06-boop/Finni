@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatCents } from '@finni/shared';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
@@ -10,6 +11,8 @@ import { SettingsGroup, SettingsRow } from '@/components/settings/SettingsRow';
 import { SavingsBudgetSetting } from '@/components/settings/SavingsBudgetSetting';
 import { Button } from '@/components/ui/Button';
 import { SafeAreaView } from '@/components/ui/SafeAreaView';
+import { useOnboarding } from '@/features/onboarding/OnboardingProvider';
+import { saveOnboarding } from '@/features/onboarding/state';
 import { colors, fonts } from '@/theme/tokens';
 
 /** Native confirm with a destructive action button. */
@@ -27,14 +30,22 @@ export default function SettingsScreen() {
   const reset = useResetDemo();
   const clearChat = useClearChat();
   const { logout } = useAuth();
+  const { profile, update: updateOnboarding } = useOnboarding();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState('');
 
   const data = settings.data;
-  const saveName = () => {
+  const saveName = async () => {
     const firstName = name.trim();
     setEditing(false);
-    if (firstName && firstName !== data?.firstName) update.mutate({ firstName });
+    if (!firstName || firstName === data?.firstName) return;
+    try {
+      await update.mutateAsync({ firstName });
+      await saveOnboarding(AsyncStorage, { ...profile, firstName });
+      updateOnboarding({ firstName });
+    } catch {
+      Alert.alert('Could not finish saving your name', 'Please try again.');
+    }
   };
 
   if (!data) {

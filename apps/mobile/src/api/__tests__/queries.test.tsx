@@ -2,9 +2,9 @@ import { QueryClient, QueryClientProvider, QueryObserver } from '@tanstack/react
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { Button, Text, View } from 'react-native';
 import { api } from '../endpoints';
-import { qk, useApproveAction, useSendChat } from '../queries';
+import { qk, useApproveAction, useBootstrap, useSendChat } from '../queries';
 jest.mock('@/lib/location', () => ({ getLocation: async () => null }));
-jest.mock('../endpoints', () => ({ api: { sendChat: jest.fn(), approveAction: jest.fn() } }));
+jest.mock('../endpoints', () => ({ api: { sendChat: jest.fn(), approveAction: jest.fn(), bootstrap: jest.fn() } }));
 const mockApi = api as jest.Mocked<typeof api>;
 function Harness() {
   const send = useSendChat();
@@ -36,4 +36,22 @@ it('waits for refreshed goal data before completing approval', async () => {
   await screen.findByText('Approved');
   expect(client.getQueryData(qk.goals)).toEqual({ goals: [{ currentCents: 5000 }] });
   unsubscribe(); client.clear();
+});
+
+it('refreshes every cached screen that displays the onboarding name', async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { gcTime: Infinity }, mutations: { gcTime: Infinity } } });
+  client.setQueryData(qk.home, { firstName: 'Gabe' });
+  client.setQueryData(qk.settings, { firstName: 'Gabe' });
+  const me = { id: 'u', email: null, firstName: 'Jordan', seeded: true, accounts: [] };
+  mockApi.bootstrap.mockResolvedValue({ me, created: false });
+  function BootstrapName() {
+    const bootstrap = useBootstrap();
+    return <Button title="Finish setup" onPress={() => bootstrap.mutate({ firstName: 'Jordan' })} />;
+  }
+  await render(<QueryClientProvider client={client}><BootstrapName /></QueryClientProvider>);
+  await fireEvent.press(screen.getByText('Finish setup'));
+  await waitFor(() => expect(client.getQueryData(qk.me)).toEqual(me));
+  expect(client.getQueryState(qk.home)?.isInvalidated).toBe(true);
+  expect(client.getQueryState(qk.settings)?.isInvalidated).toBe(true);
+  client.clear();
 });

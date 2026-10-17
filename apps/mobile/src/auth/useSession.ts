@@ -25,7 +25,7 @@ export function useSession() {
     }
     if (started.current) return;
     started.current = true;
-    bootstrap.mutate(complete ? { profile: toFinnProfile(profile) } : undefined);
+    bootstrap.mutate(complete ? { ...(profile.firstName.trim() ? { firstName: profile.firstName.trim() } : {}), profile: toFinnProfile(profile) } : undefined);
   }, [signedIn, bootstrap, complete, profile]);
 
   const me = useMe({ enabled: signedIn && bootstrap.isSuccess, pollUntilSeeded: true });
@@ -40,6 +40,6 @@ export function useSession() {
     phase,
     me: me.data ?? null,
     error: bootstrap.error ?? me.error,
-    retry: () => (bootstrap.isError ? bootstrap.mutate(complete ? { profile: toFinnProfile(profile) } : undefined) : me.refetch()),
+    retry: () => (bootstrap.isError ? bootstrap.mutate(complete ? { ...(profile.firstName.trim() ? { firstName: profile.firstName.trim() } : {}), profile: toFinnProfile(profile) } : undefined) : me.refetch()),
   };
 }

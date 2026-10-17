@@ -31,7 +31,7 @@ meRouter.post("/me/bootstrap", async (req, res) => {
   const isNew = !(await findUserBySub(sub));
   const fromAuth0 = isNew && !body.firstName && env.AUTH_MODE === "auth0" ? await fetchUserInfo(req) : {};
   let { user, created } = await bootstrapUser(sub, { ...fromAuth0, firstName: body.firstName ?? fromAuth0.firstName, email: body.email ?? fromAuth0.email });
-  if (body.profile) user = await saveProfile(user.id, body.profile);
+  if (body.profile) user = await saveProfile(user.id, body.profile, body.firstName);
   const response: BootstrapResponse = { me: await toMe(user), created };
   res.json(response);
 });

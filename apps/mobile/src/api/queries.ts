@@ -54,7 +54,10 @@ export function useBootstrap() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (body?: BootstrapRequest) => api.bootstrap(body),
-    onSuccess: (res) => client.setQueryData(qk.me, res.me),
+    onSuccess: async (res) => {
+      client.setQueryData(qk.me, res.me);
+      await Promise.all([qk.home, qk.settings].map((queryKey) => client.invalidateQueries({ queryKey })));
+    },
   });
 }
 
@@ -204,7 +207,7 @@ export function useUpdateSettings() {
     mutationFn: (body: UpdateSettingsRequest) => api.updateSettings(body),
     onSuccess: async (res) => {
       client.setQueryData(qk.settings, res);
-      await Promise.all([client.invalidateQueries({ queryKey: qk.home }), client.invalidateQueries({ queryKey: ['contribution-limit'] })]);
+      await Promise.all([client.invalidateQueries({ queryKey: qk.home }), client.invalidateQueries({ queryKey: qk.me }), client.invalidateQueries({ queryKey: ['contribution-limit'] })]);
     },
   });
 }
