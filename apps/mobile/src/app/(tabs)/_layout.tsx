@@ -19,12 +19,12 @@ function SignedInTabs() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.lagoon,
+        tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.muted,
         tabBarLabelStyle: { fontFamily: fonts.bold },
         // Icons TBD in the design pass; labels only for now.
         tabBarIconStyle: { display: 'none' },
-        sceneStyle: { backgroundColor: colors.foam },
+        sceneStyle: { backgroundColor: colors.canvas },
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Chat' }} />
@@ -35,7 +35,7 @@ function SignedInTabs() {
         options={{
           title: 'Inbox',
           tabBarBadge: unread > 0 ? unread : undefined,
-          tabBarBadgeStyle: { backgroundColor: colors.coral },
+          tabBarBadgeStyle: { backgroundColor: colors.accent },
         }}
       />
     </Tabs>
@@ -45,18 +45,18 @@ function SignedInTabs() {
 // Placeholder for "Finn is setting up your tank…" (design pass).
 function SessionLoading({ phase, onRetry }: { phase: string; onRetry: () => void }) {
   return (
-    <View className="flex-1 items-center justify-center gap-4 bg-foam px-6">
+    <View className="flex-1 items-center justify-center gap-4 bg-canvas px-6">
       {phase === 'error' ? (
         <>
-          <Text className="font-bold text-lg text-deep">Glub… couldn't reach Finn's tank.</Text>
-          <Pressable onPress={onRetry} className="rounded-full bg-ocean px-6 py-3">
+          <Text className="font-bold text-lg text-ink">Glub… couldn't reach Finn's tank.</Text>
+          <Pressable onPress={onRetry} className="rounded-full bg-accent px-6 py-3">
             <Text className="font-bold text-white">Try again</Text>
           </Pressable>
         </>
       ) : (
         <>
-          <ActivityIndicator color={colors.lagoon} />
-          <Text className="font-body text-muted">Finn is setting up your tank…</Text>
+          <ActivityIndicator color={colors.accent} />
+          <Text className="font-regular text-muted">Finn is setting up your tank…</Text>
         </>
       )}
     </View>

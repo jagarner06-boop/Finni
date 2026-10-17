@@ -1,13 +1,17 @@
 import type { ChatMessage } from '@finni/shared';
 import { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { LayoutAnimationConfig } from 'react-native-reanimated';
 
 import { useChatHistory, useSendChat } from '@/api/queries';
+import { AgentHeader } from '@/components/chat/AgentHeader';
+import { groupPositions } from '@/components/chat/grouping';
 import { MessageBubble, TypingBubble } from '@/components/chat/MessageBubble';
+import { Button } from '@/components/ui/Button';
 import { SafeAreaView } from '@/components/ui/SafeAreaView';
 import { colors, fonts, radius } from '@/theme/tokens';
 
-// Basic chat with Finn: history, optimistic user bubble, typing indicator. Design pass comes later.
+// Agent: chat with Finn. Expressive element: the 64pt Finn header. Composer redesign comes later.
 export default function ChatScreen() {
   const history = useChatHistory();
   const send = useSendChat();
@@ -19,6 +23,9 @@ export default function ChatScreen() {
   const pending: ChatMessage | null = send.isPending
     ? { id: 'pending', role: 'user', text: send.variables ?? '', mood: null, cards: [], createdAt: new Date().toISOString() }
     : null;
+  const shown = pending ? [...messages, pending] : messages;
+  const positions = groupPositions(shown);
+  const replyMood = messages.findLast((m) => m.role === 'finn')?.mood ?? 'happy';
 
   const submit = () => {
     const text = draft.trim();
@@ -29,6 +36,7 @@ export default function ChatScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
+      <AgentHeader sending={send.isPending} replyMood={replyMood} />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           ref={scroll}
@@ -37,15 +45,17 @@ export default function ChatScreen() {
           onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}
           keyboardShouldPersistTaps="handled"
         >
-          {messages.length === 0 && !pending && (
-            <Text style={styles.empty}>{history.isLoading ? 'Loading…' : 'Say hi to Finn! Try "How much money do I have?"'}</Text>
+          {shown.length === 0 && (
+            <Text style={styles.empty}>{history.isLoading ? 'Loading…' : 'Say hi to Finn. Try “How much money do I have?”'}</Text>
           )}
-          {messages.map((m) => (
-            <MessageBubble key={m.id} message={m} />
-          ))}
-          {pending && <MessageBubble message={pending} />}
+          {/* History renders in place; only messages that arrive later animate in. */}
+          <LayoutAnimationConfig skipEntering>
+            {shown.map((m, i) => (
+              <MessageBubble key={m.id} message={m} position={positions[i]} />
+            ))}
+          </LayoutAnimationConfig>
           {send.isPending && <TypingBubble />}
-          {send.isError && <Text style={styles.error}>Couldn't reach Finn. Try again?</Text>}
+          {send.isError && <Text style={styles.error}>Couldn’t reach Finn. Try again?</Text>}
         </ScrollView>
 
         <View style={styles.composer}>
@@ -53,15 +63,13 @@ export default function ChatScreen() {
             style={styles.input}
             value={draft}
             onChangeText={setDraft}
-            placeholder="Ask Finn anything…"
-            placeholderTextColor={colors.muted}
+            placeholder="Ask Finn"
+            placeholderTextColor={colors.placeholder}
             onSubmitEditing={submit}
             returnKeyType="send"
             editable={!send.isPending}
           />
-          <Pressable onPress={submit} disabled={!draft.trim() || send.isPending} style={[styles.send, (!draft.trim() || send.isPending) && styles.disabled]}>
-            <Text style={styles.sendText}>Send</Text>
-          </Pressable>
+          <Button label="Send" size="sm" onPress={submit} disabled={!draft.trim() || send.isPending} />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -69,14 +77,31 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.foam },
+  safe: { flex: 1, backgroundColor: colors.canvas },
   flex: { flex: 1 },
-  list: { padding: 16, gap: 12 },
-  empty: { textAlign: 'center', color: colors.muted, fontFamily: fonts.body, marginTop: 40 },
-  error: { textAlign: 'center', color: colors.berry, fontFamily: fonts.body },
-  composer: { flexDirection: 'row', gap: 8, padding: 12, borderTopWidth: StyleSheet.hairlineWidth, borderColor: colors.muted, backgroundColor: colors.surface },
-  input: { flex: 1, borderRadius: radius.bubble, backgroundColor: colors.foam, paddingHorizontal: 16, paddingVertical: 10, fontSize: 16, fontFamily: fonts.body, color: colors.deep },
-  send: { borderRadius: radius.bubble, backgroundColor: colors.ocean, paddingHorizontal: 18, justifyContent: 'center' },
-  disabled: { opacity: 0.4 },
-  sendText: { color: '#FFFFFF', fontFamily: fonts.bold, fontSize: 16 },
+  list: { paddingHorizontal: 20, paddingBottom: 16, paddingTop: 4 },
+  empty: { textAlign: 'center', color: colors.muted, fontFamily: fonts.regular, fontSize: 14, marginTop: 40 },
+  error: { textAlign: 'center', color: colors.dangerInk, fontFamily: fonts.semibold, fontSize: 12, marginTop: 8 },
+  composer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderColor: colors.hairline,
+    backgroundColor: colors.surface,
+  },
+  input: {
+    flex: 1,
+    borderRadius: radius.bubble,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    backgroundColor: colors.canvas,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 16,
+    fontFamily: fonts.regular,
+    color: colors.ink,
+  },
 });

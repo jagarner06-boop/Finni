@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F1EEE7;font-family:Nunito,system-ui,sans-serif;color:#14213D;-webkit-font-smoothing:antialiased}
+a{color:#2563EB;text-decoration:none}a:hover{color:#1E3A8A;text-decoration:underline}
+pre{margin:0}
+@keyframes tickPop{0%{transform:scale(0);opacity:0}30%{transform:scale(1.15);opacity:1}65%{transform:scale(1);opacity:1}100%{transform:scale(1);opacity:0}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes dot{0%,60%,100%{transform:translateY(0);opacity:.6}30%{transform:translateY(-3px);opacity:1}}
+@keyframes shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}
+@keyframes pop{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}
+</style>
+</helmet>
+
+<section id="t0" style="padding:64px 72px 48px;max-width:1720px;border-bottom:1px solid #E3DFD6">
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:28px">
+    <div style="width:56px;height:56px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1px solid #EDEAE3"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+    <div>
+      <div style="font:700 12px/1 Nunito;letter-spacing:.08em;text-transform:uppercase;color:#5B6B82">Finni · Design system v0.1</div>
+      <h1 style="margin:6px 0 0;font:800 40px/1.1 Nunito;letter-spacing:-.01em">A calm bank with a companion</h1>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px">
+    <div>
+      <h2 style="margin:0 0 14px;font:800 20px/1.2 Nunito">Principles</h2>
+      <ol style="margin:0;padding-left:20px;display:grid;gap:10px;font:400 16px/1.5 Nunito">
+        <li><b style="font-weight:800">The bank comes first.</b> Finn adds warmth, and the UI carries the clarity.</li>
+        <li><b style="font-weight:800">One expressive element per screen.</b> That's Finn, the tide fill, the ticks, or the peek. Everything else stays quiet.</li>
+        <li><b style="font-weight:800">Color means something.</b> Cobalt marks actions. Semantic colors appear only as dots, rings, and small text. The only gradient is on the hero card.</li>
+        <li><b style="font-weight:800">Money is sacred.</b> Tabular numerals, never abbreviated, cents set lighter, and every amount links to its source.</li>
+        <li><b style="font-weight:800">Approval is where trust is earned.</b> A plain summary, a deliberate hold to approve, and an explicit outcome either way.</li>
+      </ol>
+    </div>
+    <div>
+      <h2 style="margin:0 0 14px;font:800 20px/1.2 Nunito">Decisions from your answers</h2>
+      <div style="display:grid;gap:9px;font:400 15px/1.45 Nunito">
+        <div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:#2563EB;margin-top:7px;flex:none"></span><span><b style="font-weight:800">Tabs follow the mockups: Home · Agent · Activity · Settings.</b> Money becomes Home, Chat becomes Agent, and Inbox becomes Activity (nudges and transactions). Goals isn't a tab anymore. It's a pushed route opened from Home. In the code, rename <code>(tabs)/index</code>, <code>money</code>, and <code>inbox</code> to match, and add <code>settings</code>.</span></div>
+        <div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:#2563EB;margin-top:7px;flex:none"></span><span><b style="font-weight:800">The mockups use plush Finn in chat and the nudge card.</b> I kept to the brief instead: flat art in-app, plush only for hero moments.</span></div>
+        <div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:#2563EB;margin-top:7px;flex:none"></span><span><b style="font-weight:800">The mockups show the Agent tab icon as a sparkle on Home and as Finn's head in chat.</b> I standardized on Finn's head. The "Ask your agent…" bar on Home stays, with Finn's head in place of the sparkle.</span></div>
+        <div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:#2563EB;margin-top:7px;flex:none"></span><span><b style="font-weight:800">Approval and step-up auth</b> use the flat happy head with a shield badge.</span></div>
+        <div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:#2563EB;margin-top:7px;flex:none"></span><span><b style="font-weight:800">Avatars at 40pt or smaller and the tab icon don't count</b> toward the one-Finn limit. The ticks and the confident head's sparkle get re-exported in cobalt. The heart-eyes head is for goal completion only.</span></div>
+        <div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:#F5A524;margin-top:7px;flex:none"></span><span><b style="font-weight:800">Still open:</b> there's no flat waving, thinking, or celebrating pose (pose-laptop, pose-laugh-card, and pose-wave stand in). The PNGs aren't transparent, so they're shown with multiply blending here.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="t1" style="padding:56px 72px;max-width:1720px;border-bottom:1px solid #E3DFD6">
+  <div style="font:700 12px/1 Nunito;letter-spacing:.08em;text-transform:uppercase;color:#5B6B82">01</div>
+  <h2 style="margin:6px 0 24px;font:800 28px/1.2 Nunito">Tokens · reconciled from the repo</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:32px">
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="14">
+      <div style="background:#fff;border:1px solid #EDEAE3;border-radius:16px;overflow:hidden">
+        <div style="height:52px;background:{{ t.bg }};border-bottom:1px solid #EDEAE3"></div>
+        <div style="padding:10px 12px 12px;display:grid;gap:2px">
+          <div style="font:800 14px/1.3 Nunito">{{ t.name }}</div>
+          <div style="font:400 12px/1.3 ui-monospace,Menlo,monospace;color:#5B6B82">{{ t.hex }}</div>
+          <div style="font:400 12px/1.4 Nunito;color:#5B6B82">{{ t.role }}</div>
+          <div style="font:700 11px/1.4 Nunito;color:#1E4FD0">{{ t.change }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:32px">
+    <div style="display:grid;gap:20px;align-content:start">
+      <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:24px;display:grid;gap:14px">
+        <div style="font:700 12px/1 Nunito;letter-spacing:.06em;text-transform:uppercase;color:#5B6B82">Type · Nunito 400 / 700 / 800</div>
+        <div style="display:flex;align-items:baseline;gap:16px"><span style="width:96px;flex:none;font:700 12px Nunito;color:#5B6B82">hero 32 / 800</span><span style="font:800 32px/1.15 Nunito;font-variant-numeric:tabular-nums">$1,364<span style="font-weight:400;font-size:22px">.20</span></span></div>
+        <div style="display:flex;align-items:baseline;gap:16px"><span style="width:96px;flex:none;font:700 12px Nunito;color:#5B6B82">title 24 / split</span><span style="font:400 24px/1.2 Nunito">Good <b style="font-weight:800">evening, Gabe</b></span></div>
+        <div style="display:flex;align-items:baseline;gap:16px"><span style="width:96px;flex:none;font:700 12px Nunito;color:#5B6B82">section 20 / 800</span><span style="font:800 20px/1.2 Nunito">Needs attention</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px"><span style="width:96px;flex:none;font:700 12px Nunito;color:#5B6B82">body 17 / 400</span><span style="font:400 17px/1.45 Nunito">I can fix that before Oct 22.</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px"><span style="width:96px;flex:none;font:700 12px Nunito;color:#5B6B82">caption 14 / 400</span><span style="font:400 14px/1.4 Nunito;color:#5B6B82">Spotify · $14.99 · Oct 14</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px"><span style="width:96px;flex:none;font:700 12px Nunito;color:#5B6B82">micro 12 / 700</span><span style="font:700 12px/1.3 Nunito;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82">Current balance</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+        <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:18px;display:grid;gap:10px">
+          <div style="font:700 12px/1 Nunito;letter-spacing:.06em;text-transform:uppercase;color:#5B6B82">Radii</div>
+          <div style="display:flex;gap:8px;align-items:end"><div style="width:40px;height:40px;border:2px solid #2563EB;border-radius:20px 0 0 0"></div><div style="width:56px;height:28px;border:2px solid #2563EB;border-radius:999px"></div></div>
+          <div style="font:400 12px/1.4 Nunito;color:#5B6B82">card 20 · bubble 22 · sheet 28 · pill</div>
+        </div>
+        <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:18px;display:grid;gap:10px">
+          <div style="font:700 12px/1 Nunito;letter-spacing:.06em;text-transform:uppercase;color:#5B6B82">Depth</div>
+          <div style="height:40px;border-radius:14px;background:#fff;box-shadow:0 4px 12px rgba(20,33,61,.07)"></div>
+          <div style="font:400 12px/1.4 Nunito;color:#5B6B82">One level: y4, blur 12, navy at 7%</div>
+        </div>
+        <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:18px;display:grid;gap:10px">
+          <div style="font:700 12px/1 Nunito;letter-spacing:.06em;text-transform:uppercase;color:#5B6B82">Space</div>
+          <div style="display:flex;gap:4px;align-items:end"><div style="width:4px;height:4px;background:#2563EB"></div><div style="width:8px;height:8px;background:#2563EB"></div><div style="width:12px;height:12px;background:#2563EB"></div><div style="width:16px;height:16px;background:#2563EB"></div><div style="width:20px;height:20px;background:#2563EB"></div><div style="width:24px;height:24px;background:#2563EB"></div></div>
+          <div style="font:400 12px/1.4 Nunito;color:#5B6B82">8pt grid · gutter 20 · target 44</div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:20px 24px;font:400 14px/1.55 Nunito">
+        <div style="font:800 16px/1.3 Nunito;margin-bottom:8px">Diff rationale</div>
+        <div style="display:grid;gap:6px">
+          <span><b style="font-weight:800">deep #0B2545 → ink #14213D.</b> Matches Finn's back and reads less black on cream.</span>
+          <span><b style="font-weight:800">foam #F3FAFF → canvas #FAF8F3.</b> The cool blue-white becomes warm cream, taken from his belly.</span>
+          <span><b style="font-weight:800">lagoon, coral, sun, and berry are removed.</b> Lagoon was the active tab and the happy color, and both become cobalt. Coral (the badge) becomes cobalt too, since a badge is "new", not "danger". Sun becomes warning #F5A524 and berry becomes danger #E5484D, both muted.</span>
+          <span><b style="font-weight:800">kelp → success.</b> Same hex, renamed for its role.</span>
+          <span><b style="font-weight:800">New -ink variants.</b> The base semantic hues fail AA as text on white (success is 2.6:1), so each gets a darker variant for text.</span>
+          <span><b style="font-weight:800">moodColor now drives the ring only.</b> happy has no ring, thinking is cobalt, worried is warning, celebrating is success.</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;gap:12px;align-content:start">
+      <pre style="background:#14213D;color:#E8F0FE;border-radius:20px;padding:20px 22px;font:400 12px/1.6 ui-monospace,Menlo,monospace;overflow:auto;white-space:pre">// apps/mobile/src/theme/tokens.ts
+import type { Mood } from '@finni/shared';
+
+export const colors = {
+  canvas: '#FAF8F3',  surface: '#FFFFFF', hairline: '#EDEAE3',
+  ink: '#14213D',     muted: '#5B6B82',
+  accent: '#2563EB',  accentTint: '#E8F0FE', accentPressed: '#1E4FD0',
+  belly: '#FBF6EC',
+  heroFrom: '#1E3A8A', heroTo: '#2F55C8',   // AccountHeroCard only
+  danger: '#E5484D',  dangerInk: '#C62F36',
+  warning: '#F5A524', warningInk: '#9A5B00',
+  success: '#2FB37F', successInk: '#1F7A55',
+} as const;
+
+export const fonts = { body: 'Nunito_400Regular',
+  bold: 'Nunito_700Bold', heavy: 'Nunito_800ExtraBold' } as const;
+export const radius = { card: 20, bubble: 22, sheet: 28, pill: 999 } as const;
+export const space = { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32 } as const;
+export const fontSize = { hero: 32, title: 24, section: 20,
+  body: 17, caption: 14, micro: 12 } as const;
+
+export const moodRing: Record&lt;Mood, string | null&gt; = {
+  happy: null, thinking: colors.accent,
+  worried: colors.warning, celebrating: colors.success,
+};
+
+export const shadow = { shadowColor: colors.ink, shadowOpacity: 0.07,
+  shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 2 } as const;
+
+export const motion = { micro: 150, standard: 250, hero: 400,
+  finnSpring: { damping: 14, stiffness: 180 } } as const;</pre>
+      <pre style="background:#14213D;color:#E8F0FE;border-radius:20px;padding:20px 22px;font:400 12px/1.6 ui-monospace,Menlo,monospace;overflow:auto;white-space:pre">/* apps/mobile/src/global.css */
+@theme {
+  --color-canvas: #faf8f3;  --color-surface: #ffffff;
+  --color-hairline: #edeae3; --color-belly: #fbf6ec;
+  --color-ink: #14213d;     --color-muted: #5b6b82;
+  --color-accent: #2563eb;  --color-accent-tint: #e8f0fe;
+  --color-accent-pressed: #1e4fd0;
+  --color-hero-from: #1e3a8a; --color-hero-to: #2f55c8;
+  --color-danger: #e5484d;  --color-danger-ink: #c62f36;
+  --color-warning: #f5a524; --color-warning-ink: #9a5b00;
+  --color-success: #2fb37f; --color-success-ink: #1f7a55;
+
+  --font-body: 'Nunito_400Regular';
+  --font-bold: 'Nunito_700Bold';
+  --font-heavy: 'Nunito_800ExtraBold';
+
+  --radius-card: 20px; --radius-bubble: 22px; --radius-sheet: 28px;
+}
+/* removed: deep foam ocean lagoon coral sun kelp berry
+   bg-foam → bg-canvas · text-deep → text-ink · bg-ocean → bg-accent */</pre>
+    </div>
+  </div>
+</section>
+
+<section id="t2" style="padding:56px 72px;max-width:1720px;border-bottom:1px solid #E3DFD6">
+  <div style="font:700 12px/1 Nunito;letter-spacing:.08em;text-transform:uppercase;color:#5B6B82">02</div>
+  <h2 style="margin:6px 0 8px;font:800 28px/1.2 Nunito">Finn assets · apps/mobile/assets/finn/</h2>
+  <p style="margin:0 0 24px;font:400 15px/1.5 Nunito;color:#5B6B82;max-width:820px">Transparent PNG on a square artboard, subject centered with 8% padding. Exports at @1x/@2x/@3x: heads 120/240/360px, poses 160/320/480px, plush 280/560/840px. Every tick, "?", and sparkle must be #2563EB. Re-export without the cream background.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:32px">
+    <sc-for list="{{ assets }}" as="a" hint-placeholder-count="20">
+      <div style="background:#fff;border:1px solid #EDEAE3;border-radius:16px;overflow:hidden">
+        <div style="aspect-ratio:1;background:#FBF6EC;overflow:hidden"><img src="{{ a.src }}" alt="{{ a.alt }}" style="width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply;display:block"></div>
+        <div style="padding:8px 10px 10px">
+          <div style="font:700 12px/1.3 ui-monospace,Menlo,monospace">{{ a.file }}</div>
+          <div style="font:400 12px/1.35 Nunito;color:#5B6B82">{{ a.use }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px">
+    <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;overflow:hidden;align-self:start">
+      <div style="display:grid;grid-template-columns:100px 1fr 1fr 70px;gap:8px;padding:12px 18px;font:700 12px/1.3 Nunito;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82;border-bottom:1px solid #EDEAE3"><span>Mood</span><span>Head</span><span>Pose</span><span>Ring</span></div>
+      <sc-for list="{{ moodMap }}" as="m" hint-placeholder-count="4">
+        <div style="display:grid;grid-template-columns:100px 1fr 1fr 70px;align-items:center;padding:12px 18px;border-bottom:1px solid #EDEAE3;gap:8px">
+          <span style="font:800 14px Nunito">{{ m.mood }}</span>
+          <div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:none"><img src="{{ m.head }}" alt="" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div><span style="font:400 13px Nunito;color:#5B6B82">{{ m.headName }}</span></div>
+          <span style="font:400 13px/1.4 Nunito;color:#5B6B82">{{ m.pose }}</span>
+          <span style="width:14px;height:14px;border-radius:50%;border:2px solid {{ m.ring }}"></span>
+        </div>
+      </sc-for>
+      <div style="padding:12px 18px;font:400 13px/1.45 Nunito;color:#5B6B82">Sad is for declined actions and skeptical is for suspicious charges, both chosen explicitly. Heart-eyes appears only when a goal is completed.</div>
+    </div>
+    <pre style="background:#14213D;color:#E8F0FE;border-radius:20px;padding:20px 22px;font:400 12px/1.6 ui-monospace,Menlo,monospace;overflow:auto;white-space:pre">// apps/mobile/src/components/finn/assets.ts
+import type { Mood } from '@finni/shared';
+
+export const FINN_HEAD = {
+  happy:       require('@/assets/finn/head-happy.png'),
+  thinking:    require('@/assets/finn/head-curious.png'),
+  worried:     require('@/assets/finn/head-worried.png'),
+  celebrating: require('@/assets/finn/head-excited.png'),
+} satisfies Record&lt;Mood, number&gt;;
+
+/** Rare heads, chosen explicitly — never from a Mood. */
+export const FINN_HEAD_RARE = {
+  sad:       require('@/assets/finn/head-sad.png'),       // declined action
+  skeptical: require('@/assets/finn/head-skeptical.png'), // suspicious charge
+  love:      require('@/assets/finn/head-love.png'),      // goal completed
+  content:   require('@/assets/finn/head-content.png'),
+  confident: require('@/assets/finn/head-confident.png'),
+  surprised: require('@/assets/finn/head-surprised.png'),
+} as const;
+
+export const FINN_POSE = {
+  happy:       require('@/assets/finn/pose-thumbsup.png'),
+  thinking:    require('@/assets/finn/pose-laptop.png'),
+  worried:     require('@/assets/finn/pose-alert.png'),
+  celebrating: require('@/assets/finn/pose-laugh-card.png'),
+} satisfies Record&lt;Mood, number&gt;;
+
+export const FINN_PLUSH = {   // hero moments only
+  welcome:  require('@/assets/finn/plush-card.png'),
+  loading:  require('@/assets/finn/plush-wave.png'),
+  complete: require('@/assets/finn/plush-celebrate.png'),
+} as const;
+
+export const FINN_LABEL: Record&lt;Mood, string&gt; = {
+  happy: 'Finn looks happy', thinking: 'Finn is thinking',
+  worried: 'Finn looks worried', celebrating: 'Finn is celebrating',
+};</pre>
+  </div>
+</section>
+
+<section id="t3" style="padding:56px 72px;max-width:1720px;border-bottom:1px solid #E3DFD6">
+  <div style="font:700 12px/1 Nunito;letter-spacing:.08em;text-transform:uppercase;color:#5B6B82">03</div>
+  <h2 style="margin:6px 0 24px;font:800 28px/1.2 Nunito">Components</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:20px;align-items:start">
+
+    <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:22px;display:grid;gap:16px">
+      <div style="font:800 16px Nunito">FinnAvatar <span style="font:400 13px Nunito;color:#5B6B82">24 · 32 · 40 · 64 · 120</span></div>
+      <div style="display:flex;align-items:end;gap:14px">
+        <div style="width:24px;height:24px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+        <div style="width:32px;height:32px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+        <div style="width:40px;height:40px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+        <div style="width:64px;height:64px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+        <div style="width:120px;height:120px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div style="padding:2px;border-radius:50%;border:2px solid #2563EB"><div style="width:40px;height:40px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-curious.png" alt="Finn is thinking" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div></div>
+        <div style="padding:2px;border-radius:50%;border:2px solid #F5A524"><div style="width:40px;height:40px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-worried.png" alt="Finn looks worried" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div></div>
+        <div style="padding:2px;border-radius:50%;border:2px solid #2FB37F"><div style="width:40px;height:40px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-excited.png" alt="Finn is celebrating" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div></div>
+        <span style="font:400 13px/1.4 Nunito;color:#5B6B82">Optional mood ring, 2px with a 2px gap. Heads crossfade over 150ms. Replaces the emoji placeholder.</span>
+      </div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:22px;display:grid;gap:16px">
+      <div style="font:800 16px Nunito">FinnTicks · FinnTyping</div>
+      <div style="display:flex;align-items:center;gap:24px">
+        <svg width="28" height="28" viewBox="0 0 20 20" fill="none" stroke="#2563EB" stroke-width="2.4" stroke-linecap="round"><path d="M5 3.5l1.8 4"></path><path d="M11.5 2.5l-.6 4.4"></path><path d="M17 6.5l-3.6 2.4"></path></svg>
+        <div style="display:flex;align-items:center;gap:6px"><span style="font:700 14px Nunito">Unread</span><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round"><path d="M6 4l1.6 4"></path><path d="M13 3.5l-.8 4.4"></path></svg></div>
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px">{{ ticksDemo }}</div><button onClick="{{ replayTicks }}" style="border:1px solid #EDEAE3;background:#fff;border-radius:999px;padding:6px 12px;font:700 12px Nunito;color:#14213D;cursor:pointer">Replay burst</button></div>
+      </div>
+      <div style="display:flex;align-items:end;gap:8px">
+        <div style="width:32px;height:32px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:none"><img src="assets/finn/head-curious.png" alt="Finn is thinking" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+        <div style="background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:14px 16px">{{ typingDots }}</div>
+      </div>
+      <div style="font:400 13px/1.45 Nunito;color:#5B6B82">The burst is 2–3 strokes that scale from 0 to 1, staggered by 40ms, then fade. Static ticks mark unread items. Typing shows the thinking head with three dots, the first in cobalt, matching the chat mockup.</div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:22px;display:grid;gap:14px">
+      <div style="font:800 16px Nunito">Button</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <button style="height:48px;padding:0 22px;border:0;border-radius:999px;background:#2563EB;color:#fff;font:800 16px Nunito;cursor:pointer" style-hover="background:#1E4FD0">Primary</button>
+        <button style="height:48px;padding:0 22px;border:1px solid #D9D4C9;border-radius:999px;background:#fff;color:#14213D;font:800 16px Nunito;cursor:pointer">Secondary</button>
+        <button style="height:48px;padding:0 18px;border:0;border-radius:999px;background:transparent;color:#2563EB;font:800 16px Nunito;cursor:pointer">Ghost</button>
+        <button style="height:48px;padding:0 22px;border:1px solid #F3C9CA;border-radius:999px;background:#fff;color:#C62F36;font:800 16px Nunito;cursor:pointer">Destructive</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <button style="height:48px;padding:0 22px;border:0;border-radius:999px;background:#1E4FD0;color:#fff;font:800 16px Nunito;transform:scale(.97)">Pressed</button>
+        <button style="height:48px;padding:0 22px;border:0;border-radius:999px;background:#2563EB;color:#fff;font:800 16px Nunito;display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-9-9"></path></svg>Loading</button>
+        <button style="height:48px;padding:0 22px;border:0;border-radius:999px;background:#E3E8F0;color:#7D8AA0;font:800 16px Nunito">Disabled</button>
+      </div>
+      <div style="font:400 13px/1.45 Nunito;color:#5B6B82">48pt tall, 44pt minimum. Pressed state scales to 0.97 over 150ms. While loading, the width stays fixed and the label is announced as "Loading".</div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:22px;display:grid;gap:14px">
+      <div style="font:800 16px Nunito">Chip · SuggestionChips · Composer</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span style="height:36px;padding:0 16px;border-radius:999px;background:#E8F0FE;color:#1E4FD0;font:700 14px/36px Nunito">Why 9%?</span>
+        <span style="height:36px;padding:0 16px;border-radius:999px;background:#E8F0FE;color:#1E4FD0;font:700 14px/36px Nunito">Check charges</span>
+        <span style="height:36px;padding:0 16px;border-radius:999px;background:#fff;border:1px solid #EDEAE3;color:#14213D;font:700 14px/34px Nunito">Filter</span>
+        <span style="height:36px;padding:0 16px;border-radius:999px;background:#14213D;color:#fff;font:700 14px/36px Nunito">Selected</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;height:52px;padding:0 6px 0 18px;border:1px solid #EDEAE3;border-radius:999px;background:#fff">
+        <span style="flex:1;font:400 16px Nunito;color:#7D8AA0">Ask Finn…</span>
+        <span style="width:40px;height:40px;border-radius:50%;background:#C9D6F5;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;height:52px;padding:0 6px 0 18px;border:1px solid #2563EB;border-radius:999px;background:#fff">
+        <span style="flex:1;font:400 16px Nunito">Move $200 to Hawaii</span>
+        <span style="width:40px;height:40px;border-radius:50%;background:#2563EB;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></span>
+      </div>
+      <div style="font:400 13px/1.45 Nunito;color:#5B6B82">Send is disabled when the field is empty or a message is sending. The focus ring is 1px cobalt. Tapping a chip fires a selection haptic and sends its text right away.</div>
+    </div>
+
+    <div style="background:#FAF8F3;border:1px solid #EDEAE3;border-radius:20px;padding:22px;display:grid;gap:4px">
+      <div style="font:800 16px Nunito;margin-bottom:10px">MessageBubble · grouping</div>
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <div style="width:32px;height:32px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:none;border:1px solid #EDEAE3"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+        <div style="max-width:78%;background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:11px 15px;font:400 16px/1.4 Nunito">You're at <b style="font-weight:800;font-variant-numeric:tabular-nums">68%</b> utilization.</div>
+      </div>
+      <div style="display:flex;gap:8px"><div style="width:32px;flex:none"></div><div style="max-width:78%;background:#fff;border:1px solid #EDEAE3;border-radius:6px 22px 22px 6px;padding:11px 15px;font:400 16px/1.4 Nunito">I can fix that before Oct 22.</div></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px"><div style="max-width:78%;background:#E8F0FE;border-radius:22px 22px 6px 22px;padding:11px 15px;font:400 16px/1.4 Nunito">Show me the plan.</div></div>
+      <div style="display:flex;justify-content:flex-end;gap:6px;align-items:center;margin-top:4px"><span style="font:700 12px Nunito;color:#C62F36">Not sent · Retry</span></div>
+      <div style="font:400 13px/1.45 Nunito;color:#5B6B82;margin-top:10px">Finn's bubbles are white with a hairline border, not a shadow. The user's are cobalt tint with ink text (the old solid ocean is gone). Messages in a group are 4pt apart and only the first gets the avatar. The corner nearest the speaker is 6.</div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:22px;display:grid;gap:14px">
+      <div style="font:800 16px Nunito">CardRenderer · rich cards</div>
+      <div style="border:1px solid #EDEAE3;border-radius:20px;padding:14px;display:flex;gap:12px;align-items:center">
+        <div style="width:44px;height:44px;border-radius:14px;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></div>
+        <div style="flex:1;min-width:0"><div style="font:800 16px/1.3 Nunito;font-variant-numeric:tabular-nums">Pay $1,184.20 before Oct 22.</div><div style="font:400 13px/1.4 Nunito;color:#5B6B82">Target: 9%</div></div>
+      </div>
+      <div style="border:1px solid #EDEAE3;border-radius:20px;padding:14px;display:grid;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:800 15px Nunito">Spending · last 30 days</span><span style="font:800 15px Nunito;font-variant-numeric:tabular-nums">$990.00</span></div>
+        <sc-for list="{{ spend }}" as="s" hint-placeholder-count="4">
+          <div style="display:grid;grid-template-columns:84px 1fr 64px;align-items:center;gap:10px;font:400 13px Nunito">
+            <span>{{ s.name }}</span>
+            <div style="height:8px;border-radius:999px;background:#F1EEE7;overflow:hidden"><div style="height:100%;width:{{ s.pct }};background:{{ s.color }};border-radius:999px"></div></div>
+            <span style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700">{{ s.amt }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="border:1px dashed #D9D4C9;border-radius:20px;padding:14px;font:400 14px Nunito;color:#5B6B82">Empty: "No bills due in the next 30 days."</div>
+      <div style="font:400 13px/1.45 Nunito;color:#5B6B82">Covers account_list, transaction_list, spending_breakdown, bill_list, goal_progress, atm_list, and approval. Each card fills the bubble column with an icon tile on the left. Spending bars use ink and cobalt shades, never semantic colors. Tapping any amount opens its transactions.</div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:22px;display:grid;gap:14px">
+      <div style="font:800 16px Nunito">AccountHeroCard · StatTile · UtilizationRing</div>
+      <div style="border-radius:20px;background:linear-gradient(135deg,#1E3A8A,#2F55C8);color:#fff;padding:20px;display:grid;gap:18px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font:700 18px Nunito">Closer Card</div><div style="font:400 14px Nunito;color:#DCE5FB;letter-spacing:.06em">•••• 4821</div></div><div style="width:34px;height:26px;border-radius:6px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35)"></div></div>
+        <div><div style="font:400 13px Nunito;color:#DCE5FB">Current balance</div><div style="font:800 32px/1.1 Nunito;font-variant-numeric:tabular-nums">$1,364<span style="font-weight:400;font-size:22px">.20</span></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+        <div style="border:1px solid #EDEAE3;border-radius:20px;padding:12px;display:grid;justify-items:center;gap:6px">
+          <div style="position:relative;width:64px;height:64px"><svg width="64" height="64" viewBox="0 0 64 64" style="transform:rotate(-90deg)"><circle cx="32" cy="32" r="28" fill="none" stroke="#F1EEE7" stroke-width="6"></circle><circle cx="32" cy="32" r="28" fill="none" stroke="#2FB37F" stroke-width="6" stroke-linecap="round" stroke-dasharray="31.7 176"></circle></svg><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:800 16px Nunito;font-variant-numeric:tabular-nums">18%</span></div>
+          <span style="font:400 12px Nunito;color:#5B6B82">≤30% healthy</span>
+        </div>
+        <div style="border:1px solid #EDEAE3;border-radius:20px;padding:12px;display:grid;justify-items:center;gap:6px">
+          <div style="position:relative;width:64px;height:64px"><svg width="64" height="64" viewBox="0 0 64 64" style="transform:rotate(-90deg)"><circle cx="32" cy="32" r="28" fill="none" stroke="#F1EEE7" stroke-width="6"></circle><circle cx="32" cy="32" r="28" fill="none" stroke="#F5A524" stroke-width="6" stroke-linecap="round" stroke-dasharray="79.2 176"></circle></svg><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:800 16px Nunito;font-variant-numeric:tabular-nums">45%</span></div>
+          <span style="font:400 12px Nunito;color:#5B6B82">≤60% watch</span>
+        </div>
+        <div style="border:1px solid #EDEAE3;border-radius:20px;padding:12px;display:grid;justify-items:center;gap:6px">
+          <div style="position:relative;width:64px;height:64px"><svg width="64" height="64" viewBox="0 0 64 64" style="transform:rotate(-90deg)"><circle cx="32" cy="32" r="28" fill="none" stroke="#F1EEE7" stroke-width="6"></circle><circle cx="32" cy="32" r="28" fill="none" stroke="#E5484D" stroke-width="6" stroke-linecap="round" stroke-dasharray="119.7 176"></circle></svg><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:800 16px Nunito;font-variant-numeric:tabular-nums">68%</span></div>
+          <span style="font:400 12px Nunito;color:#5B6B82">&gt;60% high</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:22px;display:grid;gap:12px">
+      <div style="font:800 16px Nunito">FinnNudgeCard · AttentionRow · BillRow</div>
+      <div style="background:#E8F0FE;border-radius:20px;padding:12px 14px;display:flex;gap:10px;align-items:center">
+        <img src="assets/finn/pose-laugh-card.png" alt="Finn holds a card" style="width:72px;height:72px;object-fit:cover;mix-blend-mode:multiply;flex:none">
+        <div style="display:grid;gap:10px;flex:1">
+          <div style="font:400 15px/1.4 Nunito">I can drop your utilization to <b style="font-weight:800;color:#1E4FD0">9%</b> before Oct 22.</div>
+          <span style="justify-self:start;height:36px;padding:0 16px;border-radius:999px;background:#2563EB;color:#fff;font:800 14px/36px Nunito">Review plan →</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;min-height:58px;border:1px solid #EDEAE3;border-radius:16px;padding:0 14px">
+        <span style="width:9px;height:9px;border-radius:50%;background:#E5484D;flex:none"></span>
+        <div style="flex:1"><div style="font:800 15px Nunito">Duplicate charge</div><div style="font:400 13px Nunito;color:#5B6B82;font-variant-numeric:tabular-nums">Spotify · $14.99 · Oct 14</div></div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6B82" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;min-height:58px;border:1px solid #EDEAE3;border-radius:16px;padding:0 14px">
+        <div style="width:36px;height:36px;border-radius:10px;background:#F1EEE7;display:flex;align-items:center;justify-content:center;font:800 12px Nunito;flex:none">CC</div>
+        <div style="flex:1"><div style="font:800 15px Nunito">Closer Card</div><div style="font:400 13px Nunito;color:#5B6B82;font-variant-numeric:tabular-nums">$1,184.20 statement</div></div>
+        <span style="height:28px;padding:0 10px;border-radius:999px;background:#FEF4E2;color:#9A5B00;font:700 12px/28px Nunito">Due Oct 22</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;min-height:52px;padding:0 14px">
+        <div style="flex:1"><div style="font:700 15px Nunito">Whole Foods</div><div style="font:400 13px Nunito;color:#5B6B82">Groceries · Oct 15</div></div>
+        <span style="font:800 15px Nunito;font-variant-numeric:tabular-nums">−$82.14</span>
+      </div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:22px;display:grid;gap:14px">
+      <div style="font:800 16px Nunito">GoalCard · tide fill</div>
+      <div style="display:flex;gap:16px;align-items:center;border:1px solid #EDEAE3;border-radius:20px;padding:14px">
+        <div style="position:relative;width:64px;height:84px;border-radius:20px;background:#F4F7FE;overflow:hidden;border:1px solid #E1E8F8;flex:none">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:62%;background:#CFDDFB"></div>
+          <svg viewBox="0 0 120 10" preserveAspectRatio="none" style="position:absolute;left:0;width:100%;height:8px;bottom:calc(62% - 1px)"><path d="M0 6 Q15 1 30 6 T60 6 T90 6 T120 6 V10 H0Z" fill="#CFDDFB"></path></svg>
+          <span style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;font:800 15px Nunito;color:#1E3A8A;font-variant-numeric:tabular-nums">62%</span>
+        </div>
+        <div style="flex:1;display:grid;gap:4px">
+          <div style="font:800 17px Nunito">Hawaii Fund</div>
+          <div style="font:700 15px Nunito;font-variant-numeric:tabular-nums">$1,488.00 <span style="font-weight:400;color:#5B6B82">/ $2,400.00</span></div>
+          <div style="font:400 13px Nunito;color:#5B6B82">On track for March at $50 a week.</div>
+        </div>
+      </div>
+      <div style="font:400 13px/1.45 Nunito;color:#5B6B82">The water level shows the percentage. The crest stays still and only moves when the level changes, over 400ms on Finn's spring. A completed goal fills to the top and gets a success ring on its border.</div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:22px;display:grid;gap:12px">
+      <div style="font:800 16px Nunito">NudgeItem · unread · action · swiping</div>
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:4px 0 12px;border-bottom:1px solid #EDEAE3">
+        <div style="width:40px;height:40px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:none"><img src="assets/finn/head-worried.png" alt="Finn looks worried" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+        <div style="flex:1;display:grid;gap:8px"><div><div style="font:800 15px Nunito">Closer Card is due Oct 22</div><div style="font:400 13px Nunito;color:#5B6B82;font-variant-numeric:tabular-nums">$1,184.20 statement balance</div></div><div style="display:flex;gap:8px"><span style="height:34px;padding:0 14px;border-radius:999px;background:#2563EB;color:#fff;font:800 13px/34px Nunito">Review payment</span></div></div>
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round"><path d="M6 4l1.6 4"></path><path d="M13 3.5l-.8 4.4"></path></svg>
+      </div>
+      <div style="position:relative;border-radius:16px;overflow:hidden;background:#FBE9E9">
+        <div style="position:absolute;right:16px;top:0;bottom:0;display:flex;align-items:center;font:800 13px Nunito;color:#C62F36">Dismiss</div>
+        <div style="position:relative;transform:translateX(-88px);background:#fff;display:flex;gap:12px;align-items:center;padding:12px 0 12px 4px">
+          <div style="width:40px;height:40px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:none"><img src="assets/finn/head-excited.png" alt="Finn is celebrating" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+          <div><div style="font:700 15px Nunito;color:#5B6B82">Hawaii Fund passed 60%</div><div style="font:400 13px Nunito;color:#5B6B82">Yesterday · read</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:22px;display:grid;gap:14px">
+      <div style="font:800 16px Nunito">Toast · Skeleton · EmptyState</div>
+      <div style="display:flex;align-items:center;gap:10px;background:#14213D;color:#fff;border-radius:999px;padding:6px 16px 6px 6px;justify-self:start">
+        <div style="width:32px;height:32px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:none"><img src="assets/finn/head-excited.png" alt="Finn is celebrating" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+        <span style="font:700 14px Nunito">$200.00 moved to Hawaii Fund.</span>
+      </div>
+      <div style="display:grid;gap:8px">
+        <div style="height:14px;width:60%;border-radius:999px;background:linear-gradient(90deg,#F1EEE7 0,#FBF8F2 50%,#F1EEE7 100%);background-size:400px 100%;animation:shimmer 1.4s linear infinite"></div>
+        <div style="height:14px;width:90%;border-radius:999px;background:linear-gradient(90deg,#F1EEE7 0,#FBF8F2 50%,#F1EEE7 100%);background-size:400px 100%;animation:shimmer 1.4s linear infinite"></div>
+        <div style="height:14px;width:40%;border-radius:999px;background:linear-gradient(90deg,#F1EEE7 0,#FBF8F2 50%,#F1EEE7 100%);background-size:400px 100%;animation:shimmer 1.4s linear infinite"></div>
+      </div>
+      <div style="display:grid;justify-items:center;gap:8px;padding:4px 0;text-align:center">
+        <img src="assets/finn/pose-thumbsup.png" alt="Finn gives a thumbs-up" style="width:96px;height:96px;object-fit:cover;mix-blend-mode:multiply">
+        <div style="font:400 15px/1.4 Nunito">You're all caught up. I'll ping you when something's due.</div>
+        <span style="height:36px;padding:0 16px;border-radius:999px;border:1px solid #D9D4C9;font:800 14px/34px Nunito">Ask Finn something</span>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin:40px 0 14px;font:800 20px Nunito">Props, states, accessibility</h3>
+  <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;overflow:hidden">
+    <div style="display:grid;grid-template-columns:170px minmax(0,1.3fr) minmax(0,1.4fr) minmax(0,1.1fr);gap:16px;padding:12px 20px;font:700 12px/1.3 Nunito;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82;border-bottom:1px solid #EDEAE3"><span>Component</span><span>Props</span><span>States</span><span>A11y</span></div>
+    <sc-for list="{{ specs }}" as="s" hint-placeholder-count="12">
+      <div style="display:grid;grid-template-columns:170px minmax(0,1.3fr) minmax(0,1.4fr) minmax(0,1.1fr);gap:16px;padding:12px 20px;border-bottom:1px solid #EDEAE3;font:400 13px/1.45 Nunito">
+        <span style="font:800 14px Nunito">{{ s.name }}</span>
+        <span style="font:400 12px/1.5 ui-monospace,Menlo,monospace">{{ s.props }}</span>
+        <span style="color:#5B6B82">{{ s.states }}</span>
+        <span style="color:#5B6B82">{{ s.a11y }}</span>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="t4" style="padding:56px 72px;border-bottom:1px solid #E3DFD6">
+  <div style="font:700 12px/1 Nunito;letter-spacing:.08em;text-transform:uppercase;color:#5B6B82">04</div>
+  <h2 style="margin:6px 0 8px;font:800 28px/1.2 Nunito">Screens</h2>
+  <p style="margin:0 0 28px;font:400 15px/1.5 Nunito;color:#5B6B82">The dark tag above each frame names its one expressive element. The approval sheet and goal creation are interactive.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+
+    <div style="display:grid;gap:10px" data-screen-label="Home">
+      <div style="display:flex;gap:8px;align-items:center"><span style="font:800 15px Nunito">Home</span><span style="font:700 11px Nunito;padding:3px 8px;border-radius:999px;background:#14213D;color:#fff">Expressive · Finn in nudge</span></div>
+      <div style="width:360px;height:760px;background:#FAF8F3;border-radius:44px;border:1px solid #DCD7CC;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(20,33,61,.07)">
+        <div style="height:44px;padding:0 28px;display:flex;align-items:center;font:800 15px Nunito;flex:none">9:41</div>
+        <div style="flex:1;overflow:hidden;padding:8px 20px 0;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="font:400 28px/1.1 Nunito;letter-spacing:-.01em">Good <b style="font-weight:800">evening,</b><br><b style="font-weight:800">Gabe</b></div>
+            <div style="width:44px;height:44px;border-radius:50%;background:#EDEAE3;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="#14213D"><circle cx="12" cy="8" r="4.5"></circle><path d="M3.5 21c.8-4.4 4.2-7 8.5-7s7.7 2.6 8.5 7z"></path></svg></div>
+          </div>
+          <div style="border-radius:20px;background:linear-gradient(135deg,#1E3A8A,#2F55C8);color:#fff;padding:18px 20px;display:grid;gap:14px;flex:none">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font:700 17px Nunito">Closer Card</div><div style="font:400 13px Nunito;color:#DCE5FB;letter-spacing:.06em">•••• 4821</div></div><div style="width:32px;height:24px;border-radius:6px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35)"></div></div>
+            <div><div style="font:400 13px Nunito;color:#DCE5FB">Current balance</div><div style="font:800 32px/1.1 Nunito;font-variant-numeric:tabular-nums">$1,364<span style="font-weight:400;font-size:22px">.20</span></div></div>
+          </div>
+          <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:14px;flex:none">
+            <div style="position:relative;width:92px;height:92px;flex:none"><svg width="92" height="92" viewBox="0 0 64 64" style="transform:rotate(-90deg)"><circle cx="32" cy="32" r="27" fill="none" stroke="#F1EEE7" stroke-width="5"></circle><circle cx="32" cy="32" r="27" fill="none" stroke="#E5484D" stroke-width="5" stroke-linecap="round" stroke-dasharray="115.4 170"></circle></svg><div style="position:absolute;inset:0;display:grid;place-content:center;text-align:center"><span style="font:800 24px/1 Nunito;font-variant-numeric:tabular-nums">68%</span><span style="font:400 11px Nunito;color:#5B6B82">Utilization</span></div></div>
+            <div style="flex:1;display:grid;gap:10px;border-left:1px solid #EDEAE3;padding-left:14px">
+              <div><div style="font:400 12px Nunito;color:#5B6B82">Statement closes in</div><div style="font:800 17px Nunito">6 days</div></div>
+              <div style="height:1px;background:#EDEAE3"></div>
+              <div><div style="font:400 12px Nunito;color:#5B6B82">Limit</div><div style="font:800 17px Nunito;font-variant-numeric:tabular-nums">$2,000.00</div></div>
+            </div>
+          </div>
+          <div style="background:#E8F0FE;border-radius:20px;padding:10px 14px 10px 8px;display:flex;gap:8px;align-items:center;flex:none">
+            <img src="assets/finn/pose-laugh-card.png" alt="Finn holds a card" style="width:72px;height:72px;object-fit:cover;mix-blend-mode:multiply;flex:none">
+            <div style="display:grid;gap:8px;flex:1">
+              <div style="font:400 14px/1.4 Nunito">I can drop your utilization to <b style="font-weight:800;color:#1E4FD0">9%</b> before Oct 22.</div>
+              <span style="justify-self:start;height:34px;padding:0 14px;border-radius:999px;background:#2563EB;color:#fff;font:800 13px/34px Nunito">Review plan →</span>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:800 20px Nunito">Needs attention</span><span style="font:700 14px Nunito;color:#5B6B82">See all ›</span></div>
+          <div style="display:flex;align-items:center;gap:12px;min-height:56px;background:#fff;border:1px solid #EDEAE3;border-radius:16px;padding:0 14px;flex:none"><span style="width:9px;height:9px;border-radius:50%;background:#E5484D;flex:none"></span><div style="flex:1"><div style="font:800 15px Nunito">Duplicate charge</div><div style="font:400 13px Nunito;color:#5B6B82">Spotify · $14.99 · Oct 14</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6B82" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg></div>
+          <div style="display:flex;align-items:center;gap:12px;min-height:56px;background:#fff;border:1px solid #EDEAE3;border-radius:16px;padding:0 14px;flex:none"><span style="width:9px;height:9px;border-radius:50%;background:#F5A524;flex:none"></span><div style="flex:1"><div style="font:800 15px Nunito">Free trial converted</div><div style="font:400 13px Nunito;color:#5B6B82">Hulu · $17.99 · Oct 12</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6B82" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg></div>
+        </div>
+        <div style="padding:8px 16px;flex:none"><div style="display:flex;align-items:center;gap:10px;height:50px;padding:0 5px 0 8px;border:1px solid #EDEAE3;border-radius:999px;background:#fff"><div style="width:32px;height:32px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:none"><img src="assets/finn/head-happy.png" alt="" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div><span style="flex:1;font:400 15px Nunito;color:#7D8AA0">Ask your agent…</span><span style="width:40px;height:40px;border-radius:50%;background:#2563EB;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></span></div></div>
+        <div style="height:76px;border-top:1px solid #EDEAE3;background:#fff;display:flex;justify-content:space-around;padding-top:9px;flex:none">
+          <div style="display:grid;justify-items:center;gap:3px;color:#2563EB;width:64px"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg><span style="font:700 11px Nunito">Home</span></div>
+          <div style="display:grid;justify-items:center;gap:3px;color:#5B6B82;width:64px"><svg width="26" height="24" viewBox="0 0 26 24"><ellipse cx="4.5" cy="15" rx="3.5" ry="2.2" fill="currentColor" transform="rotate(-25 4.5 15)"></ellipse><ellipse cx="21.5" cy="15" rx="3.5" ry="2.2" fill="currentColor" transform="rotate(25 21.5 15)"></ellipse><ellipse cx="13" cy="13" rx="9" ry="8" fill="currentColor"></ellipse><path d="M7 15.2c0-2.6 2.2-4.3 5-4.3 1.3 0 2-.8 3-1.1 1.8-.5 3.6 1.8 3.6 4.7 0 2.7-2.8 4.3-5.9 4.3S7 17.6 7 15.2z" fill="#fff"></path><circle cx="10.6" cy="14.2" r="1.1" fill="currentColor"></circle><circle cx="16.4" cy="13.4" r="1.1" fill="currentColor"></circle></svg><span style="font:700 11px Nunito">Agent</span></div>
+          <div style="display:grid;justify-items:center;gap:3px;color:#5B6B82;width:64px;position:relative"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="3"></rect><path d="M9 8h6M9 12h6M9 16h3"></path></svg><span style="position:absolute;top:-4px;right:10px;min-width:18px;height:18px;border-radius:999px;background:#2563EB;color:#fff;font:800 11px/18px Nunito;text-align:center">2</span><span style="font:700 11px Nunito">Activity</span></div>
+          <div style="display:grid;justify-items:center;gap:3px;color:#5B6B82;width:64px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"></path></svg><span style="font:700 11px Nunito">Settings</span></div>
+        </div>
+      </div>
+      <div style="width:360px;font:400 13px/1.45 Nunito;color:#5B6B82">Matches finn-dashbord.png, with flat Finn in place of plush. The "9%" is cobalt because it's the action target, not a status. The ring is red because 68% is over the 60% threshold.</div>
+    </div>
+
+    <div style="display:grid;gap:10px" data-screen-label="Agent">
+      <div style="display:flex;gap:8px;align-items:center"><span style="font:800 15px Nunito">Agent</span><span style="font:700 11px Nunito;padding:3px 8px;border-radius:999px;background:#14213D;color:#fff">Expressive · Finn header (64)</span></div>
+      <div style="width:360px;height:760px;background:#FAF8F3;border-radius:44px;border:1px solid #DCD7CC;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(20,33,61,.07)">
+        <div style="height:44px;padding:0 28px;display:flex;align-items:center;font:800 15px Nunito;flex:none">9:41</div>
+        <div style="display:grid;justify-items:center;gap:4px;padding:4px 0 12px;flex:none">
+          <div style="width:64px;height:64px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1px solid #EDEAE3"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+          <span style="font:800 17px Nunito">Finn</span>
+        </div>
+        <div style="flex:1;padding:4px 16px 8px;display:flex;flex-direction:column;gap:4px;overflow:hidden">
+          <div style="display:flex;align-items:flex-start;gap:8px">
+            <div style="width:32px;height:32px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:none;border:1px solid #EDEAE3"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+            <div style="max-width:80%;background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:10px 14px;font:400 16px/1.4 Nunito">You're at <b style="font-weight:800">68%</b> utilization.</div>
+          </div>
+          <div style="display:flex;gap:8px"><div style="width:32px;flex:none"></div><div style="max-width:80%;background:#fff;border:1px solid #EDEAE3;border-radius:6px 22px 22px 6px;padding:10px 14px;font:400 16px/1.4 Nunito">I can fix that before Oct 22.</div></div>
+          <div style="display:flex;justify-content:flex-end;margin:12px 0"><div style="background:#E8F0FE;border-radius:22px 22px 6px 22px;padding:10px 14px;font:400 16px/1.4 Nunito">Show me the plan.</div></div>
+          <div style="display:flex;align-items:flex-start;gap:8px">
+            <div style="width:32px;height:32px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:none;border:1px solid #EDEAE3"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+            <div style="flex:1;background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:12px;display:grid;gap:12px">
+              <div style="display:flex;gap:10px;align-items:center">
+                <div style="width:40px;height:40px;border-radius:12px;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></div>
+                <div style="min-width:0"><div style="font:800 15px/1.3 Nunito;font-variant-numeric:tabular-nums">Pay $1,184.20 before Oct 22.</div><div style="font:400 13px/1.4 Nunito;color:#5B6B82">Target: 9%</div></div>
+              </div>
+              <span style="justify-self:start;height:36px;padding:0 16px;border-radius:999px;background:#2563EB;color:#fff;font:800 14px/36px Nunito">Review payment</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:8px;margin-top:12px">
+            <div style="width:32px;height:32px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:none;border:1px solid #EDEAE3"><img src="assets/finn/head-curious.png" alt="Finn is thinking" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+            <div style="background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:13px 15px">{{ typingDots }}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;padding:8px 16px;flex:none">
+          <span style="height:36px;padding:0 14px;border-radius:999px;background:#E8F0FE;color:#1E4FD0;font:700 14px/36px Nunito;white-space:nowrap">Why 9%?</span>
+          <span style="height:36px;padding:0 14px;border-radius:999px;background:#E8F0FE;color:#1E4FD0;font:700 14px/36px Nunito;white-space:nowrap">Check charges</span>
+          <span style="height:36px;padding:0 14px;border-radius:999px;background:#E8F0FE;color:#1E4FD0;font:700 14px/36px Nunito;white-space:nowrap">What's due?</span>
+        </div>
+        <div style="padding:4px 16px 8px;flex:none"><div style="display:flex;align-items:center;gap:8px;height:50px;padding:0 5px 0 18px;border:1px solid #EDEAE3;border-radius:999px;background:#fff"><span style="flex:1;font:400 16px Nunito;color:#7D8AA0">Ask Finn…</span><span style="width:40px;height:40px;border-radius:50%;background:#2563EB;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></span></div></div>
+        <div style="height:76px;border-top:1px solid #EDEAE3;background:#fff;display:flex;justify-content:space-around;padding-top:9px;flex:none">
+          <div style="display:grid;justify-items:center;gap:3px;color:#5B6B82;width:64px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg><span style="font:700 11px Nunito">Home</span></div>
+          <div style="display:grid;justify-items:center;gap:3px;color:#2563EB;width:64px"><svg width="26" height="24" viewBox="0 0 26 24"><ellipse cx="4.5" cy="15" rx="3.5" ry="2.2" fill="currentColor" transform="rotate(-25 4.5 15)"></ellipse><ellipse cx="21.5" cy="15" rx="3.5" ry="2.2" fill="currentColor" transform="rotate(25 21.5 15)"></ellipse><ellipse cx="13" cy="13" rx="9" ry="8" fill="currentColor"></ellipse><path d="M7 15.2c0-2.6 2.2-4.3 5-4.3 1.3 0 2-.8 3-1.1 1.8-.5 3.6 1.8 3.6 4.7 0 2.7-2.8 4.3-5.9 4.3S7 17.6 7 15.2z" fill="#fff"></path><circle cx="10.6" cy="14.2" r="1.1" fill="currentColor"></circle><circle cx="16.4" cy="13.4" r="1.1" fill="currentColor"></circle></svg><span style="font:700 11px Nunito">Agent</span></div>
+          <div style="display:grid;justify-items:center;gap:3px;color:#5B6B82;width:64px;position:relative"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="3"></rect><path d="M9 8h6M9 12h6M9 16h3"></path></svg><span style="position:absolute;top:-4px;right:10px;min-width:18px;height:18px;border-radius:999px;background:#2563EB;color:#fff;font:800 11px/18px Nunito;text-align:center">2</span><span style="font:700 11px Nunito">Activity</span></div>
+          <div style="display:grid;justify-items:center;gap:3px;color:#5B6B82;width:64px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"></path></svg><span style="font:700 11px Nunito">Settings</span></div>
+        </div>
+      </div>
+      <div style="width:360px;font:400 13px/1.45 Nunito;color:#5B6B82">Matches finn-chat.png. The header avatar is the screen's one Finn, and the 32pt avatars are exempt. The approval card's CTA opens <code>approve/[id]</code>.</div>
+    </div>
+
+    <div style="display:grid;gap:10px" data-screen-label="Approval sheet">
+      <div style="display:flex;gap:8px;align-items:center"><span style="font:800 15px Nunito">Approval sheet</span><span style="font:700 11px Nunito;padding:3px 8px;border-radius:999px;background:#14213D;color:#fff">Expressive · ticks on success</span><span style="font:700 11px Nunito;padding:3px 8px;border-radius:999px;background:#E8F0FE;color:#1E4FD0">Interactive</span></div>
+      <div style="display:flex;gap:20px;align-items:flex-start">
+        <div style="position:relative;width:360px;height:760px;background:#FAF8F3;border-radius:44px;border:1px solid #DCD7CC;overflow:hidden;box-shadow:0 4px 12px rgba(20,33,61,.07)">
+          <div style="padding:60px 16px 0;display:grid;gap:8px">
+            <div style="display:flex;gap:8px"><div style="width:32px;height:32px;border-radius:50%;background:#FBF6EC;flex:none"></div><div style="background:#fff;border-radius:22px;padding:10px 14px;font:400 16px Nunito">I can fix that before Oct 22.</div></div>
+            <div style="align-self:end;justify-self:end;background:#E8F0FE;border-radius:22px;padding:10px 14px;font:400 16px Nunito">Show me the plan.</div>
+          </div>
+          <div style="position:absolute;inset:0;background:rgba(20,33,61,.42)"></div>
+          <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:28px 28px 0 0;padding:10px 20px 30px;display:grid;gap:16px">
+            <div style="justify-self:center;width:36px;height:5px;border-radius:999px;background:#DCD7CC"></div>
+
+            <sc-if value="{{ isReview }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid;gap:16px">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <div style="position:relative;width:48px;height:48px;flex:none">
+                    <div style="width:48px;height:48px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                    <div style="position:absolute;right:-4px;bottom:-4px;width:22px;height:22px;border-radius:8px;background:#2563EB;border:2px solid #fff;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"></path></svg></div>
+                  </div>
+                  <div style="font:800 18px/1.3 Nunito">{{ act.summary }}</div>
+                </div>
+                <div style="display:grid;gap:2px">
+                  <span style="font:700 12px Nunito;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82">{{ act.amtLabel }}</span>
+                  <span style="font:800 40px/1.1 Nunito;font-variant-numeric:tabular-nums;letter-spacing:-.01em">{{ act.amtMain }}<span style="font-weight:400;font-size:26px">{{ act.amtCents }}</span></span>
+                </div>
+                <div style="border:1px solid #EDEAE3;border-radius:20px;overflow:hidden">
+                  <sc-for list="{{ act.rows }}" as="r" hint-placeholder-count="2">
+                    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid #EDEAE3">
+                      <span style="width:44px;font:700 12px Nunito;color:#5B6B82;text-transform:uppercase;letter-spacing:.04em">{{ r.label }}</span>
+                      <div style="flex:1"><div style="font:800 15px Nunito">{{ r.value }}</div><div style="font:400 13px Nunito;color:#5B6B82;font-variant-numeric:tabular-nums">{{ r.sub }}</div></div>
+                    </div>
+                  </sc-for>
+                  <button onClick="{{ toggleWhy }}" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:0;background:#fff;font:700 14px Nunito;color:#2563EB;cursor:pointer;min-height:44px">Why Finn suggests this<span style="font:800 14px Nunito">{{ whyCaret }}</span></button>
+                  <sc-if value="{{ why }}" hint-placeholder-val="{{ false }}"><div style="padding:0 14px 14px;font:400 14px/1.5 Nunito;color:#14213D">{{ act.reason }}</div></sc-if>
+                </div>
+                <div onPointerDown="{{ startHold }}" onPointerUp="{{ endHold }}" onPointerLeave="{{ endHold }}" role="button" aria-label="Hold to approve" style="position:relative;height:56px;border-radius:999px;background:#C9D6F5;overflow:hidden;cursor:pointer;user-select:none;touch-action:none">
+                  <div style="position:absolute;left:0;top:0;bottom:0;width:{{ holdPct }};background:#2563EB"></div>
+                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;font:800 17px Nunito;color:#fff"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"></path></svg>{{ holdLabel }}</div>
+                </div>
+                <button onClick="{{ reset }}" style="height:44px;border:0;background:transparent;font:800 16px Nunito;color:#14213D;cursor:pointer">Not now</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isAuth }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;justify-items:center;gap:14px;text-align:center;padding:18px 0 4px">
+                <div style="position:relative;width:88px;height:88px">
+                  <div style="width:88px;height:88px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                  <div style="position:absolute;right:-2px;bottom:-2px;width:34px;height:34px;border-radius:12px;background:#2563EB;border:3px solid #fff;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"></path></svg></div>
+                </div>
+                <div style="font:800 24px/1.2 Nunito">Quick check it's you.</div>
+                <div style="font:400 15px/1.5 Nunito;color:#5B6B82;max-width:280px">Moves over $100 need a second sign-in. After that, Finn sends the request to Capital One.</div>
+                <button onClick="{{ process }}" style="width:100%;height:52px;border:0;border-radius:999px;background:#2563EB;color:#fff;font:800 17px Nunito;cursor:pointer;margin-top:8px">Continue with Face ID</button>
+                <button onClick="{{ reset }}" style="height:44px;border:0;background:transparent;font:800 16px Nunito;color:#14213D;cursor:pointer">Cancel</button>
+                <span style="font:400 12px Nunito;color:#5B6B82">Secured by Auth0</span>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isProcessing }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;justify-items:center;gap:14px;text-align:center;padding:40px 0 60px">
+                <div style="width:64px;height:64px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-curious.png" alt="Finn is thinking" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                <div style="font:800 18px Nunito">Sending to Capital One…</div>
+                {{ typingDots }}
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isSuccess }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;justify-items:center;gap:12px;text-align:center;padding:24px 0 8px">
+                <div style="position:relative;width:96px;height:96px">
+                  <div style="width:96px;height:96px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center;animation:pop 400ms cubic-bezier(.3,1.4,.5,1) both"><img src="assets/finn/head-excited.png" alt="Finn is celebrating" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                  <div style="position:absolute;right:-30px;top:-18px;width:44px;height:44px">{{ ticksSuccess }}</div>
+                  <div style="position:absolute;left:-30px;top:-18px;width:44px;height:44px;transform:scaleX(-1)">{{ ticksSuccess2 }}</div>
+                </div>
+                <div style="font:800 24px/1.2 Nunito">Done.</div>
+                <div style="font:400 16px/1.5 Nunito;max-width:280px">{{ act.successLine }}</div>
+                <div style="font:400 13px Nunito;color:#5B6B82">Confirmation {{ act.ref }} · View in Activity</div>
+                <button onClick="{{ reset }}" style="width:100%;height:52px;border:0;border-radius:999px;background:#2563EB;color:#fff;font:800 17px Nunito;cursor:pointer;margin-top:12px">Done</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;justify-items:center;gap:12px;text-align:center;padding:24px 0 8px">
+                <div style="width:88px;height:88px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center;border:2px solid #F5A524"><img src="assets/finn/head-worried.png" alt="Finn looks worried" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                <div style="font:800 22px/1.2 Nunito">That didn't go through.</div>
+                <div style="font:400 15px/1.5 Nunito;max-width:290px">Capital One didn't respond. <b style="font-weight:800">Nothing was moved.</b> You can try again now, or Finn will remind you tomorrow.</div>
+                <button onClick="{{ retry }}" style="width:100%;height:52px;border:0;border-radius:999px;background:#2563EB;color:#fff;font:800 17px Nunito;cursor:pointer;margin-top:12px">Try again</button>
+                <button onClick="{{ reset }}" style="height:44px;border:0;background:transparent;font:800 16px Nunito;color:#14213D;cursor:pointer">Not now</button>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+        <div style="width:220px;display:grid;gap:16px;padding-top:4px">
+          <div style="display:grid;gap:8px">
+            <span style="font:700 12px Nunito;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82">PendingActionType</span>
+            <sc-for list="{{ typeOpts }}" as="o" hint-placeholder-count="3">
+              <button onClick="{{ o.pick }}" style="height:40px;border-radius:999px;border:1px solid #DCD7CC;background:{{ o.bg }};color:{{ o.fg }};font:700 14px Nunito;cursor:pointer;text-align:left;padding:0 16px">{{ o.label }}</button>
+            </sc-for>
+          </div>
+          <div style="display:grid;gap:8px">
+            <span style="font:700 12px Nunito;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82">Simulate</span>
+            <button onClick="{{ toggleStepUp }}" style="height:40px;border-radius:999px;border:1px solid #DCD7CC;background:#fff;font:700 14px Nunito;cursor:pointer;text-align:left;padding:0 16px;color:#14213D">Step-up: {{ stepUpLabel }}</button>
+            <button onClick="{{ toggleFail }}" style="height:40px;border-radius:999px;border:1px solid #DCD7CC;background:#fff;font:700 14px Nunito;cursor:pointer;text-align:left;padding:0 16px;color:#14213D">Outcome: {{ failLabel }}</button>
+          </div>
+          <div style="font:400 13px/1.5 Nunito;color:#5B6B82">Press and hold the pill. It fills over 600ms with light haptic ticks at 25%, 50%, and 75%, and letting go early cancels. Success plays the tick burst, the celebrating head, and a success haptic. Failure shows the worried head and spells out what didn't happen.<br><br>VoiceOver exposes an "Approve" action on the pill, so the hold isn't required for screen reader users.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;gap:10px" data-screen-label="Activity">
+      <div style="display:flex;gap:8px;align-items:center"><span style="font:800 15px Nunito">Activity</span><span style="font:700 11px Nunito;padding:3px 8px;border-radius:999px;background:#14213D;color:#fff">Expressive · unread ticks</span></div>
+      <div style="width:360px;height:760px;background:#FAF8F3;border-radius:44px;border:1px solid #DCD7CC;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(20,33,61,.07)">
+        <div style="height:44px;padding:0 28px;display:flex;align-items:center;font:800 15px Nunito;flex:none">9:41</div>
+        <div style="padding:8px 20px 12px;display:grid;gap:14px;flex:none">
+          <div style="font:800 28px Nunito">Activity</div>
+          <div style="display:flex;background:#EFECE5;border-radius:999px;padding:3px">
+            <span style="flex:1;height:36px;border-radius:999px;background:#fff;font:800 14px/36px Nunito;text-align:center;box-shadow:0 1px 3px rgba(20,33,61,.08)">From Finn · 2</span>
+            <span style="flex:1;height:36px;font:700 14px/36px Nunito;text-align:center;color:#5B6B82">Transactions</span>
+          </div>
+        </div>
+        <div style="flex:1;overflow:hidden;padding:0 20px;display:grid;gap:10px;align-content:start">
+          <div style="font:700 12px Nunito;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82">New</div>
+          <sc-for list="{{ nudges }}" as="n" hint-placeholder-count="4">
+            <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:14px;display:flex;gap:12px;align-items:flex-start">
+              <div style="width:40px;height:40px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:none"><img src="{{ n.head }}" alt="{{ n.alt }}" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+              <div style="flex:1;display:grid;gap:8px">
+                <div><div style="font:800 15px/1.3 Nunito;color:{{ n.titleColor }}">{{ n.title }}</div><div style="font:400 13px/1.4 Nunito;color:#5B6B82;font-variant-numeric:tabular-nums">{{ n.body }}</div></div>
+                <sc-if value="{{ n.action }}" hint-placeholder-val="{{ false }}"><span style="justify-self:start;height:34px;padding:0 14px;border-radius:999px;background:#2563EB;color:#fff;font:800 13px/34px Nunito">Review payment</span></sc-if>
+              </div>
+              <div style="display:grid;justify-items:end;gap:6px"><span style="font:400 12px Nunito;color:#5B6B82">{{ n.time }}</span><sc-if value="{{ n.unread }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round"><path d="M6 4l1.6 4"></path><path d="M13 3.5l-.8 4.4"></path></svg></sc-if></div>
+            </div>
+          </sc-for>
+          <div style="font:400 12px/1.4 Nunito;color:#5B6B82;text-align:center;padding-top:4px">Swipe left to dismiss</div>
+        </div>
+        <div style="height:76px;border-top:1px solid #EDEAE3;background:#fff;display:flex;justify-content:space-around;padding-top:9px;flex:none">
+          <div style="display:grid;justify-items:center;gap:3px;color:#5B6B82;width:64px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg><span style="font:700 11px Nunito">Home</span></div>
+          <div style="display:grid;justify-items:center;gap:3px;color:#5B6B82;width:64px"><svg width="26" height="24" viewBox="0 0 26 24"><ellipse cx="4.5" cy="15" rx="3.5" ry="2.2" fill="currentColor" transform="rotate(-25 4.5 15)"></ellipse><ellipse cx="21.5" cy="15" rx="3.5" ry="2.2" fill="currentColor" transform="rotate(25 21.5 15)"></ellipse><ellipse cx="13" cy="13" rx="9" ry="8" fill="currentColor"></ellipse><path d="M7 15.2c0-2.6 2.2-4.3 5-4.3 1.3 0 2-.8 3-1.1 1.8-.5 3.6 1.8 3.6 4.7 0 2.7-2.8 4.3-5.9 4.3S7 17.6 7 15.2z" fill="#fff"></path><circle cx="10.6" cy="14.2" r="1.1" fill="currentColor"></circle><circle cx="16.4" cy="13.4" r="1.1" fill="currentColor"></circle></svg><span style="font:700 11px Nunito">Agent</span></div>
+          <div style="display:grid;justify-items:center;gap:3px;color:#2563EB;width:64px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="3"></rect><path d="M9 8h6M9 12h6M9 16h3"></path></svg><span style="font:700 11px Nunito">Activity</span></div>
+          <div style="display:grid;justify-items:center;gap:3px;color:#5B6B82;width:64px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"></path></svg><span style="font:700 11px Nunito">Settings</span></div>
+        </div>
+      </div>
+      <div style="width:360px;font:400 13px/1.45 Nunito;color:#5B6B82">One NudgeItem per NudgeRule. Each head comes from <code>nudge.mood</code>. The 40pt heads are exempt from the one-Finn limit, so the ticks are this screen's expressive element. The inline action appears for <code>propose_bill_payment</code>.</div>
+    </div>
+
+    <div style="display:grid;gap:10px" data-screen-label="Goals">
+      <div style="display:flex;gap:8px;align-items:center"><span style="font:800 15px Nunito">Goals</span><span style="font:700 11px Nunito;padding:3px 8px;border-radius:999px;background:#14213D;color:#fff">Expressive · tide fill</span></div>
+      <div style="width:360px;height:760px;background:#FAF8F3;border-radius:44px;border:1px solid #DCD7CC;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(20,33,61,.07)">
+        <div style="height:44px;padding:0 28px;display:flex;align-items:center;font:800 15px Nunito;flex:none">9:41</div>
+        <div style="padding:4px 20px 16px;display:flex;align-items:center;justify-content:space-between;flex:none">
+          <div style="display:flex;align-items:center;gap:6px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#14213D" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg><span style="font:800 28px Nunito">Goals</span></div>
+          <span style="height:40px;padding:0 16px;border-radius:999px;background:#2563EB;color:#fff;font:800 14px/40px Nunito">+ New goal</span>
+        </div>
+        <div style="flex:1;overflow:hidden;padding:0 20px;display:grid;gap:12px;align-content:start">
+          <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:14px 16px;display:flex;justify-content:space-between;align-items:baseline"><span style="font:400 14px Nunito;color:#5B6B82">Saved across 3 goals</span><span style="font:800 22px Nunito;font-variant-numeric:tabular-nums">$3,213<span style="font-weight:400;font-size:15px">.40</span></span></div>
+          <sc-for list="{{ goals }}" as="g" hint-placeholder-count="3">
+            <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:14px;display:flex;gap:16px;align-items:center">
+              <div style="position:relative;width:64px;height:84px;border-radius:20px;background:#F4F7FE;overflow:hidden;border:1px solid {{ g.border }};flex:none">
+                <div style="position:absolute;left:0;right:0;bottom:0;height:{{ g.pct }};background:#CFDDFB"></div>
+                <svg viewBox="0 0 120 10" preserveAspectRatio="none" style="position:absolute;left:0;width:100%;height:8px;bottom:calc({{ g.pct }} - 1px)"><path d="M0 6 Q15 1 30 6 T60 6 T90 6 T120 6 V10 H0Z" fill="#CFDDFB"></path></svg>
+                <span style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;font:800 15px Nunito;color:#1E3A8A;font-variant-numeric:tabular-nums">{{ g.pct }}</span>
+              </div>
+              <div style="flex:1;display:grid;gap:4px;min-width:0">
+                <div style="font:800 17px Nunito">{{ g.emoji }} {{ g.name }}</div>
+                <div style="font:700 15px Nunito;font-variant-numeric:tabular-nums">{{ g.saved }} <span style="font-weight:400;color:#5B6B82">/ {{ g.target }}</span></div>
+                <div style="font:400 13px/1.4 Nunito;color:{{ g.etaColor }}">{{ g.eta }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="width:360px;font:400 13px/1.45 Nunito;color:#5B6B82">Opened from Home, since Goals is no longer a tab. There's no Finn here, so the tide fill is the expressive element. The ETA lines are Finn's words in plain text. A behind-schedule goal uses warning-ink text, never a red fill.</div>
+    </div>
+
+    <div style="display:grid;gap:10px" data-screen-label="Goal create">
+      <div style="display:flex;gap:8px;align-items:center"><span style="font:800 15px Nunito">goal/new</span><span style="font:700 11px Nunito;padding:3px 8px;border-radius:999px;background:#14213D;color:#fff">Expressive · Finn reacting</span><span style="font:700 11px Nunito;padding:3px 8px;border-radius:999px;background:#E8F0FE;color:#1E4FD0">Interactive</span></div>
+      <div style="width:360px;height:760px;background:#FAF8F3;border-radius:44px;border:1px solid #DCD7CC;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(20,33,61,.07)">
+        <div style="height:44px;padding:0 28px;display:flex;align-items:center;font:800 15px Nunito;flex:none">9:41</div>
+        <div style="padding:4px 20px 0;display:flex;align-items:center;justify-content:space-between;flex:none">
+          <button onClick="{{ gBack }}" style="width:44px;height:44px;border:0;background:transparent;display:flex;align-items:center;justify-content:flex-start;cursor:pointer;padding:0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#14213D" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg></button>
+          <div style="display:flex;gap:6px">
+            <sc-for list="{{ gDots }}" as="d" hint-placeholder-count="3"><span style="width:{{ d.w }};height:6px;border-radius:999px;background:{{ d.c }}"></span></sc-for>
+          </div>
+          <span style="width:44px"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:16px 20px 8px;flex:none">
+          <div style="position:relative;width:64px;height:64px;flex:none">
+            <div style="width:64px;height:64px;border-radius:50%;background:#FBF6EC;overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="{{ gHead }}" alt="{{ gHeadAlt }}" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+            <div style="position:absolute;right:-24px;top:-14px;width:36px;height:36px">{{ ticksGoal }}</div>
+          </div>
+          <div style="background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:10px 14px;font:400 15px/1.4 Nunito">{{ gLine }}</div>
+        </div>
+        <div style="flex:1;padding:16px 20px;display:grid;gap:14px;align-content:start;overflow:hidden">
+          <sc-if value="{{ gIs0 }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;gap:14px">
+              <div style="font:800 24px Nunito">Name it</div>
+              <div style="height:52px;border:1px solid #2563EB;border-radius:16px;background:#fff;display:flex;align-items:center;padding:0 16px;font:700 17px Nunito">{{ gName }}</div>
+              <div style="font:700 12px Nunito;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82">Pick an icon</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <sc-for list="{{ gEmojis }}" as="e" hint-placeholder-count="6"><button onClick="{{ e.pick }}" style="width:48px;height:48px;border-radius:16px;border:2px solid {{ e.border }};background:#fff;font-size:22px;cursor:pointer">{{ e.char }}</button></sc-for>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ gIs1 }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;gap:14px">
+              <div style="font:800 24px Nunito">How much?</div>
+              <div style="font:800 48px/1 Nunito;font-variant-numeric:tabular-nums;letter-spacing:-.01em">{{ gTargetMain }}<span style="font-weight:400;font-size:30px">.00</span></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <sc-for list="{{ gTargets }}" as="t" hint-placeholder-count="4"><button onClick="{{ t.pick }}" style="height:40px;padding:0 16px;border-radius:999px;border:1px solid {{ t.border }};background:{{ t.bg }};color:{{ t.fg }};font:700 14px Nunito;cursor:pointer;font-variant-numeric:tabular-nums">{{ t.label }}</button></sc-for>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ gIs2 }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;gap:12px">
+              <div style="font:800 24px Nunito">How often?</div>
+              <sc-for list="{{ gCadences }}" as="c" hint-placeholder-count="3">
+                <button onClick="{{ c.pick }}" style="min-height:60px;border-radius:16px;border:{{ c.border }};background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 16px;cursor:pointer;text-align:left">
+                  <span style="font:800 16px Nunito;color:#14213D">{{ c.label }}</span>
+                  <span style="font:400 14px Nunito;color:#5B6B82;font-variant-numeric:tabular-nums">{{ c.detail }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ gIs3 }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;gap:12px">
+              <div style="font:800 24px Nunito">Ready to start</div>
+              <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;overflow:hidden">
+                <div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EDEAE3"><span style="color:#5B6B82;font:400 14px Nunito">Goal</span><span style="font:800 15px Nunito">{{ gEmoji }} {{ gName }}</span></div>
+                <div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EDEAE3"><span style="color:#5B6B82;font:400 14px Nunito">Target</span><span style="font:800 15px Nunito;font-variant-numeric:tabular-nums">{{ gTargetMain }}.00</span></div>
+                <div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EDEAE3"><span style="color:#5B6B82;font:400 14px Nunito">Saving</span><span style="font:800 15px Nunito;font-variant-numeric:tabular-nums">{{ gPer }}</span></div>
+                <div style="display:flex;justify-content:space-between;padding:14px 16px"><span style="color:#5B6B82;font:400 14px Nunito">Done by</span><span style="font:800 15px Nunito">{{ gEta }}</span></div>
+              </div>
+              <div style="font:400 13px/1.45 Nunito;color:#5B6B82">Finn opens a new savings account for this goal. You approve it on the next screen, and nothing moves until you do.</div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="padding:12px 20px 34px;flex:none"><button onClick="{{ gNext }}" style="width:100%;height:54px;border:0;border-radius:999px;background:#2563EB;color:#fff;font:800 17px Nunito;cursor:pointer">{{ gCta }}</button></div>
+      </div>
+      <div style="width:360px;font:400 13px/1.45 Nunito;color:#5B6B82">Finn is curious through the first three steps and celebrates at the end, with the tick burst. The last step creates a <code>create_goal</code> pending action, so it goes through the same approval sheet.</div>
+    </div>
+
+    <div style="display:grid;gap:10px" data-screen-label="Welcome">
+      <div style="display:flex;gap:8px;align-items:center"><span style="font:800 15px Nunito">Welcome</span><span style="font:700 11px Nunito;padding:3px 8px;border-radius:999px;background:#14213D;color:#fff">Hero · plush Finn + float</span></div>
+      <div style="position:relative;width:360px;height:760px;background:#FAF8F3;border-radius:44px;border:1px solid #DCD7CC;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(20,33,61,.07)">
+        <div style="height:44px;padding:0 28px;display:flex;align-items:center;font:800 15px Nunito;flex:none">9:41</div>
+        <div style="position:relative;height:420px;flex:none">
+          <div style="position:absolute;left:50%;top:20px;width:320px;height:320px;margin-left:-160px">{{ welcomeFinn }}</div>
+          <div style="position:absolute;left:22px;top:60px;width:56px;height:56px;border-radius:18px;background:#fff;border:1px solid #EDEAE3;box-shadow:0 4px 12px rgba(20,33,61,.07);display:flex;align-items:center;justify-content:center;transform:rotate(-6deg)"><svg width="30" height="30" viewBox="0 0 36 36"><circle cx="18" cy="18" r="12" fill="none" stroke="#E8F0FE" stroke-width="6"></circle><circle cx="18" cy="18" r="12" fill="none" stroke="#2563EB" stroke-width="6" stroke-dasharray="48 76" transform="rotate(-90 18 18)"></circle></svg></div>
+          <div style="position:absolute;right:20px;top:40px;width:56px;height:56px;border-radius:18px;background:#fff;border:1px solid #EDEAE3;box-shadow:0 4px 12px rgba(20,33,61,.07);display:flex;align-items:center;justify-content:center;transform:rotate(5deg)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></div>
+          <div style="position:absolute;left:28px;top:280px;width:56px;height:56px;border-radius:18px;background:#fff;border:1px solid #EDEAE3;box-shadow:0 4px 12px rgba(20,33,61,.07);display:flex;align-items:center;justify-content:center;transform:rotate(4deg)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.4" stroke-linecap="round"><path d="M6 20v-6M12 20V8M18 20v-9"></path></svg></div>
+          <div style="position:absolute;right:26px;top:300px;width:56px;height:56px;border-radius:18px;background:#fff;border:1px solid #EDEAE3;box-shadow:0 4px 12px rgba(20,33,61,.07);display:flex;align-items:center;justify-content:center;transform:rotate(-5deg)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"></path><path d="M9 12l2 2 4-4"></path></svg></div>
+        </div>
+        <div style="flex:1;padding:8px 28px 0;display:grid;gap:12px;align-content:start;text-align:center">
+          <div style="font:800 30px/1.15 Nunito;letter-spacing:-.01em;text-wrap:pretty">Meet Finn, your money buddy.</div>
+          <div style="font:400 16px/1.5 Nunito;color:#5B6B82;text-wrap:pretty">He reads your accounts, spots what needs attention, and asks before he moves a cent.</div>
+        </div>
+        <div style="padding:0 24px 40px;display:grid;gap:10px;flex:none">
+          <button style="height:54px;border:0;border-radius:999px;background:#2563EB;color:#fff;font:800 17px Nunito;cursor:pointer">Sign in to get started</button>
+          <span style="font:400 12px Nunito;color:#5B6B82;text-align:center">Secured by Auth0 · Read-only until you approve</span>
+        </div>
+      </div>
+      <div style="width:360px;font:400 13px/1.45 Nunito;color:#5B6B82">This is the only screen with plush art. Finn floats ±3pt on a 3.5s loop and the tiles stay still. The session-loading screen ("Finn is setting up your tank…") and goal completion use the same layout with plush-wave and plush-celebrate.</div>
+    </div>
+  </div>
+</section>
+
+<section id="t5" style="padding:56px 72px 80px;max-width:1720px">
+  <div style="font:700 12px/1 Nunito;letter-spacing:.08em;text-transform:uppercase;color:#5B6B82">05</div>
+  <h2 style="margin:6px 0 8px;font:800 28px/1.2 Nunito">Motion · Reanimated 4 + expo-haptics</h2>
+  <p style="margin:0 0 24px;font:400 15px/1.5 Nunito;color:#5B6B82;max-width:820px">Anything Finn does uses a spring (damping 14, stiffness 180). The UI uses timing curves only: 150 for micro, 250 for standard, 400 for hero. With Reduce Motion on, springs become 150ms fades, loops are disabled, and haptics stay.</p>
+  <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;overflow:hidden">
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr);gap:16px;padding:12px 20px;font:700 12px/1.3 Nunito;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82;border-bottom:1px solid #EDEAE3"><span>Trigger</span><span>Animation</span><span>Duration · easing</span><span>Haptic</span></div>
+    <sc-for list="{{ motion }}" as="m" hint-placeholder-count="16">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr);gap:16px;padding:12px 20px;border-bottom:1px solid #EDEAE3;font:400 14px/1.45 Nunito">
+        <span style="font-weight:800">{{ m.t }}</span><span>{{ m.a }}</span><span style="color:#5B6B82;font-variant-numeric:tabular-nums">{{ m.d }}</span><span style="color:#5B6B82">{{ m.h }}</span>
+      </div>
+    </sc-for>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { tk: 0, hold: 0, phase: 'review', type: 'transfer', stepUp: true, fail: false, why: false,
+    gStep: 0, gEmoji: '🏝️', gTarget: 2400, gCad: 'weekly', gTk: 0 };
+
+  componentWillUnmount() { cancelAnimationFrame(this.raf); clearTimeout(this.to); }
+
+  ticks(key, size, delay) {
+    const h = React.createElement;
+    const d = delay || 0;
+    const st = i => ({ transformOrigin: 'center', transformBox: 'fill-box', animation: `tickPop 900ms cubic-bezier(.2,.8,.2,1) ${d + i * 40}ms both` });
+    return h('svg', { key, width: size, height: size, viewBox: '0 0 20 20', fill: 'none', stroke: '#2563EB', strokeWidth: 2.4, strokeLinecap: 'round' },
+      h('path', { d: 'M5 3.5l1.8 4', style: st(0) }),
+      h('path', { d: 'M11.5 2.5l-.6 4.4', style: st(1) }),
+      h('path', { d: 'M17 6.5l-3.6 2.4', style: st(2) }));
+  }
+
+  dots() {
+    const h = React.createElement;
+    const c = ['#2563EB', '#C3CCDA', '#C3CCDA'];
+    return h('div', { style: { display: 'flex', gap: 5 } }, c.map((col, i) =>
+      h('span', { key: i, style: { width: 8, height: 8, borderRadius: 999, background: col, animation: `dot 1.2s ease-in-out ${i * 0.15}s infinite` } })));
+  }
+
+  startHold = (e) => {
+    if (this.state.phase !== 'review') return;
+    e && e.currentTarget && e.currentTarget.setPointerCapture && e.currentTarget.setPointerCapture(e.pointerId);
+    this.t0 = performance.now();
+    const loop = () => {
+      const p = Math.min(1, (performance.now() - this.t0) / 600);
+      this.setState({ hold: p });
+      if (p >= 1) { this.complete(); return; }
+      this.raf = requestAnimationFrame(loop);
+    };
+    this.raf = requestAnimationFrame(loop);
+  };
+  endHold = () => { cancelAnimationFrame(this.raf); if (this.state.hold < 1) this.setState({ hold: 0 }); };
+  complete = () => { cancelAnimationFrame(this.raf); if (this.state.stepUp) this.setState({ phase: 'auth', hold: 0 }); else this.process(); };
+  process = () => {
+    this.setState({ phase: 'processing', hold: 0 });
+    clearTimeout(this.to);
+    this.to = setTimeout(() => {
+      if (this.state.fail) this.setState({ phase: 'error' });
+      else this.setState(s => ({ phase: 'success', tk: s.tk + 1 }));
+    }, 1100);
+  };
+  retry = () => this.process();
+  reset = () => { cancelAnimationFrame(this.raf); clearTimeout(this.to); this.setState({ phase: 'review', hold: 0, why: false }); };
+
+  actions() {
+    return {
+      transfer: { summary: 'Move $200 from Checking to Hawaii Fund', amtLabel: 'Amount', amtMain: '$200', amtCents: '.00',
+        rows: [{ label: 'From', value: 'Everyday Checking', sub: '•••• 1093 · $2,140.55 available' }, { label: 'To', value: 'Hawaii Fund', sub: '$1,488.00 of $2,400.00' }],
+        reason: 'You have $1,212.40 left after rent and bills this month. Moving $200 now keeps Hawaii on track for March.',
+        successLine: '$200.00 is in Hawaii Fund. Checking has $1,940.55 left.', ref: '#TR-48120' },
+      bill_payment: { summary: 'Pay your Closer Card statement before Oct 22', amtLabel: 'Payment', amtMain: '$1,184', amtCents: '.20',
+        rows: [{ label: 'From', value: 'Everyday Checking', sub: '•••• 1093 · $2,140.55 available' }, { label: 'To', value: 'Closer Card', sub: '•••• 4821 · due Oct 22' }],
+        reason: 'Paying before the statement closes drops your reported utilization from 68% to 9%. It also avoids $31.40 in interest.',
+        successLine: 'Paid $1,184.20 to Closer Card. Utilization will update when the statement closes.', ref: '#BP-20931' },
+      create_goal: { summary: 'Start a savings goal: Hawaii Fund', amtLabel: 'Target', amtMain: '$2,400', amtCents: '.00',
+        rows: [{ label: 'Opens', value: 'New savings account', sub: 'Capital One · no fees' }, { label: 'Plan', value: '$50.00 every week', sub: 'From Everyday Checking' }],
+        reason: 'You mentioned a March trip. $50 a week gets you there with two weeks to spare.',
+        successLine: 'Hawaii Fund is open. The first $50.00 moves Monday.', ref: '#GL-3007' },
+    };
+  }
+
+  gData() {
+    const per = { weekly: [50, 7, 'Weekly', '$50.00'], biweekly: [100, 14, 'Every 2 weeks', '$100.00'], monthly: [200, 30.4, 'Monthly', '$200.00'] };
+    const fmt = n => '$' + n.toLocaleString('en-US');
+    const eta = k => { const [a, d] = per[k]; const n = Math.ceil(this.state.gTarget / a); const dt = new Date(2026, 9, 17 + Math.round(n * d)); return dt.toLocaleString('en-US', { month: 'short', year: 'numeric' }); };
+    return { per, fmt, eta };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const a = this.actions()[s.type];
+    const types = [['transfer', 'transfer'], ['bill_payment', 'bill_payment'], ['create_goal', 'create_goal']];
+    const { per, fmt, eta } = this.gData();
+    const gLines = ["What are we saving for?", "Nice. How much do you need?", "Got it. How often should I move money?", "This works. Here's the plan."];
+    const set = o => () => this.setState(o);
+
+    return {
+      ticksDemo: this.ticks('d' + s.tk, 36),
+      replayTicks: () => this.setState(x => ({ tk: x.tk + 1 })),
+      typingDots: this.dots(),
+      welcomeFinn: React.createElement('img', { src: 'assets/finn/plush-card.png', alt: 'Finn holds a bank card and smiles',
+        style: { width: '100%', height: '100%', objectFit: 'cover', mixBlendMode: 'multiply', animation: 'float 3.5s ease-in-out infinite' } }),
+
+      tokens: [
+        { name: 'canvas', hex: '#FAF8F3', bg: '#FAF8F3', role: 'Page background', change: 'was foam #F3FAFF' },
+        { name: 'surface', hex: '#FFFFFF', bg: '#FFFFFF', role: 'Cards, bubbles', change: 'unchanged' },
+        { name: 'hairline', hex: '#EDEAE3', bg: '#EDEAE3', role: 'Borders, dividers', change: 'new' },
+        { name: 'ink', hex: '#14213D', bg: '#14213D', role: 'Headings, primary text', change: 'was deep #0B2545' },
+        { name: 'muted', hex: '#5B6B82', bg: '#5B6B82', role: 'Secondary text (5.3:1)', change: 'unchanged' },
+        { name: 'accent', hex: '#2563EB', bg: '#2563EB', role: 'Buttons, links, ticks, active tab', change: 'was ocean (same) · absorbs lagoon' },
+        { name: 'accent-tint', hex: '#E8F0FE', bg: '#E8F0FE', role: 'Chips, user bubbles, nudge', change: 'new' },
+        { name: 'belly', hex: '#FBF6EC', bg: '#FBF6EC', role: 'Finn-owned surfaces', change: 'new' },
+        { name: 'hero', hex: '#1E3A8A → #2F55C8', bg: 'linear-gradient(135deg,#1E3A8A,#2F55C8)', role: 'AccountHeroCard only', change: 'new' },
+        { name: 'danger', hex: '#E5484D / ink #C62F36', bg: '#E5484D', role: 'Dots, rings, small text', change: 'was berry #E5486A + coral #FF7A59' },
+        { name: 'warning', hex: '#F5A524 / ink #9A5B00', bg: '#F5A524', role: 'Dots, rings, due chips', change: 'was sun #FFC845' },
+        { name: 'success', hex: '#2FB37F / ink #1F7A55', bg: '#2FB37F', role: 'Dots, rings, completed', change: 'was kelp (same hex)' },
+      ],
+
+      assets: [
+        ['head-happy', 'happy · default'], ['head-excited', 'celebrating'], ['head-curious', 'thinking'], ['head-worried', 'worried'],
+        ['head-surprised', 'spending spike'], ['head-sad', 'declined action'], ['head-content', 'idle / relaxed'], ['head-confident', 'goal on track · recolor sparkle'],
+        ['head-skeptical', 'suspicious charge'], ['head-love', 'goal completed only'],
+        ['pose-thumbsup', 'happy · empty states'], ['pose-laptop', 'thinking · loading'], ['pose-alert', 'worried · alerts'], ['pose-laugh-card', 'celebrating · nudge'],
+        ['pose-wave', 'peek / greeting'],
+        ['plush-card', 'hero · welcome'], ['plush-wave', 'hero · session loading'], ['plush-thinking', 'hero · reserve'], ['plush-celebrate', 'hero · goal complete'], ['plush-shield', 'hero · marketing / reserve'],
+      ].map(([f, u]) => ({ file: f + '.png', src: 'assets/finn/' + f + '.png', alt: f, use: u })),
+
+      moodMap: [
+        { mood: 'happy', head: 'assets/finn/head-happy.png', headName: 'head-happy', pose: 'pose-thumbsup · pose-wave', ring: '#EDEAE3' },
+        { mood: 'thinking', head: 'assets/finn/head-curious.png', headName: 'head-curious', pose: 'pose-laptop', ring: '#2563EB' },
+        { mood: 'worried', head: 'assets/finn/head-worried.png', headName: 'head-worried', pose: 'pose-alert', ring: '#F5A524' },
+        { mood: 'celebrating', head: 'assets/finn/head-excited.png', headName: 'head-excited', pose: 'pose-laugh-card', ring: '#2FB37F' },
+      ],
+
+      spend: [
+        { name: 'Dining', pct: '82%', amt: '$412.30', color: '#14213D' },
+        { name: 'Groceries', pct: '52%', amt: '$261.18', color: '#2563EB' },
+        { name: 'Transport', pct: '30%', amt: '$148.02', color: '#7FA2EE' },
+        { name: 'Subscriptions', pct: '34%', amt: '$168.50', color: '#C9D6F5' },
+      ],
+
+      specs: [
+        { name: 'FinnAvatar', props: 'mood: Mood; size?: 24|32|40|64|120; ring?: boolean', states: 'default · crossfade on mood change (150ms) · with ring', a11y: 'image, "Finn looks {mood}"' },
+        { name: 'FinnPose', props: "pose: 'thumbsup'|'laptop'|'alert'|'laughCard'|'wave'; size?: number", states: 'default · reduced motion (static)', a11y: 'image, describes action + mood' },
+        { name: 'FinnTicks', props: 'count?: 2|3; animated?: boolean; size?: number', states: 'static (unread) · burst once (success/new)', a11y: 'decorative, hidden' },
+        { name: 'FinnTyping', props: '—', states: 'looping · reduced motion: static dots', a11y: 'live region "Finn is typing"' },
+        { name: 'MessageBubble', props: "message: ChatMessage; position: 'first'|'middle'|'last'|'solo'", states: 'finn · user · grouped · failed (Retry)', a11y: 'role + text; amounts read in full' },
+        { name: 'SuggestionChips', props: 'chips: string[]; onPick(text); disabled?: boolean', states: 'default · pressed · disabled while sending', a11y: 'button, "Ask Finn: Why 9%?"' },
+        { name: 'Composer', props: 'value; onChange; onSend; sending: boolean', states: 'empty (send disabled) · focused · typing · sending · error', a11y: 'text field "Ask Finn"; send button' },
+        { name: 'CardRenderer', props: 'card: Card', states: 'per Card.type · skeleton · empty line · inline error + retry', a11y: 'each row a button to source txns' },
+        { name: 'AccountHeroCard', props: 'account: Account', states: 'default · pressed · balance hidden', a11y: '"Closer Card ending 4821, balance $1,364.20"' },
+        { name: 'UtilizationRing / StatTile', props: 'percent: number; label: string', states: '≤30 success · ≤60 warning · >60 danger', a11y: '"Utilization 68 percent, high"' },
+        { name: 'FinnNudgeCard', props: 'text; highlight; cta; onPress; mood', states: 'default · pressed · dismissed', a11y: 'one element: sentence + button' },
+        { name: 'AttentionRow / BillRow / TransactionRow', props: 'title; meta; status?; dueDate?; amountCents', states: 'default · pressed · overdue chip', a11y: 'combined label, chevron hidden' },
+        { name: 'GoalCard', props: 'goal: Goal; eta?: string', states: 'active · behind · completed · skeleton', a11y: '"Hawaii Fund, 62 percent, $1,488 of $2,400"' },
+        { name: 'GoalCreateFlow', props: '— (route goal/new)', states: 'name · target · cadence · review → create_goal', a11y: 'step "2 of 3" announced' },
+        { name: 'ApprovalSheet', props: 'action: PendingAction', states: 'review · holding · step-up · executing · executed · failed · expired', a11y: 'pill exposes "Approve" action; no hold needed' },
+        { name: 'NudgeItem', props: 'nudge: Nudge; onDismiss; onAction', states: 'unread · read · swiping · dismissed · with action', a11y: 'custom actions: Dismiss, Review payment' },
+        { name: 'Button', props: "variant: 'primary'|'secondary'|'ghost'|'destructive'; loading; disabled", states: 'default · pressed · loading · disabled', a11y: 'min 44pt; "Loading" when busy' },
+        { name: 'Toast (ToastHost)', props: 'mood: Mood; text: string; action?', states: 'enter · auto-hide 3s · with Undo', a11y: 'polite announcement' },
+        { name: 'Skeleton / EmptyState', props: 'lines? · pose, text, action', states: 'shimmer · static under Reduce Motion', a11y: 'skeleton hidden · empty text read' },
+        { name: 'TabBar / ScreenHeader', props: 'unread: number · greeting, name', states: 'active cobalt · inactive muted · badge', a11y: '"Activity, 2 new"' },
+      ],
+
+      nudges: [
+        { head: 'assets/finn/head-worried.png', alt: 'Finn looks worried', title: 'Closer Card is due Oct 22', body: '$1,184.20 statement balance', time: '2h', unread: true, action: true, titleColor: '#14213D' },
+        { head: 'assets/finn/head-surprised.png', alt: 'Finn looks surprised', title: 'Dining is up 9% this month', body: '$412.30 so far · usually $378', time: '5h', unread: true, action: false, titleColor: '#14213D' },
+        { head: 'assets/finn/head-excited.png', alt: 'Finn is celebrating', title: 'Hawaii Fund passed 60%', body: '$1,488.00 of $2,400.00', time: 'Yesterday', unread: false, action: false, titleColor: '#5B6B82' },
+        { head: 'assets/finn/head-worried.png', alt: 'Finn looks worried', title: 'Checking is getting low', body: '$184.20 left · rent is in 4 days', time: 'Oct 12', unread: false, action: false, titleColor: '#5B6B82' },
+      ],
+
+      goals: [
+        { emoji: '🏝️', name: 'Hawaii Fund', saved: '$1,488.00', target: '$2,400.00', pct: '62%', eta: 'On track for March at $50 a week.', etaColor: '#5B6B82', border: '#E1E8F8' },
+        { emoji: '🚗', name: 'Car repair', saved: '$425.40', target: '$1,500.00', pct: '28%', eta: 'About 3 weeks behind. $20 more a week catches up.', etaColor: '#9A5B00', border: '#E1E8F8' },
+        { emoji: '🛟', name: 'Emergency', saved: '$1,300.00', target: '$1,300.00', pct: '100%', eta: 'Done. Nice work.', etaColor: '#1F7A55', border: '#2FB37F' },
+      ],
+
+      act: a,
+      isReview: s.phase === 'review', isAuth: s.phase === 'auth', isProcessing: s.phase === 'processing', isSuccess: s.phase === 'success', isError: s.phase === 'error',
+      holdPct: (s.hold * 100).toFixed(1) + '%',
+      holdLabel: s.hold > 0 ? 'Keep holding…' : 'Hold to approve',
+      startHold: this.startHold, endHold: this.endHold, process: this.process, retry: this.retry, reset: this.reset,
+      why: s.why, whyCaret: s.why ? '−' : '+', toggleWhy: () => this.setState(x => ({ why: !x.why })),
+      ticksSuccess: this.ticks('s' + s.tk, 44, 120), ticksSuccess2: this.ticks('s2' + s.tk, 44, 160),
+      typeOpts: types.map(([k, l]) => ({ label: l, bg: s.type === k ? '#14213D' : '#fff', fg: s.type === k ? '#fff' : '#14213D', pick: () => { this.reset(); this.setState({ type: k }); } })),
+      stepUpLabel: s.stepUp ? 'required' : 'not required', toggleStepUp: () => this.setState(x => ({ stepUp: !x.stepUp })),
+      failLabel: s.fail ? 'failure' : 'success', toggleFail: () => this.setState(x => ({ fail: !x.fail })),
+
+      gIs0: s.gStep === 0, gIs1: s.gStep === 1, gIs2: s.gStep === 2, gIs3: s.gStep === 3,
+      gDots: [0, 1, 2].map(i => ({ w: i === Math.min(s.gStep, 2) ? '20px' : '6px', c: i <= s.gStep ? '#2563EB' : '#DCD7CC' })),
+      gHead: s.gStep === 3 ? 'assets/finn/head-excited.png' : 'assets/finn/head-curious.png',
+      gHeadAlt: s.gStep === 3 ? 'Finn is celebrating' : 'Finn is thinking',
+      ticksGoal: s.gStep === 3 ? this.ticks('g' + s.gTk, 36) : null,
+      gLine: gLines[s.gStep],
+      gName: 'Hawaii Fund', gEmoji: s.gEmoji,
+      gEmojis: ['🏝️', '🚗', '🏠', '🎓', '🛟', '🎁'].map(c => ({ char: c, border: s.gEmoji === c ? '#2563EB' : '#EDEAE3', pick: set({ gEmoji: c }) })),
+      gTargetMain: fmt(s.gTarget),
+      gTargets: [500, 1000, 2400, 5000].map(v => ({ label: fmt(v), bg: s.gTarget === v ? '#14213D' : '#fff', fg: s.gTarget === v ? '#fff' : '#14213D', border: s.gTarget === v ? '#14213D' : '#DCD7CC', pick: set({ gTarget: v }) })),
+      gCadences: Object.keys(per).map(k => ({ label: per[k][2], detail: per[k][3] + ' · done ' + eta(k), border: s.gCad === k ? '2px solid #2563EB' : '1px solid #EDEAE3', pick: set({ gCad: k }) })),
+      gPer: per[s.gCad][3] + ' ' + per[s.gCad][2].toLowerCase(),
+      gEta: eta(s.gCad),
+      gCta: ['Next', 'Next', 'Review', 'Create goal'][s.gStep],
+      gNext: () => this.setState(x => x.gStep < 3 ? { gStep: x.gStep + 1, gTk: x.gTk + 1 } : { gStep: 0 }),
+      gBack: () => this.setState(x => ({ gStep: Math.max(0, x.gStep - 1) })),
+
+      motion: [
+        { t: 'Finn mood change', a: 'Crossfade between heads', d: '150ms ease-out', h: '—' },
+        { t: 'Message arrives', a: 'Fade in and rise 8pt; group siblings tighten', d: '250ms ease-out', h: '—' },
+        { t: 'Finn typing', a: '3 dots bob, staggered 150ms, cobalt lead dot', d: '1.2s loop', h: '—' },
+        { t: 'Chip tap', a: 'Scale to 0.96 and back; text drops into composer', d: '150ms', h: 'selection' },
+        { t: 'Send', a: 'Send button scales; bubble lifts from composer', d: '250ms ease-out', h: 'light' },
+        { t: 'Approval sheet open', a: 'Slide up, scrim fades to 42%', d: '250ms ease-out-cubic', h: '—' },
+        { t: 'Hold to approve', a: 'Cobalt fill sweeps left → right', d: '600ms linear', h: 'light at 25 / 50 / 75%' },
+        { t: 'Hold released early', a: 'Fill drains back', d: '250ms ease-out', h: '—' },
+        { t: 'Approval succeeded', a: 'Celebrating head pops (0.85 → 1) + tick burst, 40ms stagger', d: 'Finn spring d14 s180', h: 'success' },
+        { t: 'Approval failed', a: 'Worried head crossfade + ring; sheet nudges ±4pt once', d: '250ms', h: 'error' },
+        { t: 'Tide fill changes', a: 'Water rises; crest drifts one wavelength, then rests', d: '400ms Finn spring', h: 'light on milestone' },
+        { t: 'New / unread', a: 'Two tick strokes scale in', d: '150ms, 40ms stagger', h: '—' },
+        { t: 'Nudge swipe', a: 'Row tracks finger; past 40% it snaps off and collapses', d: 'gesture → 250ms', h: 'light at threshold' },
+        { t: 'Pull to refresh', a: 'Ticks draw in with pull distance, then burst on release', d: 'gesture → 150ms', h: 'selection at threshold' },
+        { t: 'Finn idle (hero only)', a: 'Float ±3pt; blink every 4–6s', d: '3.5s sine loop', h: '—' },
+        { t: 'Goal completed', a: 'Full-screen plush-celebrate scales in; auto-dismiss', d: '400ms spring, out at 2.4s', h: 'success' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
