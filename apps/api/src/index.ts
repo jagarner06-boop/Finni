@@ -1,13 +1,15 @@
 import cors from "cors";
 import express, { type ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
-import { checkJwt, getSub } from "./auth.js";
+import { authenticate, getSub } from "./auth.js";
 import { env } from "./env.js";
 import { activityRouter } from "./routes/activity.js";
 import { chatRouter } from "./routes/chat.js";
 import { meRouter } from "./routes/me.js";
 import { moneyRouter } from "./routes/money.js";
+import { homeRouter } from "./routes/home.js";
 import { nudgesRouter } from "./routes/nudges.js";
+import { settingsRouter } from "./routes/settings.js";
 
 const app = express();
 app.use(cors());
@@ -21,7 +23,7 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-app.use(checkJwt);
+app.use(authenticate);
 
 // Foundation spike: proves the Expo login → JWT → API path works.
 app.get("/whoami", (req, res) => {
@@ -33,6 +35,8 @@ app.use(chatRouter);
 app.use(moneyRouter);
 app.use(activityRouter);
 app.use(nudgesRouter);
+app.use(homeRouter);
+app.use(settingsRouter);
 
 const onError: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof ZodError) {
@@ -48,4 +52,5 @@ app.use(onError);
 
 app.listen(env.PORT, () => {
   console.log(`Finni API on http://localhost:${env.PORT}`);
+  if (env.AUTH_MODE === "demo") console.warn("AUTH_MODE=demo: any device can sign in. Do not deploy this.");
 });

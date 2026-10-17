@@ -11,7 +11,8 @@ import { requireUser } from "../services/users.js";
 // REST routes behind the Goals / Money / Inbox tabs and approval sheets (see apps/mobile/src/api/endpoints.ts).
 export const moneyRouter = Router();
 
-const cents = z.number().int().positive();
+// $1,000,000 cap: keeps ETA math and Nessie amounts sane.
+const cents = z.number().int().positive().max(100_000_000);
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const goalBody = z.object({
   name: z.string().trim().min(1).max(40),
@@ -75,7 +76,7 @@ moneyRouter.post("/actions/:id/approve", async (req, res) => {
   const u = await user(req);
   const row = await getActionRow(u, req.params.id);
   // Checked before claiming, so a 403 leaves the action pending for the retry after re-login.
-  if (row.requiresStepUp && row.status === "pending") await requireStepUp(req);
+  if (row.requiresStepUp && row.status === "pending") await requireStepUp(req, u);
   const body: ActionResponse = { action: await approveAction(u, row.id) };
   res.json(body);
 });
