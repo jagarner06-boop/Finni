@@ -52,6 +52,8 @@ describe("buildNudges", () => {
     expect(by("goal_contribution").body).toBe("Time to move $40.00 to Car repair. That keeps your every-2-weeks plan going.");
     expect(by("goal_contribution").action).toEqual({ type: "propose_goal_contribution", goalId: "g1", amountCents: 4_000, label: "Move $40.00" });
   });
+  it("drops the trial once its subscription is cancelled", () =>
+    expect(buildNudges({ ...base(), bills: [bill({})] }).some((x) => x.rule === "trial_converted")).toBe(false));
   it("skips a duplicate that was refunded", () => expect(buildNudges({ ...base(), refunded: new Set([dupId]) }).some((x) => x.rule === "duplicate_charge")).toBe(false));
   it("skips the plan when checking can't cover it", () =>
     expect(buildNudges({ ...base(), checking: { ...checking, balanceCents: 5_000 } }).some((x) => x.rule === "high_utilization")).toBe(false));

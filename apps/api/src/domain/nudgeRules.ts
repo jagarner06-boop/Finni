@@ -80,7 +80,9 @@ export function buildNudges(i: NudgeInput): NudgeCandidate[] {
   }
 
   for (const t of findConvertedTrials(i.purchases, i.today)) {
+    // Only while there's a live subscription to cancel; once cancelled, the nudge resolves.
     const sub = i.bills.find((b) => b.status === "recurring" && b.payee.toLowerCase() === t.merchantName.toLowerCase());
+    if (!sub) continue;
     out.push(
       nudge({
         rule: "trial_converted",
@@ -91,7 +93,7 @@ export function buildNudges(i: NudgeInput): NudgeCandidate[] {
         meta: `${t.merchantName} · ${money(t.amountCents)} · ${shortDate(t.date)}`,
         body: `Your ${t.merchantName} trial turned into a ${money(t.amountCents)} charge. Want me to cancel it?`,
         highlight: money(t.amountCents),
-        action: sub ? { type: "propose_cancel_subscription", billId: sub.id, label: `Cancel ${t.merchantName}` } : null,
+        action: { type: "propose_cancel_subscription", billId: sub.id, label: `Cancel ${t.merchantName}` },
       }),
     );
   }

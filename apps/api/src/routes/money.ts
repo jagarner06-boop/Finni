@@ -25,6 +25,9 @@ const goalBody = z.object({
 const actionBody = z.discriminatedUnion("type", [
   z.object({ type: z.literal("transfer"), fromAccountId: z.string(), toAccountId: z.string(), amountCents: cents, reason: z.string().max(120).optional() }),
   z.object({ type: z.literal("bill_payment"), billId: z.string(), fromAccountId: z.string().optional() }),
+  z.object({ type: z.literal("card_payment"), amountCents: cents, fromAccountId: z.string().optional() }),
+  z.object({ type: z.literal("dispute_charge"), purchaseId: z.string() }),
+  z.object({ type: z.literal("cancel_subscription"), billId: z.string() }),
   goalBody.extend({ type: z.literal("create_goal") }),
 ]);
 const actionsQuery = z.object({ status: z.enum(["pending", "executing", "executed", "rejected", "expired", "failed"]).optional() });
