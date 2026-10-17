@@ -1,7 +1,7 @@
 import type { Account, CardSummary } from "@finni/shared";
 import { describe, expect, it } from "vitest";
 import type { User } from "../../db/schema.js";
-import { DEFAULT_CHIPS, namesToolInsteadOfCalling, parseReply } from "../parse.js";
+import { claimsCompletedAction, claimsProposal, DEFAULT_CHIPS, namesToolInsteadOfCalling, parseReply, plainText } from "../parse.js";
 import { systemPrompt } from "../prompt.js";
 
 describe("parseReply", () => {
@@ -14,6 +14,47 @@ describe("parseReply", () => {
   it("strips tool names written instead of called", () =>
     expect(parseReply("[mood:happy] Here is your progress.\n\n[get_goals] [make_chart(spending)] [chips: a | b]").text).toBe("Here is your progress."));
   it("keeps ordinary bracketed text", () => expect(parseReply("[mood:happy] Pay [Visible] today").text).toBe("Pay [Visible] today"));
+});
+
+describe("plainText", () => {
+  it("drops tables (the cards show that data)", () =>
+    expect(plainText("Here are your balances.\n\n| Account | Balance |\n| :--- | :--- |\n| Everyday | $2,140 |")).toBe("Here are your balances."));
+  it("removes bold, italics, code and headings", () => expect(plainText("## Heads up\nYou owe **$1,364** on your *card* (`68%`).")).toBe("Heads up You owe $1,364 on your card (68%)."));
+  it("turns a list into one line", () => expect(plainText("Next steps:\n- Pay Phone\n- Pay Electric")).toBe("Next steps: Pay Phone Pay Electric"));
+  it("leaves plain sentences alone", () => expect(plainText("You have $2,140 in Everyday. Want me to move $50 to savings?")).toBe("You have $2,140 in Everyday. Want me to move $50 to savings?"));
+  it("keeps a lone asterisk or minus sign", () => expect(plainText("Spending is up 3 * 2 times, down -$5.")).toBe("Spending is up 3 * 2 times, down -$5."));
+});
+
+describe("claimsCompletedAction", () => {
+  it.each([
+    "I've paid your phone bill.",
+    "I paid the $45 to Visible.",
+    "Done! Moved $50 to savings.",
+    "I have transferred $100 to your Hawaii Fund.",
+    "I've cancelled Hulu for you.",
+    "Your electric bill is now paid.",
+    "Your $15 has been refunded.",
+  ])("flags a claim that money moved: %s", (t) => expect(claimsCompletedAction(t)).toBe(true));
+
+  it.each([
+    "I've proposed paying your phone bill. Tap Review to approve it.",
+    "I've set that up for you to review.",
+    "Want me to pay it?",
+    "You paid $750 for rent on Oct 1.",
+    "Your phone bill will be paid once you approve.",
+    "Your rent was paid on Oct 2.",
+    "You've spent $264 this week.",
+  ])("allows proposals and facts: %s", (t) => expect(claimsCompletedAction(t)).toBe(false));
+});
+
+describe("claimsProposal", () => {
+  it.each([
+    "I've set up the payment for your $82 electric bill for you to review. Tap Review to approve it.",
+    "I have proposed paying your phone bill.",
+    "It's ready for you to approve.",
+  ])("spots a reply that says an approval is ready: %s", (t) => expect(claimsProposal(t)).toBe(true));
+  it.each(["Want me to set that up?", "Your phone bill is due Oct 19.", "I can set that up for you."])("ignores offers and facts: %s", (t) =>
+    expect(claimsProposal(t)).toBe(false));
 });
 
 describe("namesToolInsteadOfCalling", () => {

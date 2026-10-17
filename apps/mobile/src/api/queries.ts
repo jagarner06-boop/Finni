@@ -72,7 +72,11 @@ export function useSendChat() {
       const body: ChatRequest = location ? { message, location } : { message };
       return api.sendChat(body);
     },
-    onSuccess: () => client.invalidateQueries({ queryKey: qk.history }),
+    // Finn may have proposed something: the approvals list changes too.
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: qk.history });
+      client.invalidateQueries({ queryKey: ['actions'] });
+    },
   });
 }
 
@@ -115,6 +119,12 @@ export function useApproveAction() {
       client.setQueryData(qk.action(res.action.id), res);
       invalidateMoney(client);
     },
+    // e.g. 409 expired / already handled: the server updated the action and its chat card; show that.
+    onError: (_err, id) => {
+      client.invalidateQueries({ queryKey: qk.action(id) });
+      client.invalidateQueries({ queryKey: ['actions'] });
+      client.invalidateQueries({ queryKey: qk.history });
+    },
   });
 }
 
@@ -125,6 +135,8 @@ export function useRejectAction() {
     onSuccess: (res) => {
       client.setQueryData(qk.action(res.action.id), res);
       client.invalidateQueries({ queryKey: ['actions'] });
+      // The proposal's card in chat now says declined.
+      client.invalidateQueries({ queryKey: qk.history });
     },
   });
 }
@@ -146,7 +158,11 @@ export function useScanNudges() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: api.scanNudges,
-    onSuccess: (res) => client.setQueryData(qk.nudges, { nudges: res.nudges }),
+    onSuccess: (res) => {
+      client.setQueryData(qk.nudges, { nudges: res.nudges });
+      // Home's plan card and Needs attention come from the same nudges.
+      client.invalidateQueries({ queryKey: qk.home });
+    },
   });
 }
 

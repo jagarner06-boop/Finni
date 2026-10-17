@@ -38,7 +38,9 @@ check("result line and reference", !!done.resultLine?.startsWith("$360.00 is in 
 const sb = (await listGoals(user)).find((g) => g.name === "Car repair")!;
 check("goal at 52% with 50% milestone", sb.percent === 52 && sb.milestonesHit.includes(50), { percent: sb.percent, milestonesHit: sb.milestonesHit });
 const [celebration] = await db.select().from(schema.chatMessages).where(eq(schema.chatMessages.userId, user.id)).orderBy(desc(schema.chatMessages.createdAt)).limit(1);
-check("celebration message posted", celebration?.mood === "celebrating", celebration?.text);
+// Approved outside chat: the result shows on the sheet and in Activity, not as a Finn message
+// (chat proposals still get one; see smoke-consistency).
+check("UI approval adds nothing to Finn's chat", !celebration, celebration?.text);
 check("double approve → 409", (await rejects(approveAction(user, t.id))) === "action_not_pending");
 
 // Bill payment marks the one-off bill completed.

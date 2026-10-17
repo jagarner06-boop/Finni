@@ -261,10 +261,13 @@ export async function getActionRow(user: User, id: string): Promise<ActionRow> {
 }
 
 export async function listActions(user: User, status?: PendingActionStatus): Promise<PendingAction[]> {
-  await db
+  const expired = await db
     .update(schema.pendingActions)
     .set({ status: "expired" })
-    .where(and(eq(schema.pendingActions.userId, user.id), eq(schema.pendingActions.status, "pending"), lt(schema.pendingActions.expiresAt, new Date())));
+    .where(and(eq(schema.pendingActions.userId, user.id), eq(schema.pendingActions.status, "pending"), lt(schema.pendingActions.expiresAt, new Date())))
+    .returning();
+  // Keep chat history in step: those cards would otherwise still offer Review.
+  for (const row of expired) await syncChatCard(row);
   const rows = await db
     .select()
     .from(schema.pendingActions)
@@ -324,9 +327,12 @@ export async function approveAction(user: User, id: string): Promise<PendingActi
   try {
     const result = await execute(user, claimed);
     const done = await finish(claimed, { status: "executed", executedAt: new Date(), nessieRef: result.ref, resultLine: result.resultLine });
-    await db.insert(schema.chatMessages).values({ userId: user.id, role: "finn", text: result.chatText ?? result.resultLine, mood: "celebrating", cards: result.cards });
-    // Whatever this fixed (bill due, duplicate, plan) resolves now, not on the next lazy scan.
-    void scanNudges(user).catch((err) => console.error("post-action nudge scan failed", err));
+    // No chat message for results: a Finn line like "Paid $45.00 to Visible." reads as Finn paying it.
+    // The result shows on the approval sheet, in Activity, and as "Done." on the chat's approval card.
+    await retireDuplicates(user, done);
+    // Whatever this fixed (bill due, duplicate, plan) resolves before we answer, so every tab the
+    // app refetches next (Home, Activity, chat) already shows it handled.
+    await scanNudges(user).catch((err) => console.error("post-action nudge scan failed", err));
     return toPendingAction(done);
   } catch (err) {
     console.error(`action ${id} failed`, err);
@@ -343,6 +349,36 @@ export async function rejectAction(user: User, id: string): Promise<PendingActio
   if (!row) throw new HttpError(409, "action_not_pending", `This action is already ${(await getActionRow(user, id)).status}`);
   await syncChatCard(row);
   return toPendingAction(row);
+}
+
+/** What an action acts on, when two approvals for it can't both make sense (null = no conflict). */
+function targetOf(row: ActionRow): string | null {
+  const p = row.payload as Partial<BillPaymentPayload & DisputePayload & CancelSubscriptionPayload>;
+  switch (row.type) {
+    case "bill_payment":
+    case "cancel_subscription":
+      return p.billId ? `bill:${p.billId}` : null;
+    case "dispute_charge":
+      return p.purchaseId ? `purchase:${p.purchaseId}` : null;
+    case "card_payment":
+      return "card"; // one card per user
+    default:
+      return null; // transfers and new goals can legitimately repeat
+  }
+}
+
+/**
+ * The same bill can be proposed twice (Finn in chat and the Activity nudge). Once one approval runs,
+ * the other would only fail, so it's expired (with its chat card) instead of still offering Review.
+ */
+async function retireDuplicates(user: User, done: ActionRow): Promise<void> {
+  const target = targetOf(done);
+  if (!target) return;
+  const pending = await db
+    .select()
+    .from(schema.pendingActions)
+    .where(and(eq(schema.pendingActions.userId, user.id), eq(schema.pendingActions.type, done.type), eq(schema.pendingActions.status, "pending")));
+  for (const row of pending) if (row.id !== done.id && targetOf(row) === target) await finish(row, { status: "expired", error: "Already handled by another approval" });
 }
 
 /** Saves the final state and updates the approval card in the chat message that proposed it. */
