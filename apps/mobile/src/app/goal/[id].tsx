@@ -75,7 +75,7 @@ export default function GoalDetailScreen() {
 
         {complete ? (
           <View style={styles.done}>
-            <FinnAvatar mood="celebrating" head="love" size={64} />
+            <FinnAvatar mood="celebrating" head="love" size={64} animated />
             <Text style={styles.doneText}>Done. Nice work.</Text>
           </View>
         ) : (

@@ -98,7 +98,7 @@ function ShieldedFinn({ size }: { size: FinnAvatarSize }) {
 export function ExecutingPhase() {
   return (
     <View style={[styles.phase, styles.center]}>
-      <FinnAvatar mood="thinking" size={64} />
+      <FinnAvatar mood="thinking" size={64} animated />
       <Text style={styles.title}>Sending to Capital One…</Text>
       <FinnTyping />
     </View>
@@ -139,7 +139,7 @@ export function ExecutedPhase({
         {/* The pop and Finn's hop both use transform, so they sit on separate views. */}
         <Animated.View entering={pop}>
           <Animated.View style={finn.style}>
-            <FinnAvatar mood="celebrating" size={88} />
+            <FinnAvatar mood="celebrating" size={88} animated />
           </Animated.View>
         </Animated.View>
         <View style={styles.ticksRight}>
@@ -178,7 +178,7 @@ export function FailedPhase({ type, onRetry, onNotNow }: { type: PendingActionTy
 
   return (
     <Animated.View style={[styles.phase, styles.center, nudge]}>
-      <FinnAvatar mood="worried" size={88} ring />
+      <FinnAvatar mood="worried" size={88} ring animated />
       <Text style={styles.title}>That didn’t go through.</Text>
       <Text style={[styles.body, styles.centerText]}>
         Capital One didn’t respond.{' '}
@@ -198,7 +198,7 @@ export function FailedPhase({ type, onRetry, onNotNow }: { type: PendingActionTy
 export function EndedPhase({ declined, onDone }: { declined: boolean; onDone: () => void }) {
   return (
     <View style={[styles.phase, styles.center]}>
-      <FinnAvatar mood="happy" head={declined ? 'sad' : undefined} size={64} />
+      <FinnAvatar mood="happy" head={declined ? 'sad' : undefined} size={64} animated />
       <Text style={styles.title}>{declined ? 'You declined this.' : 'This request expired.'}</Text>
       <Text style={[styles.body, styles.centerText]}>Nothing was moved.</Text>
       <View style={styles.fullWidth}>

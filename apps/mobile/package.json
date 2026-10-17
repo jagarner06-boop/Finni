@@ -42,11 +42,13 @@
     "uniwind": "^1.12.2"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@testing-library/react-native": "^14.1.0",
     "@types/jest": "29.5.14",
     "@types/react": "~19.2.4",
     "eslint": "^9.39.5",
     "eslint-config-expo": "~57.0.2",
+    "gifenc": "^1.0.3",
     "jest": "~29.7.0",
     "jest-expo": "~57.0.6",
     "typescript": "~6.0.3"
@@ -57,7 +59,9 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
-    "test": "jest"
+    "test": "jest",
+    "finn:cutout": "node scripts/finn-cutout.cjs",
+    "finn:gif": "node scripts/finn-gif.cjs"
   },
   "private": true,
   "jest": {

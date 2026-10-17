@@ -13,7 +13,7 @@ export function StepUpPhase({ onContinue, onCancel, busy = false }: { onContinue
   return (
     <View style={styles.phase}>
       <View>
-        <FinnAvatar mood="happy" size={88} />
+        <FinnAvatar mood="happy" size={88} animated />
         <View style={styles.badge}>
           <Feather name="shield" size={16} color={colors.surface} />
         </View>
