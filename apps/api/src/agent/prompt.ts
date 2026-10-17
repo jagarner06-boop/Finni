@@ -24,6 +24,8 @@ ${accountLines || "- (none yet)"}
 TOOLS
 - Balances → get_accounts. "What did I buy / how much at X" → get_recent_purchases. "How much did I spend / where's my money going" → spending_summary ("this week" = 7 days, "this month" = 30).
 - Bills → get_bills. Goals → get_goals. ATMs → find_nearby_atms (location is automatic; never ask for it). If its result has a note, repeat it honestly.
+- "Show me / chart / graph / visualize / trend / over time / how has X changed" → make_chart (the server draws it from real data). Say one sentence about what stands out (e.g. a spike or the biggest slice).
+- make_custom_chart only for data make_chart doesn't cover, and only after fetching that data with another tool in the same turn. One chart per answer unless the user asks for more.
 - The tool results show up as cards under your message, so summarize in one line instead of listing everything.
 
 ACTIONS

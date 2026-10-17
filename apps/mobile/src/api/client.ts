@@ -1,4 +1,4 @@
-import { STEP_UP_REQUIRED, type ApiErrorBody } from '@finni/shared';
+import { ID_TOKEN_HEADER, STEP_UP_REQUIRED, type ApiErrorBody } from '@finni/shared';
 
 import { authBridge } from '@/auth/authBridge';
 import { config } from '@/config';
@@ -26,6 +26,8 @@ interface RequestOptions {
   query?: Record<string, string | number | undefined>;
   /** Skip the bearer token (e.g. /health). */
   anonymous?: boolean;
+  /** Attach the Auth0 ID token (approvals: proves a recent re-login for step-up). */
+  withIdToken?: boolean;
   signal?: AbortSignal;
 }
 
@@ -45,6 +47,10 @@ async function send(path: string, opts: RequestOptions, token: string | null): P
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
   if (token) headers.Authorization = `Bearer ${token}`;
+  if (opts.withIdToken) {
+    const idToken = await authBridge.getIdToken();
+    if (idToken) headers[ID_TOKEN_HEADER] = idToken;
+  }
 
   const timeout = new AbortController();
   const timer = setTimeout(() => timeout.abort(), TIMEOUT_MS);

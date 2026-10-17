@@ -18,7 +18,8 @@ export async function listPurchases(
   opts: { days?: number; merchantQuery?: string; accountId?: string; limit?: number } = {},
 ): Promise<Transaction[]> {
   const accountIds = opts.accountId ? [opts.accountId] : (await nessie.getCustomerAccounts(user.nessieCustomerId)).map((a) => a._id);
-  const since = isoDay(-(opts.days ?? 30));
+  // "Last N days" = N calendar days including today.
+  const since = isoDay(1 - (opts.days ?? 30));
   const raw = (await Promise.all(accountIds.map(async (accountId) => (await nessie.getPurchases(accountId)).map((p) => ({ ...p, accountId })))))
     .flat()
     .filter((p) => p.status !== "cancelled" && p.purchase_date >= since);

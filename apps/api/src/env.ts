@@ -6,6 +6,8 @@ const schema = z.object({
   GEMINI_MODEL: z.string().default("gemini-3.1-flash-lite"),
   AUTH0_DOMAIN: z.string().min(1),
   AUTH0_AUDIENCE: z.string().min(1),
+  // Public (not a secret): the ID token audience checked by step-up.
+  AUTH0_CLIENT_ID: z.string().default("qQweRCxviMmTL4nsKygCt8Try2jLvQJL"),
   DATABASE_URL: z.string().url(),
   STEP_UP_THRESHOLD: z.coerce.number().default(100),
   PORT: z.coerce.number().default(4000),

@@ -63,7 +63,7 @@ async function generate(contents: Content[], system: string) {
 
 /** One user turn: history + tool loop → Finn's reply with mood and any cards the tools emitted. */
 export async function runAgent(user: User, message: string, opts: { location?: LatLng } = {}): Promise<AgentReply> {
-  const ctx: ToolContext = { user, cards: [], actionIds: [], location: opts.location };
+  const ctx: ToolContext = { user, cards: [], actionIds: [], seenCents: new Set(), location: opts.location };
   const done = (reply: { text: string; mood: Mood }): AgentReply => ({ ...reply, cards: ctx.cards, actionIds: ctx.actionIds });
   try {
     const [history, accounts] = await Promise.all([loadHistory(user.id), listAccounts(user)]);

@@ -63,8 +63,8 @@ moneyRouter.post("/actions", async (req, res) => {
 moneyRouter.post("/actions/:id/approve", async (req, res) => {
   const u = await user(req);
   const row = await getActionRow(u, req.params.id);
-  // Checked before claiming, so a 403 leaves the action pending for the retry after MFA.
-  if (row.requiresStepUp && row.status === "pending") requireStepUp(req);
+  // Checked before claiming, so a 403 leaves the action pending for the retry after re-login.
+  if (row.requiresStepUp && row.status === "pending") await requireStepUp(req);
   const body: ActionResponse = { action: await approveAction(u, row.id) };
   res.json(body);
 });

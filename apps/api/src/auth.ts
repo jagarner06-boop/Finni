@@ -1,6 +1,7 @@
 import type { Request } from "express";
 import { auth } from "express-oauth2-jwt-bearer";
-import { MFA_AT_CLAIM, STEP_UP_REQUIRED } from "@finni/shared";
+import { ID_TOKEN_HEADER, MFA_AT_CLAIM, STEP_UP_REQUIRED } from "@finni/shared";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import { env } from "./env.js";
 import { HttpError } from "./services/users.js";
 
@@ -12,16 +13,30 @@ export const checkJwt = auth({
 });
 
 const STEP_UP_MAX_AGE_S = 5 * 60;
+const jwks = createRemoteJWKSet(new URL(`https://${env.AUTH0_DOMAIN}/.well-known/jwks.json`));
+
+/** True when the request carries an Auth0 ID token for the same user from a login in the last 5 minutes. */
+async function hasFreshLogin(req: Request): Promise<boolean> {
+  const idToken = req.header(ID_TOKEN_HEADER);
+  if (!idToken) return false;
+  try {
+    const { payload } = await jwtVerify(idToken, jwks, { issuer: `https://${env.AUTH0_DOMAIN}/`, audience: env.AUTH0_CLIENT_ID });
+    return payload.sub === req.auth?.payload.sub && typeof payload.auth_time === "number" && Date.now() / 1000 - payload.auth_time <= STEP_UP_MAX_AGE_S;
+  } catch {
+    return false;
+  }
+}
 
 /**
- * Large actions need a recent MFA. The Auth0 post-login Action stamps MFA_AT_CLAIM (epoch seconds)
- * when the login included MFA; the app retries with a fresh token after a 403 step_up_required.
+ * Large actions need the user to have just re-authenticated. Accepted proof: a recent MFA claim on the
+ * access token (if an Auth0 Action stamps MFA_AT_CLAIM), or an ID token from a login in the last
+ * 5 minutes. The app re-logs in and retries after a 403 step_up_required.
  */
-export function requireStepUp(req: Request): void {
+export async function requireStepUp(req: Request): Promise<void> {
   const mfaAt = Number(req.auth?.payload[MFA_AT_CLAIM]);
-  if (!mfaAt || Date.now() / 1000 - mfaAt > STEP_UP_MAX_AGE_S) {
-    throw new HttpError(403, STEP_UP_REQUIRED, "Confirm it's you to approve this");
-  }
+  if (mfaAt && Date.now() / 1000 - mfaAt <= STEP_UP_MAX_AGE_S) return;
+  if (await hasFreshLogin(req)) return;
+  throw new HttpError(403, STEP_UP_REQUIRED, "Sign in again to approve this");
 }
 
 export function getSub(req: Request): string {
