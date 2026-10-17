@@ -1,15 +1,15 @@
 import { Tabs } from 'expo-router';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-import { useSession } from '@/auth/useSession';
+import { SessionGate } from '@/components/session/SessionGate';
 import { useNudgeNotifier } from '@/lib/useNudgeNotifier';
 import { colors, fonts } from '@/theme/tokens';
 
 export default function TabsLayout() {
-  const session = useSession();
-
-  if (session.phase !== 'ready') return <SessionLoading phase={session.phase} onRetry={session.retry} />;
-  return <SignedInTabs />;
+  return (
+    <SessionGate>
+      <SignedInTabs />
+    </SessionGate>
+  );
 }
 
 function SignedInTabs() {
@@ -39,26 +39,5 @@ function SignedInTabs() {
         }}
       />
     </Tabs>
-  );
-}
-
-// Placeholder for "Finn is setting up your tank…" (design pass).
-function SessionLoading({ phase, onRetry }: { phase: string; onRetry: () => void }) {
-  return (
-    <View className="flex-1 items-center justify-center gap-4 bg-canvas px-6">
-      {phase === 'error' ? (
-        <>
-          <Text className="font-bold text-lg text-ink">Glub… couldn't reach Finn's tank.</Text>
-          <Pressable onPress={onRetry} className="rounded-full bg-accent px-6 py-3">
-            <Text className="font-bold text-white">Try again</Text>
-          </Pressable>
-        </>
-      ) : (
-        <>
-          <ActivityIndicator color={colors.accent} />
-          <Text className="font-regular text-muted">Finn is setting up your tank…</Text>
-        </>
-      )}
-    </View>
   );
 }

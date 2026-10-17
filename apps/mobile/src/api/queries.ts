@@ -1,4 +1,4 @@
-import type { ChatRequest, CreateActionRequest, CreateGoalRequest, PendingActionStatus } from '@finni/shared';
+import type { ChatRequest, NudgesResponse, UpdateSettingsRequest, CreateActionRequest, CreateGoalRequest, PendingActionStatus } from '@finni/shared';
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { getLocation } from '@/lib/location';
@@ -25,11 +25,14 @@ export const qk = {
   action: (id: string) => ['action', id] as const,
   bills: ['bills'] as const,
   nudges: ['nudges'] as const,
+  home: ['home'] as const,
+  transactions: (accountId?: string) => ['transactions', accountId ?? 'all'] as const,
+  settings: ['settings'] as const,
 };
 
 /** Money moved / created: everything showing balances or actions is stale. */
 function invalidateMoney(client: QueryClient) {
-  for (const key of [qk.me, qk.accounts, qk.goals, qk.bills, ['actions'], qk.history]) {
+  for (const key of [qk.me, qk.accounts, qk.goals, qk.bills, ['actions'], qk.history, qk.home, ['transactions'], qk.nudges]) {
     client.invalidateQueries({ queryKey: key });
   }
 }
@@ -49,7 +52,7 @@ export function useMe(opts: { enabled?: boolean; pollUntilSeeded?: boolean } = {
 export function useBootstrap() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: api.bootstrap,
+    mutationFn: () => api.bootstrap(),
     onSuccess: (res) => client.setQueryData(qk.me, res.me),
   });
 }
@@ -144,5 +147,79 @@ export function useScanNudges() {
   return useMutation({
     mutationFn: api.scanNudges,
     onSuccess: (res) => client.setQueryData(qk.nudges, { nudges: res.nudges }),
+  });
+}
+
+export function useDismissNudge() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.dismissNudge(id),
+    // Optimistic: the card disappears right away; roll back if the API says no.
+    onMutate: async (id) => {
+      await client.cancelQueries({ queryKey: qk.nudges });
+      const prev = client.getQueryData<NudgesResponse>(qk.nudges);
+      if (prev) client.setQueryData<NudgesResponse>(qk.nudges, { nudges: prev.nudges.filter((n) => n.id !== id) });
+      return { prev };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.prev) client.setQueryData(qk.nudges, ctx.prev);
+    },
+    onSettled: () => {
+      client.invalidateQueries({ queryKey: qk.nudges });
+      client.invalidateQueries({ queryKey: qk.home });
+    },
+  });
+}
+
+/** Creates a PendingAction; the caller routes to `/approve/<id>`. */
+export function useActOnNudge() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.actOnNudge(id),
+    onSuccess: (res) => {
+      client.setQueryData(qk.action(res.action.id), res);
+      client.invalidateQueries({ queryKey: ['actions'] });
+    },
+  });
+}
+
+// ---------- Home, activity, settings ----------
+
+export const useHome = () => useQuery({ queryKey: qk.home, queryFn: api.home });
+
+export const useTransactions = (accountId?: string) =>
+  useQuery({ queryKey: qk.transactions(accountId), queryFn: () => api.transactions({ accountId }) });
+
+export const useSettings = () => useQuery({ queryKey: qk.settings, queryFn: api.settings });
+
+export function useUpdateSettings() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: UpdateSettingsRequest) => api.updateSettings(body),
+    onSuccess: (res) => {
+      client.setQueryData(qk.settings, res);
+      client.invalidateQueries({ queryKey: qk.home });
+    },
+  });
+}
+
+/** Fresh persona; the session gate polls GET /me until seeding finishes. */
+export function useResetDemo() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: api.resetDemo,
+    onSuccess: (res) => {
+      client.setQueryData(qk.me, res.me);
+      invalidateMoney(client);
+      client.invalidateQueries({ queryKey: qk.settings });
+    },
+  });
+}
+
+export function useClearChat() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: api.clearChat,
+    onSuccess: () => client.invalidateQueries({ queryKey: qk.history }),
   });
 }
