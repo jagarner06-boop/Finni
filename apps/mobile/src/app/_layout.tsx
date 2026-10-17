@@ -1,11 +1,12 @@
 import '../global.css';
 
 import {
-  Nunito_400Regular,
-  Nunito_700Bold,
-  Nunito_800ExtraBold,
+  Figtree_400Regular,
+  Figtree_500Medium,
+  Figtree_600SemiBold,
+  Figtree_700Bold,
   useFonts,
-} from '@expo-google-fonts/nunito';
+} from '@expo-google-fonts/figtree';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -36,7 +37,7 @@ export default function RootLayout() {
 
 function RootNavigator() {
   const { status } = useAuth();
-  const [fontsLoaded, fontError] = useFonts({ Nunito_400Regular, Nunito_700Bold, Nunito_800ExtraBold });
+  const [fontsLoaded, fontError] = useFonts({ Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold, Figtree_700Bold });
   const ready = (fontsLoaded || !!fontError) && status !== 'loading';
 
   useEffect(() => {
@@ -52,7 +53,7 @@ function RootNavigator() {
 
   const signedIn = status === 'signedIn';
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.foam } }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }}>
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="approve/[id]" options={{ presentation: 'modal' }} />

@@ -1,24 +1,55 @@
 @import 'tailwindcss';
 @import 'uniwind';
 
-/* Design tokens (Component Plan 4). Mirror of src/theme/tokens.ts; keep in sync. */
+/* Finni design system v2. Mirror of src/theme/tokens.ts; keep in sync.
+   Spec: docs/design/finni-v2/README.md */
 @theme {
-  --color-deep: #0b2545;
-  --color-muted: #5b6b82;
-  --color-foam: #f3faff;
+  --color-canvas: #faf8f3;
   --color-surface: #ffffff;
-  --color-ocean: #2563eb;
-  --color-lagoon: #22c1c3;
-  --color-coral: #ff7a59;
-  --color-sun: #ffc845;
-  --color-kelp: #2fb37f;
-  --color-berry: #e5486a;
+  --color-hairline: #edeae3;
+  --color-warm-track: #f1eee7;
+  --color-ink: #14213d;
+  --color-muted: #5b6b82;
+  --color-placeholder: #7d8aa0;
+
+  --color-accent: #2563eb;
+  --color-accent-tint: #e8f0fe;
+  --color-accent-pressed: #1e4fd0;
+  --color-accent-lip: #1b47b5;
+  --color-accent-disabled: #c9d6f5;
+
+  --color-belly: #fbf6ec;
+  --color-hero-from: #1e3a8a;
+  --color-hero-to: #2f55c8;
+
+  --color-danger: #e5484d;   --color-danger-ink: #c62f36;   --color-danger-tint: #fbe9e9;
+  --color-warning: #f5a524;  --color-warning-ink: #9a5b00;  --color-warning-tint: #fef4e2;
+  --color-success: #2fb37f;  --color-success-ink: #1f7a55;
+
+  --color-disabled-bg: #e3e8f0;
+  --color-tide-well: #f4f7fe;
 
   /* RN needs one family name per weight, so weights are separate families. */
-  --font-body: 'Nunito_400Regular';
-  --font-bold: 'Nunito_700Bold';
-  --font-heavy: 'Nunito_800ExtraBold';
+  --font-regular: 'Figtree_400Regular';
+  --font-medium: 'Figtree_500Medium';
+  --font-semibold: 'Figtree_600SemiBold';
+  --font-bold: 'Figtree_700Bold';
 
+  --text-hero: 32px;
+  --text-title: 24px;
+  --text-section: 20px;
+  --text-body: 17px;
+  --text-label: 15px;
+  --text-caption: 14px;
+  --text-micro: 12px;
+
+  --radius-tile: 12px;
   --radius-card: 20px;
   --radius-bubble: 22px;
+  --radius-sheet: 28px;
+
+  --shadow-card: 0 1px 2px rgba(20,33,61,.04), 0 8px 20px -10px rgba(20,33,61,.14);
+  --shadow-primary: inset 0 1px 0 rgba(255,255,255,.3), inset 0 -1px 0 rgba(10,30,90,.25), 0 3px 0 #1b47b5, 0 8px 16px -6px rgba(37,99,235,.5);
+  --shadow-secondary: inset 0 -2px 0 rgba(20,33,61,.05), 0 2px 0 #e6e1d6, 0 4px 8px -4px rgba(20,33,61,.12);
+  --shadow-well: inset 0 2px 5px rgba(20,33,61,.18), 0 1px 0 #fff;
 }

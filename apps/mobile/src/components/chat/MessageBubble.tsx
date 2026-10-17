@@ -41,10 +41,10 @@ export function TypingBubble() {
 
 const styles = StyleSheet.create({
   bubble: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: radius.bubble, maxWidth: '85%' },
-  user: { alignSelf: 'flex-end', backgroundColor: colors.ocean, borderBottomRightRadius: 6 },
+  user: { alignSelf: 'flex-end', backgroundColor: colors.accent, borderBottomRightRadius: 6 },
   userText: { color: '#FFFFFF', fontSize: 16 },
   finnRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, maxWidth: '92%' },
   finnColumn: { flexShrink: 1, gap: 8 },
-  finn: { alignSelf: 'flex-start', backgroundColor: colors.surface, borderBottomLeftRadius: 6, ...shadow },
-  finnText: { color: colors.deep, fontSize: 16, lineHeight: 22 },
+  finn: { alignSelf: 'flex-start', backgroundColor: colors.surface, borderBottomLeftRadius: 6, boxShadow: shadow.card },
+  finnText: { color: colors.ink, fontSize: 16, lineHeight: 22 },
 });
