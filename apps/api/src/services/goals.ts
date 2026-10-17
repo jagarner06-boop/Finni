@@ -2,14 +2,14 @@ import type { Goal, GoalIcon } from "@finni/shared";
 import { and, asc, eq } from "drizzle-orm";
 import { db, schema } from "../db/client.js";
 import type { User } from "../db/schema.js";
-import { goalEta, isBehind } from "../domain/goals.js";
+import { goalEta, isBehind, goalPercent } from "../domain/goals.js";
 import { isoDay } from "../lib/dates.js";
 import { nessie } from "../nessie/client.js";
 import { liveBalanceCents } from "./ledger.js";
 
 type GoalRow = typeof schema.goals.$inferSelect;
 
-export const goalPercent = (currentCents: number, targetCents: number) => (targetCents > 0 ? Math.min(100, Math.round((currentCents / targetCents) * 100)) : 0);
+export { goalPercent } from '../domain/goals.js';
 
 /** A goal row joined with its Nessie account's live balance. */
 export async function toGoal(row: GoalRow): Promise<Goal> {

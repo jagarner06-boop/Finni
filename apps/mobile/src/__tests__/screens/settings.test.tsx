@@ -8,6 +8,14 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { api } from '@/api/endpoints';
 import SettingsScreen from '@/app/(tabs)/settings';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { initialProfile, loadOnboarding } from '@/features/onboarding/state';
+import { toFinnProfile } from '@/features/onboarding/logic';
+
+const mockUpdateOnboarding = jest.fn();
+const mockOnboardingProfile = { ...initialProfile(), firstName: 'Gabe' };
+jest.mock('@react-native-async-storage/async-storage', () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
+jest.mock('@/features/onboarding/OnboardingProvider', () => ({ useOnboarding: () => ({ profile: mockOnboardingProfile, update: mockUpdateOnboarding }) }));
 
 const mockLogout = jest.fn();
 jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
@@ -60,6 +68,14 @@ beforeEach(() => {
 });
 
 describe('Settings', () => {
+  it('saves an explicit monthly savings budget', async () => {
+    mockApi.updateSettings.mockResolvedValue({ ...settings, prefs: { ...settings.prefs, monthlySavingsBudgetCents: 25000 } });
+    await render(wrap(<SettingsScreen />));
+    await fireEvent.press(await screen.findByText('Monthly savings budget'));
+    await fireEvent.changeText(screen.getByLabelText('Monthly savings budget in dollars'), '250');
+    await fireEvent.press(screen.getByRole('button', { name: 'Save budget' }));
+    await waitFor(() => expect(mockApi.updateSettings).toHaveBeenCalledWith({ prefs: { monthlySavingsBudgetCents: 25000 } }));
+  });
   it('shows the step-up rule and accounts', async () => {
     await render(wrap(<SettingsScreen />));
     expect(await screen.findByText('Face ID over $100')).toBeTruthy();
@@ -106,4 +122,17 @@ describe('Settings', () => {
     await fireEvent(field, 'submitEditing');
     await waitFor(() => expect(mockApi.updateSettings).toHaveBeenCalledWith({ firstName: 'Gabi' }));
   });
+  it('keeps a Settings name change in the next saved onboarding bootstrap', async () => {
+    mockApi.updateSettings.mockResolvedValue({ ...settings, firstName: 'Jordan' });
+    await render(wrap(<SettingsScreen />));
+    await fireEvent.press(await screen.findByText('Gabe'));
+    await fireEvent.changeText(screen.getByLabelText('Your name'), '  Jordan  ');
+    await fireEvent(screen.getByLabelText('Your name'), 'submitEditing');
+    await waitFor(() => expect(mockUpdateOnboarding).toHaveBeenCalledWith({ firstName: 'Jordan' }));
+    const restored = await loadOnboarding(AsyncStorage);
+    expect(restored.profile.firstName).toBe('Jordan');
+    expect(restored.complete).toBe(true);
+    expect(toFinnProfile(restored.profile).handsOn).toBe('suggest');
+  });
+
 });

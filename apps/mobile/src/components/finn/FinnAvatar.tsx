@@ -100,18 +100,21 @@ const reactionOut = FadeOut.duration(180);
  */
 function useReaction(name: ReactionName | null) {
   const reduced = useReducedMotion();
-  const [playing, setPlaying] = useState<{ name: ReactionName; run: number; reaction: (typeof FINN_REACTIONS)[ReactionName] & {} } | null>(null);
+  const key = reduced ? null : name;
+  const next = (run: number) => {
+    const reaction = key ? FINN_REACTIONS[key] : undefined;
+    return key && reaction ? { name: key, run, reaction } : null;
+  };
+  const [state, setState] = useState(() => ({ key, run: 1, playing: next(1) }));
+  // A changed face starts a new one-shot; elapsed reactions stay on the static head.
+  if (state.key !== key) setState({ key, run: state.run + 1, playing: next(state.run + 1) });
+  const playing = state.key === key ? state.playing : null;
 
   useEffect(() => {
-    const reaction = name ? FINN_REACTIONS[name] : undefined;
-    if (!name || !reaction || reduced) {
-      setPlaying(null);
-      return;
-    }
-    setPlaying((p) => ({ name, run: (p?.run ?? 0) + 1, reaction }));
-    const timer = setTimeout(() => setPlaying(null), reaction.durationMs);
+    if (!playing) return;
+    const timer = setTimeout(() => setState((current) => current.run === playing.run ? { ...current, playing: null } : current), playing.reaction.durationMs);
     return () => clearTimeout(timer);
-  }, [name, reduced]);
+  }, [playing]);
 
   return playing;
 }

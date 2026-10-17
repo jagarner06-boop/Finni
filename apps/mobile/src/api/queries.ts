@@ -1,4 +1,4 @@
-import type { ChatRequest, NudgesResponse, UpdateSettingsRequest, CreateActionRequest, CreateGoalRequest, PendingActionStatus } from '@finni/shared';
+import type { BootstrapRequest, ChatRequest, NudgesResponse, UpdateSettingsRequest, CreateActionRequest, CreateGoalRequest, PendingActionStatus } from '@finni/shared';
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { getLocation } from '@/lib/location';
@@ -28,13 +28,14 @@ export const qk = {
   home: ['home'] as const,
   transactions: (accountId?: string) => ['transactions', accountId ?? 'all'] as const,
   settings: ['settings'] as const,
+  contributionLimit: (accountId?: string) => ['contribution-limit', accountId ?? 'none'] as const,
 };
 
 /** Money moved / created: everything showing balances or actions is stale. */
-function invalidateMoney(client: QueryClient) {
-  for (const key of [qk.me, qk.accounts, qk.goals, qk.bills, ['actions'], qk.history, qk.home, ['transactions'], qk.nudges]) {
-    client.invalidateQueries({ queryKey: key });
-  }
+async function invalidateMoney(client: QueryClient) {
+  await Promise.all([qk.me, qk.accounts, qk.goals, qk.bills, ['actions'], qk.history, qk.home, ['transactions'], qk.nudges, ['contribution-limit']].map((key) =>
+    client.invalidateQueries({ queryKey: key }),
+  ));
 }
 
 // ---------- Session ----------
@@ -52,8 +53,11 @@ export function useMe(opts: { enabled?: boolean; pollUntilSeeded?: boolean } = {
 export function useBootstrap() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: () => api.bootstrap(),
-    onSuccess: (res) => client.setQueryData(qk.me, res.me),
+    mutationFn: (body?: BootstrapRequest) => api.bootstrap(body),
+    onSuccess: async (res) => {
+      client.setQueryData(qk.me, res.me);
+      await Promise.all([qk.home, qk.settings].map((queryKey) => client.invalidateQueries({ queryKey })));
+    },
   });
 }
 
@@ -72,11 +76,10 @@ export function useSendChat() {
       const body: ChatRequest = location ? { message, location } : { message };
       return api.sendChat(body);
     },
-    // Finn may have proposed something: the approvals list changes too.
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: qk.history });
-      client.invalidateQueries({ queryKey: ['actions'] });
-    },
+    onSuccess: () => Promise.all([
+      client.invalidateQueries({ queryKey: qk.history }),
+      client.invalidateQueries({ queryKey: ['actions'] }),
+    ]),
   });
 }
 
@@ -84,6 +87,7 @@ export function useSendChat() {
 
 export const useAccounts = () => useQuery({ queryKey: qk.accounts, queryFn: api.accounts });
 export const useGoals = () => useQuery({ queryKey: qk.goals, queryFn: api.goals });
+export const useContributionLimit = (accountId?: string) => useQuery({ queryKey: qk.contributionLimit(accountId), queryFn: () => api.contributionLimit(accountId!), enabled: !!accountId });
 export const useBills = () => useQuery({ queryKey: qk.bills, queryFn: api.bills });
 
 // ---------- Actions (approval flow) ----------
@@ -115,9 +119,9 @@ export function useApproveAction() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.approveAction(id),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       client.setQueryData(qk.action(res.action.id), res);
-      invalidateMoney(client);
+      await invalidateMoney(client);
     },
     // e.g. 409 expired / already handled: the server updated the action and its chat card; show that.
     onError: (_err, id) => {
@@ -132,11 +136,9 @@ export function useRejectAction() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.rejectAction(id),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       client.setQueryData(qk.action(res.action.id), res);
-      client.invalidateQueries({ queryKey: ['actions'] });
-      // The proposal's card in chat now says declined.
-      client.invalidateQueries({ queryKey: qk.history });
+      await Promise.all([client.invalidateQueries({ queryKey: ['actions'] }), client.invalidateQueries({ queryKey: qk.history })]);
     },
   });
 }
@@ -183,6 +185,7 @@ export function useDismissNudge() {
     onSettled: () => {
       client.invalidateQueries({ queryKey: qk.nudges });
       client.invalidateQueries({ queryKey: qk.home });
+      client.invalidateQueries({ queryKey: ['contribution-limit'] });
     },
   });
 }
@@ -212,9 +215,9 @@ export function useUpdateSettings() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (body: UpdateSettingsRequest) => api.updateSettings(body),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       client.setQueryData(qk.settings, res);
-      client.invalidateQueries({ queryKey: qk.home });
+      await Promise.all([client.invalidateQueries({ queryKey: qk.home }), client.invalidateQueries({ queryKey: qk.me }), client.invalidateQueries({ queryKey: ['contribution-limit'] })]);
     },
   });
 }

@@ -12,7 +12,7 @@ jest.mock('expo-router', () => ({
   router: { back: jest.fn(), push: jest.fn() },
   useLocalSearchParams: () => ({ id: 'g1' }),
 }));
-jest.mock('@/api/endpoints', () => ({ api: { goals: jest.fn(), accounts: jest.fn(), createAction: jest.fn() } }));
+jest.mock('@/api/endpoints', () => ({ api: { goals: jest.fn(), accounts: jest.fn(), createAction: jest.fn(), contributionLimit: jest.fn() } }));
 
 const mockApi = api as jest.Mocked<typeof api>;
 
@@ -55,12 +55,29 @@ afterEach(async () => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockApi.contributionLimit.mockResolvedValue({ availableCents: 214_000, budgetCents: null, usedCents: 0, remainingBudgetCents: null, maxCents: 214_000 });
   mockApi.accounts.mockResolvedValue({
     accounts: [{ id: 'acc_chk', type: 'Checking', nickname: 'Everyday', mask: '1093', balanceCents: 214_000 }],
   } as never);
 });
 
 describe('Goal detail', () => {
+  it('allows a custom amount and refuses decimal or over-budget amounts', async () => {
+    mockApi.goals.mockResolvedValue({ goals: [goal()] });
+    mockApi.contributionLimit.mockResolvedValue({ availableCents: 214_000, budgetCents: 8000, usedCents: 3000, remainingBudgetCents: 5000, maxCents: 5000 });
+    mockApi.createAction.mockResolvedValue({ action: { id: 'custom' } } as never);
+    await render(wrap(<GoalDetailScreen />));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Add money' }));
+    expect(await screen.findByText('You can add up to $50.00.')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Other'));
+    await fireEvent.changeText(screen.getByLabelText('Amount in dollars'), '12.50');
+    expect(screen.getByRole('button', { name: 'Add $0' })).toBeDisabled();
+    await fireEvent.changeText(screen.getByLabelText('Amount in dollars'), '51');
+    expect(screen.getByRole('button', { name: 'Add $51' })).toBeDisabled();
+    await fireEvent.changeText(screen.getByLabelText('Amount in dollars'), '37');
+    await fireEvent.press(screen.getByRole('button', { name: 'Add $37' }));
+    await waitFor(() => expect(mockApi.createAction).toHaveBeenCalledWith(expect.objectContaining({ amountCents: 3700 })));
+  });
   it('shows the plan and adds money through the approval sheet', async () => {
     mockApi.goals.mockResolvedValue({ goals: [goal()] });
     mockApi.createAction.mockResolvedValue({ action: { id: 'act_add' } } as never);
