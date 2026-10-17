@@ -44,7 +44,7 @@ describe('ChartCard', () => {
   it('draws a donut with its total and a legend with percentages', async () => {
     await renderChart(donut);
     expect(screen.getByText('Spending by category')).toBeTruthy();
-    expect(screen.getByText('$496')).toBeTruthy();
+    expect(screen.getByText('$496.00')).toBeTruthy();
     expect(screen.getByText('Groceries')).toBeTruthy();
     expect(screen.getByText('50%')).toBeTruthy();
   });
@@ -58,13 +58,13 @@ describe('ChartCard', () => {
 
   it('draws a line with start, end and range', async () => {
     await renderChart(line);
-    expect(screen.getByText('$1,240')).toBeTruthy();
+    expect(screen.getByText('$1,240.00')).toBeTruthy(); // current value, full amount
     expect(screen.getByText('low $751 · high $1,240')).toBeTruthy();
   });
 
   it('describes the chart for screen readers', async () => {
     await render(<CardRenderer card={line} />);
-    expect(screen.getByLabelText('Everyday balance. Oct 1 $757, Oct 2 $751, Oct 3 $1,240')).toBeTruthy();
+    expect(screen.getByLabelText('Everyday balance. Oct 1 $757.00, Oct 2 $751.00, Oct 3 $1,240.00')).toBeTruthy();
   });
 
   it('says so when there is nothing to chart', async () => {
