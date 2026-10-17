@@ -19,7 +19,9 @@
     "smoke:agent": "tsx --env-file=.env scripts/smoke-agent.ts",
     "test": "vitest run",
     "smoke:live": "tsx --env-file=.env scripts/smoke-live.ts",
-    "smoke:race": "tsx --env-file=.env scripts/smoke-race.ts"
+    "smoke:race": "tsx --env-file=.env scripts/smoke-race.ts",
+    "smoke:cashflow": "tsx --env-file=.env scripts/smoke-cashflow.ts",
+    "demo:short": "tsx --env-file=.env scripts/demo-short.ts"
   },
   "dependencies": {
     "@finni/shared": "*",
