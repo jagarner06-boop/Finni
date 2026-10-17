@@ -7,11 +7,8 @@ const MAX_CHIPS = 3;
 const MAX_CHIP_LENGTH = 28;
 export const REPLY_FAILURE = "I couldn't finish that request. Please try again.";
 
-/** Keep Finn's copy plain, including flags, skin tones, keycaps and joined emoji. */
-export const withoutEmoji = (text: string) => text
-  .replace(/[0-9#*]\uFE0F?\u20E3/gu, '')
-  .replace(/[\p{Extended_Pictographic}\p{Regional_Indicator}\p{Emoji_Modifier}\u200D\uFE0F\u20E3]/gu, '')
-  .replace(/[ \t]+/g, ' ').replace(/ +([,.!?;:])/g, '$1').trim();
+export { withoutEmoji } from '@finni/shared';
+import { withoutEmoji } from '@finni/shared';
 
 /** Splits Finn's raw reply into its leading `[mood:x]`, the text, and a trailing `[chips: a | b | c]`. */
 /** "[get_goals]" / "[make_chart(...)]": a tool name written as text instead of called. */
@@ -26,36 +23,28 @@ export function namesToolInsteadOfCalling(raw: string, toolNames: readonly strin
 }
 
 export function parseReply(raw: string): { mood: Mood; text: string; chips: string[] } {
-  // Some model versions return the requested fields as JSON instead of tagged prose.
-  const candidate = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
-  if (candidate.startsWith('{') || candidate.startsWith('[') && !/^\[(?:mood|chips):/i.test(candidate)) {
+  const m = raw.match(/^\s*\[mood:\s*(\w+)\s*\]\s*/i);
+  let mood = (m && (MOODS as readonly string[]).includes(m[1].toLowerCase()) ? m[1].toLowerCase() : 'happy') as Mood;
+  let text = (m ? raw.slice(m[0].length) : raw).trim();
+  let chips: string[] = [];
+  const candidate = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  if (/^[{[]/.test(candidate) && !/^\[(?:mood|chips):/i.test(candidate)) {
     try {
       const value = JSON.parse(candidate);
-      if (value && typeof value.text === 'string' && !value.functionCall && !value.args) {
-        const mood = (MOODS as readonly string[]).includes(value.mood) ? value.mood : 'happy';
-        const chips = Array.isArray(value.chips) ? value.chips.filter((x: unknown): x is string => typeof x === 'string').map(withoutEmoji).filter(Boolean).slice(0, MAX_CHIPS).map((x: string) => x.slice(0, MAX_CHIP_LENGTH)) : [];
-        return { mood, text: withoutEmoji(value.text) || REPLY_FAILURE, chips: chips.length ? chips : DEFAULT_CHIPS };
-      }
-    } catch { /* Incomplete JSON is not user-facing prose. */ }
-    return { mood: 'worried', text: REPLY_FAILURE, chips: DEFAULT_CHIPS };
+      if (!value || typeof value.text !== 'string' || value.functionCall || value.args) throw new Error('Not a reply');
+      text = value.text;
+      if ((MOODS as readonly string[]).includes(value.mood)) mood = value.mood;
+      if (Array.isArray(value.chips)) chips = value.chips.filter((x: unknown): x is string => typeof x === 'string');
+    } catch {
+      return { mood: 'worried', text: REPLY_FAILURE, chips: DEFAULT_CHIPS };
+    }
   }
-  const m = raw.match(/^\s*\[mood:\s*(\w+)\s*\]\s*/i);
-  const mood = (m && (MOODS as readonly string[]).includes(m[1].toLowerCase()) ? m[1].toLowerCase() : "happy") as Mood;
-  let text = m ? raw.slice(m[0].length) : raw;
-
   const c = text.match(/\[chips:\s*([^\]]*)\]\s*$/i);
-  const chips = c
-    ? c[1]
-        .split("|")
-        .map((x) => withoutEmoji(x).slice(0, MAX_CHIP_LENGTH))
-        .filter(Boolean)
-        .slice(0, MAX_CHIPS)
-    : [];
-  if (c) text = text.slice(0, c.index);
-
-  // Strip any stray tags the model repeats mid-reply, including tool names it wrote instead of calling.
-  text = text.replace(/\[mood:\s*\w+\s*\]/gi, "").replace(/\[chips:[^\]]*\]/gi, "").replace(TOOL_TAG, "").trim();
-  // Never render an unexecuted tool invocation, including unbracketed calls.
-  if (/\b(?:get|propose|make|find|spending)_[a-z_]+\s*\(/i.test(text) || /```|"(?:functionCall|target_amount|functionResponse)"\s*:/.test(text)) text = REPLY_FAILURE;
+  if (c) { chips = c[1].split('|'); text = text.slice(0, c.index); }
+  text = text.replace(/\[mood:\s*\w+\s*\]/gi, '').replace(/\[chips:[^\]]*\]/gi, '').replace(TOOL_TAG, '').trim();
+  const internal = (value: string) => /^[{[]/.test(value) && !/^\[[^\]]+\]/.test(value)
+    || /```|\b(?:get|propose|make|find|spending)_[a-z_]+\b|"(?:args|functionCall|functionResponse|target_amount)"\s*:/.test(value);
+  if (internal(text)) text = REPLY_FAILURE;
+  chips = chips.map(withoutEmoji).filter((x) => x && !internal(x)).slice(0, MAX_CHIPS).map((x) => x.slice(0, MAX_CHIP_LENGTH));
   return { mood, text: withoutEmoji(text) || REPLY_FAILURE, chips: chips.length ? chips : DEFAULT_CHIPS };
 }

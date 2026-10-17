@@ -35,3 +35,10 @@ export function goalEta(g: { currentCents: number; targetCents: number; contribu
 }
 
 export const isBehind = (eta: string | null, targetDate: string | null): boolean => !!eta && !!targetDate && eta > targetDate;
+
+/** A rounded display percentage must not complete a goal before it is fully funded. */
+export function goalPercent(currentCents: number, targetCents: number): number {
+  if (targetCents <= 0) return 0;
+  if (currentCents >= targetCents) return 100;
+  return Math.max(0, Math.min(99, Math.round(currentCents / targetCents * 100)));
+}
