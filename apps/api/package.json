@@ -16,7 +16,8 @@
     "smoke:seed": "tsx --env-file=.env scripts/smoke-seed.ts",
     "smoke:actions": "tsx --env-file=.env scripts/smoke-actions.ts",
     "smoke:charts": "tsx --env-file=.env scripts/smoke-charts.ts",
-    "smoke:agent": "tsx --env-file=.env scripts/smoke-agent.ts"
+    "smoke:agent": "tsx --env-file=.env scripts/smoke-agent.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@finni/shared": "*",
@@ -35,6 +36,7 @@
     "@types/node": "^26.6.5",
     "drizzle-kit": "^0.31.11",
     "tsx": "^4.23.15",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.5"
   }
 }

@@ -24,6 +24,8 @@ export interface Account {
   nickname: string;
   type: AccountType;
   balanceCents: Cents;
+  /** Four stable digits for "•••• 4821" (Nessie ids aren't card numbers). */
+  mask: string;
   /** True when this account backs a savings goal. */
   isGoal: boolean;
   goalId?: string;
@@ -66,11 +68,13 @@ export interface Atm {
 // ---------- Our DB domain ----------
 
 export type GoalStatus = 'active' | 'completed' | 'archived';
+export type GoalIcon = 'sun' | 'tool' | 'shield' | 'home' | 'book' | 'gift';
+export type GoalCadence = 'weekly' | 'biweekly' | 'monthly';
 
 export interface Goal {
   id: string;
   name: string;
-  emoji: string | null;
+  icon: GoalIcon | null;
   targetCents: Cents;
   /** Live balance of the goal's Nessie account. */
   currentCents: Cents;
@@ -81,9 +85,22 @@ export interface Goal {
   milestonesHit: number[];
   status: GoalStatus;
   createdAt: ISODateTime;
+  cadence: GoalCadence | null;
+  contributionCents: Cents | null;
+  nextContributionOn: ISODate | null;
+  /** When the plan reaches the target (server-derived); null without a plan. */
+  eta: ISODate | null;
+  /** True when the eta is after the target date. */
+  behind: boolean;
 }
 
-export type PendingActionType = 'transfer' | 'bill_payment' | 'create_goal';
+export type PendingActionType =
+  | 'transfer'
+  | 'bill_payment'
+  | 'create_goal'
+  | 'card_payment'
+  | 'dispute_charge'
+  | 'cancel_subscription';
 export type PendingActionStatus =
   | 'pending'
   | 'executing'
@@ -100,6 +117,9 @@ export interface PendingAction {
   amountCents: Cents | null; // null for create_goal
   fromLabel?: string;
   toLabel?: string;
+  /** Sub-lines under From / To in the approval sheet, e.g. "•••• 1093 · $2,140.00 available". */
+  fromDetail?: string;
+  toDetail?: string;
   reason?: string;
   requiresStepUp: boolean;
   status: PendingActionStatus;
@@ -108,11 +128,32 @@ export interface PendingAction {
   expiresAt: ISODateTime;
   executedAt: ISODateTime | null;
   error: string | null;
+  /** What happened, in plain words, once executed. */
+  resultLine: string | null;
+  /** Confirmation number shown after execution, e.g. "#CP-48120". */
+  reference: string | null;
 }
 
-export type NudgeRule = 'bill_due' | 'spending_spike' | 'goal_milestone' | 'low_balance';
+export type NudgeRule =
+  | 'bill_due'
+  | 'spending_spike'
+  | 'goal_milestone'
+  | 'low_balance'
+  | 'duplicate_charge'
+  | 'trial_converted'
+  | 'high_utilization'
+  | 'goal_contribution';
 
-export type NudgeAction = { type: 'propose_bill_payment'; billId: string };
+export type NudgeSeverity = 'danger' | 'warning' | 'info';
+/** Rare Finn heads some nudges use instead of the mood head. */
+export type NudgeFace = 'surprised' | 'skeptical';
+
+export type NudgeAction =
+  | { type: 'propose_bill_payment'; billId: string; label: string }
+  | { type: 'propose_card_payment'; amountCents: Cents; label: string }
+  | { type: 'propose_dispute'; purchaseId: string; label: string }
+  | { type: 'propose_cancel_subscription'; billId: string; label: string }
+  | { type: 'propose_goal_contribution'; goalId: string; amountCents: Cents; label: string };
 
 export interface Nudge {
   id: string;
@@ -120,10 +161,50 @@ export interface Nudge {
   title: string;
   body: string;
   mood: Mood;
+  severity: NudgeSeverity;
+  face: NudgeFace | null;
+  /** Short line for Home rows, e.g. "Spotify · $15.00 · Oct 14". */
+  meta: string;
+  /** Part of `body` set in bold (the key number). */
+  highlight: string | null;
   action: NudgeAction | null;
   notifiedAt: ISODateTime | null;
   readAt: ISODateTime | null;
+  dismissedAt: ISODateTime | null;
+  /** Set when the condition is gone (bill paid, charge refunded). */
+  resolvedAt: ISODateTime | null;
   createdAt: ISODateTime;
+}
+
+/** One money movement on any account, for Activity. */
+export interface LedgerEntry {
+  id: string;
+  accountId: string;
+  accountLabel: string;
+  kind: 'purchase' | 'deposit' | 'withdrawal';
+  title: string;
+  category?: string;
+  /** Signed: purchases and withdrawals are negative. */
+  amountCents: Cents;
+  date: ISODate;
+}
+
+export interface CardSummary {
+  accountId: string;
+  nickname: string;
+  mask: string;
+  /** Amount owed. */
+  balanceCents: Cents;
+  limitCents: Cents;
+  /** Rounded percent of the limit in use. */
+  utilization: number;
+  statementCloseDate: ISODate;
+  closesInDays: number;
+}
+
+export interface Prefs {
+  notifications: boolean;
+  hideBalance: boolean;
 }
 
 // ---------- Chat cards (rendered under Finn's bubbles) ----------
@@ -193,6 +274,8 @@ export interface ChatMessage {
   text: string;
   mood: Mood | null; // finn only
   cards: Card[];
+  /** Suggested follow-ups (finn only). */
+  chips: string[];
   createdAt: ISODateTime;
 }
 

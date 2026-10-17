@@ -21,7 +21,7 @@ export default function ChatScreen() {
   const messages = history.data?.messages ?? [];
   // Show the user's message right away while Finn thinks.
   const pending: ChatMessage | null = send.isPending
-    ? { id: 'pending', role: 'user', text: send.variables ?? '', mood: null, cards: [], createdAt: new Date().toISOString() }
+    ? { id: 'pending', role: 'user', text: send.variables ?? '', mood: null, cards: [], chips: [], createdAt: new Date().toISOString() }
     : null;
   const shown = pending ? [...messages, pending] : messages;
   const positions = groupPositions(shown);

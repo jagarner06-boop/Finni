@@ -20,6 +20,9 @@ export const AMOUNT_LABEL: Record<PendingActionType, string> = {
   transfer: 'AMOUNT',
   bill_payment: 'PAYMENT',
   create_goal: 'TARGET',
+  card_payment: 'PAYMENT',
+  dispute_charge: 'REFUND',
+  cancel_subscription: '',
 };
 
 /** The executed line: what happened, in plain words. */
@@ -32,5 +35,7 @@ export function successLine(action: PendingAction): string {
       return `Paid ${amount} to ${action.toLabel ?? 'the payee'}.`;
     case 'create_goal':
       return `${action.title} is open.`;
+    default:
+      return action.resultLine ?? 'Done.';
   }
 }

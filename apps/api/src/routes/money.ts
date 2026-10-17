@@ -13,7 +13,15 @@ export const moneyRouter = Router();
 
 const cents = z.number().int().positive();
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
-const goalBody = z.object({ name: z.string().trim().min(1).max(40), emoji: z.string().max(8).optional(), targetCents: cents, targetDate: isoDate.optional() });
+const goalBody = z.object({
+  name: z.string().trim().min(1).max(40),
+  icon: z.enum(["sun", "tool", "shield", "home", "book", "gift"]).optional(),
+  targetCents: cents,
+  targetDate: isoDate.optional(),
+  cadence: z.enum(["weekly", "biweekly", "monthly"]).optional(),
+  contributionCents: cents.optional(),
+  fromAccountId: z.string().optional(),
+});
 const actionBody = z.discriminatedUnion("type", [
   z.object({ type: z.literal("transfer"), fromAccountId: z.string(), toAccountId: z.string(), amountCents: cents, reason: z.string().max(120).optional() }),
   z.object({ type: z.literal("bill_payment"), billId: z.string(), fromAccountId: z.string().optional() }),

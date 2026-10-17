@@ -57,7 +57,7 @@ check("reject works", (await rejectAction(user, big.id)).status === "rejected");
 check("insufficient funds refused", (await rejects(createAction(user, { type: "transfer", fromAccountId: savings.id, toAccountId: checking.id, amountCents: 99_900 }, "ui"))) === "insufficient_funds");
 
 // New goal = new Nessie account + goals row.
-const g = await approveAction(user, (await createAction(user, { type: "create_goal", name: "Laptop", emoji: "💻", targetCents: 90000, targetDate: "2027-05-01" }, "ui")).id);
+const g = await approveAction(user, (await createAction(user, { type: "create_goal", name: "Laptop", icon: "book", targetCents: 90000, targetDate: "2027-05-01" }, "ui")).id);
 const goals = await listGoals(user);
 check("goal created", g.status === "executed" && goals.some((x) => x.name === "Laptop" && x.currentCents === 0), goals.map((x) => x.name));
 

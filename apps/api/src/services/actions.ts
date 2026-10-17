@@ -20,7 +20,7 @@ const MILESTONES = [25, 50, 75, 100];
 const dollars = (cents: number) => formatCents(cents).replace(/\.00$/, "");
 /** Nessie truncates cents, so every movement is rounded to whole dollars. */
 const wholeDollars = (cents: number) => Math.round(cents / 100) * 100;
-const goalLabel = (g: { name: string; emoji?: string | null }) => (g.emoji ? `${g.emoji} ${g.name}` : g.name);
+const goalLabel = (g: { name: string }) => g.name;
 
 const statusOf = (row: ActionRow): PendingActionStatus => (row.status === "pending" && row.expiresAt < new Date() ? "expired" : row.status);
 
@@ -41,6 +41,8 @@ export function toPendingAction(row: ActionRow): PendingAction {
     expiresAt: row.expiresAt.toISOString(),
     executedAt: row.executedAt?.toISOString() ?? null,
     error: row.error,
+    resultLine: row.resultLine,
+    reference: null,
   };
 }
 
@@ -101,16 +103,18 @@ export async function createAction(user: User, req: CreateActionRequest, source:
       if (!name) throw new HttpError(400, "invalid_name", "Goal needs a name");
       if (targetCents <= 0) throw new HttpError(400, "invalid_amount", "Target must be at least $1");
       amountCents = null;
-      const label = goalLabel({ name, emoji: req.emoji });
+      const label = goalLabel({ name });
       payload = {
         name,
-        emoji: req.emoji,
+        icon: req.icon,
         targetCents,
         targetDate: req.targetDate,
         display: { title: `Start a goal: ${label}`, toLabel: label, reason: `Target ${dollars(targetCents)}${req.targetDate ? ` by ${req.targetDate}` : ""}` },
       };
       break;
     }
+    default:
+      throw new HttpError(400, "unsupported_action", `Can't create ${req.type} yet`);
   }
 
   const [row] = await db
@@ -237,6 +241,8 @@ function execute(user: User, row: ActionRow): Promise<Execution> {
       return executeBillPayment(user, row, row.payload as BillPaymentPayload);
     case "create_goal":
       return executeCreateGoal(user, row.payload as CreateGoalPayload);
+    default:
+      throw new Error(`Can't execute ${row.type} yet`);
   }
 }
 
@@ -296,7 +302,7 @@ async function executeCreateGoal(user: User, p: CreateGoalPayload): Promise<Exec
   const account = await nessie.createAccount(user.nessieCustomerId, { type: "Savings", nickname: label, rewards: 0, balance: 0 });
   const [row] = await db
     .insert(schema.goals)
-    .values({ userId: user.id, name: p.name, emoji: p.emoji ?? null, targetCents: p.targetCents, targetDate: p.targetDate ?? null, nessieAccountId: account._id })
+    .values({ userId: user.id, name: p.name, emoji: p.icon ?? null, targetCents: p.targetCents, targetDate: p.targetDate ?? null, nessieAccountId: account._id })
     .returning();
   return {
     ref: account._id,
