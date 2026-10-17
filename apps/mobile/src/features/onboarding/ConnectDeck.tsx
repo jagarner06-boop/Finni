@@ -32,6 +32,7 @@ import { dollars, personalityFor } from "./logic";
 import { Card, IconTile, layout, Micro } from "./presentation";
 import { linkBank } from "./linkBank";
 import { requestChosenNotifications } from "./permissions";
+import { BankLogo } from './BankLogo';
 
 type Phase = "intro" | "pick" | "linking" | "linked";
 export default function ConnectDeck({
@@ -233,26 +234,7 @@ export default function ConnectDeck({
                 boxShadow: shadow.secondary,
               }}
             >
-              <View
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: 12,
-                  backgroundColor: colors.warmTrack,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: fonts.bold,
-                    fontSize: 15,
-                    color: colors.ink,
-                  }}
-                >
-                  {bank.mono}
-                </Text>
-              </View>
+              <BankLogo bank={bank.name} />
               <Text
                 style={{
                   flex: 1,

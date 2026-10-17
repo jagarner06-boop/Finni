@@ -1,4 +1,7 @@
 import { Image, Text, View } from "react-native";
+import { useEffect, useId } from 'react';
+import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { FINN_POSE } from "@/components/finn/assets";
 import { LoopView, MotionView } from "@/components/ui/MotionView";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -14,6 +17,12 @@ export function FinnAnalyzing({
   error?: string | null;
   onRetry: () => void;
 }) {
+  const reduced = useReducedMotion();
+  const progress = useSharedValue(0);
+  const gradientId = useId();
+  const done = Math.max(0, Math.min(4, completed));
+  useEffect(() => { progress.value = withTiming(done / 4, { duration: reduced ? 150 : 500, easing: Easing.out(Easing.cubic) }); }, [done, progress, reduced]);
+  const progressStyle = useAnimatedStyle(() => ({ width: `${progress.value * 100}%` as `${number}%` }));
   const labels = [
     "Reading 90 days of transactions",
     "Finding subscriptions",
@@ -75,13 +84,12 @@ export function FinnAnalyzing({
           overflow: "hidden",
         }}
       >
-        <View
-          style={{
-            width: `${(completed / 4) * 100}%`,
-            height: 10,
-            backgroundColor: colors.accent,
-          }}
-        />
+        <Animated.View
+          style={[{ height: 10, backgroundColor: colors.accent }, progressStyle]}
+          // Width advances only when a real analysis task completes.
+        >
+          <Svg width="100%" height={10}><Defs><LinearGradient id={gradientId} x1="0" x2="1"><Stop offset="0" stopColor={colors.accentGradient[0]} /><Stop offset="1" stopColor={colors.accentGradient[1]} /></LinearGradient></Defs><Rect width="100%" height={10} fill={`url(#${gradientId})`} /></Svg>
+        </Animated.View>
       </View>
       {labels.map((label, i) => (
         <View
@@ -112,7 +120,7 @@ export function FinnAnalyzing({
               </MotionView>
             ) : (
               i === completed && (
-                <LoopView kind="dot">
+                <LoopView kind="pulse">
                   <View
                     style={{
                       width: 8,
