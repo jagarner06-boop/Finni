@@ -46,3 +46,15 @@ jest.mock('expo-crypto', () => ({
 
 // Uniwind ships untranspiled TS; screens only need the passthrough.
 jest.mock('uniwind', () => ({ withUniwind: (component: unknown) => component }));
+
+// ReanimatedSwipeable mixes worklet and JS callbacks, which the Jest Reanimated mock flags; render children only.
+jest.mock('react-native-gesture-handler/ReanimatedSwipeable', () => {
+  const { forwardRef } = require('react');
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: forwardRef(function Swipeable({ children }: { children: unknown }, _ref: unknown) {
+      return <View>{children}</View>;
+    }),
+  };
+});

@@ -1,85 +1,141 @@
-import type { Nudge } from '@finni/shared';
-import { router } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
+import type { LedgerEntry, Nudge } from '@finni/shared';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { useCreateAction, useMarkNudgeRead, useNudges } from '@/api/queries';
-import { FinnAvatar } from '@/components/finn/FinnAvatar';
+import { useActOnNudge, useDismissNudge, useMarkNudgeRead, useNudges, useTransactions } from '@/api/queries';
+import { NudgeItem } from '@/components/activity/NudgeItem';
+import { SegmentedControl } from '@/components/activity/SegmentedControl';
+import { TransactionRow } from '@/components/activity/TransactionRow';
 import { FinnPeek } from '@/components/finn/FinnPeek';
-import { FinnTicks } from '@/components/finn/FinnTicks';
 import { usePeek } from '@/components/finn/usePeek';
-import { Button } from '@/components/ui/Button';
 import { SafeAreaView } from '@/components/ui/SafeAreaView';
-import { Surface } from '@/components/ui/Surface';
-import { colors, fonts } from '@/theme/tokens';
+import { formatShortDate } from '@/lib/format';
+import { colors, fonts, radius } from '@/theme/tokens';
 
-// Inbox: nudges from Finn. Becomes Activity ("From Finn" / "Transactions") with the tab restructure.
-// Unread nudges carry Finn's ticks; scrolling to the end makes him peek up from behind the tab bar.
-export default function InboxScreen() {
-  const { data, isLoading } = useNudges();
+type Segment = 'finn' | 'transactions';
+
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+function dayLabel(date: string): string {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (date === iso(today)) return 'Today';
+  if (date === iso(yesterday)) return 'Yesterday';
+  return formatShortDate(date);
+}
+
+function byDay(entries: LedgerEntry[]): { date: string; entries: LedgerEntry[] }[] {
+  const days: { date: string; entries: LedgerEntry[] }[] = [];
+  for (const e of entries) {
+    const last = days[days.length - 1];
+    if (last?.date === e.date) last.entries.push(e);
+    else days.push({ date: e.date, entries: [e] });
+  }
+  return days;
+}
+
+const monthOf = (date: string) => new Date(`${date}T00:00:00`).toLocaleDateString('en-US', { month: 'long' });
+
+// Activity: nudges from Finn and every transaction. Finn peeks up at the end of either list.
+export default function ActivityScreen() {
+  const params = useLocalSearchParams<{ segment?: string; accountId?: string }>();
+  const routeSegment: Segment | undefined = params.segment === 'transactions' ? 'transactions' : params.segment === 'finn' ? 'finn' : undefined;
+  const [segment, setSegment] = useState<Segment>(routeSegment ?? 'finn');
+  // A push with ?segment= switches tabs even when the screen is already mounted.
+  const [seenSegment, setSeenSegment] = useState(routeSegment);
+  if (routeSegment !== seenSegment) {
+    setSeenSegment(routeSegment);
+    if (routeSegment) setSegment(routeSegment);
+  }
+
+  const accountId = params.accountId || undefined;
+  const nudgesQuery = useNudges();
+  const transactions = useTransactions(accountId);
+  const dismiss = useDismissNudge();
+  const markRead = useMarkNudgeRead();
+  const act = useActOnNudge();
   const peek = usePeek();
-  const nudges = data?.nudges ?? [];
-  const unread = nudges.filter((n) => !n.readAt);
-  const read = nudges.filter((n) => n.readAt);
+
+  const nudges = nudgesQuery.data?.nudges ?? [];
+  const fresh = nudges.filter((n) => !n.readAt && !n.resolvedAt);
+  const earlier = nudges.filter((n) => n.readAt || n.resolvedAt);
+  const unread = nudges.filter((n) => !n.readAt).length;
+  const entries = transactions.data?.entries ?? [];
+  const filterLabel = accountId ? entries.find((e) => e.accountId === accountId)?.accountLabel : undefined;
+
+  const actOn = (n: Nudge) => act.mutate(n.id, { onSuccess: (res) => router.push(`/approve/${res.action.id}`) });
+
+  const item = (n: Nudge) => (
+    <NudgeItem
+      key={n.id}
+      nudge={n}
+      acting={act.isPending && act.variables === n.id}
+      onDismiss={() => dismiss.mutate(n.id)}
+      onRead={() => markRead.mutate(n.id)}
+      onAct={() => actOn(n)}
+    />
+  );
+
+  const peekMessage =
+    segment === 'finn' ? 'That’s everything from Finn.' : entries.length ? `That’s all of ${monthOf(entries[entries.length - 1].date)}.` : '';
+  const hasItems = segment === 'finn' ? nudges.length > 0 : entries.length > 0;
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} onScroll={peek.onScroll} scrollEventThrottle={16}>
         <Text style={styles.title} accessibilityRole="header">
-          From Finn
+          Activity
         </Text>
-        {unread.length > 0 && <Text style={styles.micro}>NEW</Text>}
-        {unread.map((n) => (
-          <NudgeItem key={n.id} nudge={n} />
-        ))}
-        {read.length > 0 && <Text style={styles.micro}>EARLIER</Text>}
-        {read.map((n) => (
-          <NudgeItem key={n.id} nudge={n} />
-        ))}
-        {!isLoading && nudges.length === 0 && <Text style={styles.empty}>Nothing from Finn right now.</Text>}
+        <SegmentedControl
+          segments={[
+            { key: 'finn', label: unread > 0 ? `From Finn · ${unread}` : 'From Finn' },
+            { key: 'transactions', label: 'Transactions' },
+          ]}
+          value={segment}
+          onChange={(k) => setSegment(k as Segment)}
+        />
+
+        {segment === 'finn' ? (
+          <>
+            {fresh.length > 0 && <Text style={styles.section}>New</Text>}
+            {fresh.map(item)}
+            {earlier.length > 0 && <Text style={styles.section}>Earlier</Text>}
+            {earlier.map(item)}
+            {!nudgesQuery.isLoading && nudges.length === 0 && <Text style={styles.empty}>Nothing from Finn right now.</Text>}
+          </>
+        ) : (
+          <>
+            {accountId && filterLabel && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Remove filter ${filterLabel}`}
+                onPress={() => router.setParams({ accountId: undefined })}
+                style={styles.filter}>
+                <Text style={styles.filterText}>{filterLabel}</Text>
+                <Feather name="x" size={14} color={colors.ink} />
+              </Pressable>
+            )}
+            {byDay(entries).map((day) => (
+              <View key={day.date}>
+                <Text style={styles.section}>{dayLabel(day.date)}</Text>
+                {day.entries.map((e) => (
+                  <TransactionRow key={e.id} entry={e} />
+                ))}
+              </View>
+            ))}
+            {transactions.isError && <Text style={styles.empty}>Couldn&apos;t load transactions.</Text>}
+            {!transactions.isLoading && !transactions.isError && entries.length === 0 && (
+              <Text style={styles.empty}>No transactions yet.</Text>
+            )}
+          </>
+        )}
         <View style={styles.peekRoom} />
       </ScrollView>
-      <FinnPeek shown={peek.shown && nudges.length > 0} message="That’s everything from Finn." />
+      <FinnPeek shown={peek.shown && hasItems} message={peekMessage} />
     </SafeAreaView>
-  );
-}
-
-function NudgeItem({ nudge }: { nudge: Nudge }) {
-  const markRead = useMarkNudgeRead();
-  const createAction = useCreateAction();
-  const isUnread = !nudge.readAt;
-  const action = nudge.action;
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${isUnread ? 'Unread. ' : ''}${nudge.title}. ${nudge.body}`}
-      onPress={() => isUnread && markRead.mutate(nudge.id)}>
-      <Surface style={styles.item} padding={14}>
-        <FinnAvatar mood={nudge.mood} size={40} />
-        <View style={styles.itemText}>
-          <View style={styles.titleRow}>
-            <Text style={[styles.itemTitle, !isUnread && styles.readTitle]}>{nudge.title}</Text>
-            {isUnread && <FinnTicks size={18} />}
-          </View>
-          <Text style={styles.body}>{nudge.body}</Text>
-          {action?.type === 'propose_bill_payment' && (
-            <View style={styles.action}>
-              <Button
-                label="Review payment"
-                size="sm"
-                loading={createAction.isPending}
-                onPress={() =>
-                  createAction.mutate(
-                    { type: 'bill_payment', billId: action.billId },
-                    { onSuccess: (res) => router.push(`/approve/${res.action.id}`) },
-                  )
-                }
-              />
-            </View>
-          )}
-        </View>
-      </Surface>
-    </Pressable>
   );
 }
 
@@ -87,15 +143,21 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.canvas },
   content: { paddingHorizontal: 20, paddingBottom: 24, gap: 12 },
   title: { fontFamily: fonts.bold, fontSize: 28, lineHeight: 34, color: colors.ink, paddingTop: 8 },
-  micro: { fontFamily: fonts.semibold, fontSize: 12, letterSpacing: 0.5, color: colors.muted, marginTop: 4 },
-  item: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
-  itemText: { flex: 1, gap: 4 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  itemTitle: { flex: 1, fontFamily: fonts.bold, fontSize: 15, color: colors.ink },
-  readTitle: { color: colors.muted },
-  body: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, color: colors.muted },
-  action: { alignSelf: 'flex-start', marginTop: 6 },
+  section: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted, marginTop: 8 },
   empty: { fontFamily: fonts.regular, fontSize: 14, color: colors.muted, textAlign: 'center', marginTop: 24 },
-  // Space so the last nudge isn't covered when Finn peeks.
+  filter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    height: 32,
+    paddingHorizontal: 12,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    backgroundColor: colors.surface,
+  },
+  filterText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.ink },
+  // Space so the last row isn't covered when Finn peeks.
   peekRoom: { height: 96 },
 });

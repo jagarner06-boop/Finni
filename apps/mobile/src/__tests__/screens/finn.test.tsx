@@ -48,6 +48,7 @@ describe('Finn screen', () => {
     await render(wrap(<FinnScreen />));
     await fireEvent.press(await screen.findByLabelText('Ask Finn: Why 9%?'));
     await waitFor(() => expect(mockApi.sendChat).toHaveBeenCalledWith({ message: 'Why 9%?' }));
+    await waitFor(() => expect(mockApi.chatHistory).toHaveBeenCalledTimes(2));
   });
 
   it('greets by name with default chips when history is empty', async () => {
@@ -69,13 +70,15 @@ describe('Finn screen', () => {
     await fireEvent.press(screen.getByText('Not sent · Retry'));
     await waitFor(() => expect(mockApi.sendChat).toHaveBeenCalledTimes(2));
     expect(mockApi.sendChat).toHaveBeenLastCalledWith({ message: 'Pay my card' });
+    await waitFor(() => expect(screen.queryByText('Not sent · Retry')).toBeNull());
   });
 
   it('puts ?q= in the composer without sending it', async () => {
     mockParams.q = 'Pay my card down';
     mockApi.chatHistory.mockResolvedValue({ messages: [] });
     await render(wrap(<FinnScreen />));
-    expect((await screen.findByLabelText('Ask Finn')).props.value).toBe('Pay my card down');
+    expect(await screen.findByText('Hi Gabe. Ask me about your card, bills, or goals.')).toBeTruthy();
+    expect(screen.getByLabelText('Ask Finn').props.value).toBe('Pay my card down');
     expect(mockApi.sendChat).not.toHaveBeenCalled();
   });
 });
