@@ -24,7 +24,7 @@
 ## Decisions locked
 - **Frontend:** Expo (managed) React Native; keep web target building as a backup demo.
 - **Backend:** Node + TypeScript (shared types package with app).
-- **DB:** Neon Postgres + Drizzle ORM.
+- **DB:** Supabase (Postgres only; Auth stays on Auth0) + Drizzle ORM.
 - **Pet:** Friendly animated mascot, no health/evolution mechanic. 4 expression states selected per message by the agent (`mood` field in response). Gemini-generated PNG expressions animated in code (see Component Plan 4).
 - **Team skills:** RN/Expo ✅, backend ✅, LLM/agents ✅, design/animation ❌ → UI kit + prebuilt assets, no custom motion work.
 - **Team split:** vertical slices after a shared foundation.
@@ -66,7 +66,7 @@ Expo app ──HTTPS + Auth0 JWT──> Node/TS API ──> Nessie API
 - **Auth0 in Expo:** `react-native-auth0` needs a dev build; `expo-auth-session` redirect URIs fiddly → hour-1 spike; web target as fallback.
 - **Push in Expo Go** limited → local notifications + in-app inbox for MVP.
 - **Step-up MFA** config (Auth0 Actions / `acr_values`) may take iteration → fallback: re-login prompt for large actions.
-- **Nessie ATM data** is real-ish but concentrated in some cities (historically the DC area) → check Gainesville coverage in the hour-1 spike; if sparse, use demo coords where ATMs exist or widen the radius.
+- **Nessie ATM data is DC/Arlington-only and ignores the geo filter** (verified) → compute distance ourselves + honest messaging + demo-location toggle (see Seed plan).
 - **Gemini track weaker without multimodal** → stretch item #1 is the fix if time allows.
 
 ---
@@ -76,8 +76,8 @@ Expo app ──HTTPS + Auth0 JWT──> Node/TS API ──> Nessie API
 ## Stack
 - **Express + TypeScript** (run with `tsx` in dev), **Zod** for request/tool-arg validation.
 - **Auth:** `express-oauth2-jwt-bearer` (`auth({ audience, issuerBaseURL })`) on every route except `/health`. `req.auth.payload.sub` = user key.
-- **DB:** Neon Postgres + **Drizzle ORM** (detailed schema in DB component plan).
-- **Gemini:** `@google/genai` SDK, latest Gemini Flash model available at the event (model ID in env `GEMINI_MODEL`, confirm in spike).
+- **DB:** Supabase Postgres via the **Session pooler** connection string (IPv4; direct connection is IPv6-only) + **Drizzle ORM** with `postgres` driver (detailed schema in DB component plan).
+- **Gemini:** `@google/genai` SDK, `GEMINI_MODEL=gemini-2.5-flash` (stable; verified available 10/16). Optionally try `gemini-3-flash-preview` once the loop works.
 - **Jobs:** `node-cron` for the nudge scan.
 - **Hosting:** dev through a `cloudflared`/ngrok tunnel so phones can reach the laptop; deploy to Render or Railway by Sat ~noon so both devs and the demo phone hit one stable URL.
 
@@ -158,7 +158,7 @@ Deterministic rules decide *when*; Gemini (one short call, batched) only writes 
 Runs from `node-cron` every 15 min, lazily on `GET /nudges`, and from `POST /nudges/scan` for the demo. The client fires a local notification for unseen nudges.
 
 ## Backend build order
-1. **Foundation (together, Fri 8–11pm):** scaffold, env, JWT middleware working against the Expo login, Nessie client + spike (create customer/account/purchase/transfer; **check whether balances update immediately or stay "pending"**, and check ATM coverage near Gainesville), Drizzle + Neon connected, Gemini hello-world tool call.
+1. **Foundation (together, Fri 8–11pm):** scaffold, env, JWT middleware working against the Expo login, Nessie client + spike (create customer/account/purchase/transfer; **check whether balances update immediately or stay "pending"**, and ~~check ATM coverage~~ done: DC-only, see Seed plan), Drizzle + Supabase connected, Gemini hello-world tool call.
 2. **Slice A:** `/chat` loop + read tools + mood parsing + cards + history + `/me/bootstrap`.
 3. **Slice B:** actions service + approve/reject + step-up, goals, bills, nudges + cron + scan trigger.
 
@@ -174,7 +174,7 @@ Runs from `node-cron` every 15 min, lazily on `GET /nudges`, and from `POST /nud
 
 ---
 
-# Component Plan 2 — Database (Neon Postgres + Drizzle)
+# Component Plan 2 — Database (Supabase Postgres + Drizzle)
 
 ## Principles
 - **Nessie is the source of truth for money:** balances, purchases, transfers, bills, merchants, and ATMs are never copied into our DB, only read through the cached Nessie client. Our DB holds only what Nessie can't: identity mapping, goal metadata, approvals, chat, and nudges. (This also makes the case for "best use of Nessie.")
@@ -263,7 +263,7 @@ Unique: `(user_id, dedupe_key)`. Insert with `onConflictDoNothing`, so rescans a
 - `PendingAction`, `Goal` (DB row + live `currentCents` from Nessie + `percent`), `Nudge`, `ChatMessage`, `ChatRequest { message, location?: {lat,lng} }`, `ChatResponse { reply: ChatMessage, cards: Card[] }`.
 
 ## DB verification
-- `drizzle-kit push` against Neon, then `drizzle-kit studio` to inspect.
+- `drizzle-kit push` against Supabase (or view tables in the Supabase Table Editor), then `drizzle-kit studio` to inspect.
 - Bootstrap twice with the same JWT → one `users` row (idempotent).
 - Approve the same action twice concurrently → exactly one Nessie transfer (guarded by `pending→executing`).
 - Run a nudge scan twice → no duplicate nudges.
@@ -460,9 +460,10 @@ Applied by `/me/bootstrap` to every new user. All dates are **relative to today*
 - **Speed:** create customer + accounts first (fast) and return. Then seed history with `p-limit(6)` concurrency; target < 15s. The app shows the "setting up" loader by polling `GET /me` until `seeded=true` (add a `seeded_at` column to `users`).
 
 ## ATM coverage
-- Nessie ATMs are read-only, pre-loaded data (we can't create them), historically concentrated around DC.
-- **Spike:** `GET /atms?lat=29.6436&lng=-82.3549&rad=10` (UF campus).
-- **Fallback chain in `find_nearby_atms`:** requested radius → widen to 25 → 50 mi → if still empty, query `DEMO_ATM_COORDS` (env; a city with data) and Finn says so honestly ("Nessie's sandbox doesn't have ATMs near you yet, so here are some from the demo area").
+- Nessie ATMs are read-only, pre-loaded data (we can't create them).
+- **Spike result (10/16):** every ATM is in the DC/Arlington area, and the `lat/lng/rad` filter is **ignored** (UF coords at rad=10 still return Arlington ATMs). Nearest from Gainesville is ~700 mi.
+- **Implementation:** fetch `GET /atms` (follow pagination), cache it for 1h, and compute haversine distance **ourselves**; sort and return the top 3–5.
+- **Demo handling:** if the nearest ATM is > 25 mi away, Finn says so honestly ("The closest Capital One ATMs in Nessie are near Arlington, VA — about 700 mi away"). The app also has a **"Demo location: Arlington, VA"** toggle (`DEMO_ATM_COORDS`, also used when location is denied or on web), so the demo shows a realistic walk-to-ATM answer. Say this on stage; don't hide it.
 
 ## Demo account & reset
 - Before judging: a dedicated Auth0 demo login (Google social or username/password, MFA enrolled ahead of time).
@@ -538,14 +539,32 @@ Backup: record the full script as a video on Sat night after the integration che
 
 ---
 
+## Nessie API facts (verified by spike, 10/17) — these override earlier assumptions
+- Base URL `https://api.nessieisreal.com` (http fails). FastAPI/pydantic backend; unknown fields are rejected with "extra fields not permitted".
+- **`account.balance` is fixed at creation** (PUT accepts only `nickname`). **No write ever changes it.**
+- **Transfers can't specify a payee** (body allows only `transaction_date, status, amount, description`) and never move money → **not used**.
+- **All amounts are truncated to whole dollars** (purchases, deposits, withdrawals, balances, bills). Finni uses whole dollars everywhere; Finn rounds proposals.
+- **Live balance = opening balance + Σdeposits − Σwithdrawals − Σpurchases** (`apps/api/src/services/ledger.ts`). Money movement between the user's accounts = **withdrawal on source + deposit on destination**, linked by the pending-action id in the description. Bill payment = withdrawal + `PUT /bills/{id}`.
+- Required fields: purchase `merchant_id, medium, amount` (+ `purchase_date, status, description`); deposit `medium, transaction_date, status, amount, description`; withdrawal `medium, amount`; bill `status, payee, payment_amount` (+ `nickname, payment_date, recurring_date`; `upcoming_payment_date` is computed); merchant `name` (+ `category` as a **string**, `address`, `geocode`).
+- Empty lists return 404 with a string like "No transfers found for this account" → the client maps that to `[]`.
+- `/atms` returns 13 ATMs, all DC/Arlington; the geo filter is ignored.
+- Gemini: `gemini-2.5-flash` is closed to new keys → **`GEMINI_MODEL=gemini-3.8-flash`** (function calling verified).
+- Tooling: npm workspaces (not pnpm), **Expo SDK 57** (store Expo Go on iPhone only supports 57; SDK 58 template was downgraded 10/17), Node 26.
+
+## Auth0 setup gotchas (verified 10/17)
+- API → Settings → **Application Access Policy → User-Delegated Access** must allow the Finni app, or login fails with "Client … is not authorized to access resource server".
+- **Callback URL contains the laptop's LAN IP** (`exp://<ip>:8081/--/callback`); it changes per network (venue Wi-Fi vs iPhone hotspot `172.20.10.x`). Copy the Redirect URI from the app screen into Allowed Callback URLs after switching networks.
+- Auth0 login **works in Expo Go on iPhone** (SDK 57) and on web. "Development keys" warning for Google is expected; ignore for the hackathon.
+
 ## Config collected (non-secret)
 - Auth0 Domain: `dev-qfcvf4rkm3dp8xsh.us.auth0.com`
 - Auth0 Native app Client ID: `qQweRCxviMmTL4nsKygCt8Try2jLvQJL`
-- Auth0 API Identifier (audience): `https://api.finni.app` *(confirm it was created)*
-- Still needed: Nessie API key, Gemini API key, Neon `DATABASE_URL` (secrets → `.env` only, never in this file)
+- Auth0 API Identifier (audience): `https://api.finni.app` (confirmed 10/16; Google + email/password connections enabled)
+- Nessie + Gemini keys: in `apps/api/.env` (verified working 10/16). Nessie base URL must be **https://api.nessieisreal.com** (http fails).
+- Still needed: Supabase `DATABASE_URL` (Session pooler URI) → `apps/api/.env` only.
 
 ## Status
-All component plans written. **Implementation starts only when the user explicitly says so.** The first implementation step is the shared foundation (Fri 8–11pm block), starting with the Auth0-in-Expo spike.
+**Foundation complete (10/17):** monorepo, Auth0 login on web + iPhone → JWT verified by API (`/whoami`), Supabase schema pushed, Nessie client + ledger verified, Gemini function calling verified. **Next: walking skeleton** (bootstrap user + persona seed → `/chat` agent with `get_accounts` → chat screen).
 
 ## Verification
 - Run the full demo script on the seeded persona before freeze; every MVP + committed step must work on the demo phone (and web fallback) without dev tools open.
