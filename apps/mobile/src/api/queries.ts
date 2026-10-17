@@ -28,13 +28,14 @@ export const qk = {
   home: ['home'] as const,
   transactions: (accountId?: string) => ['transactions', accountId ?? 'all'] as const,
   settings: ['settings'] as const,
+  contributionLimit: (accountId?: string) => ['contribution-limit', accountId ?? 'none'] as const,
 };
 
 /** Money moved / created: everything showing balances or actions is stale. */
-function invalidateMoney(client: QueryClient) {
-  for (const key of [qk.me, qk.accounts, qk.goals, qk.bills, ['actions'], qk.history, qk.home, ['transactions'], qk.nudges]) {
-    client.invalidateQueries({ queryKey: key });
-  }
+async function invalidateMoney(client: QueryClient) {
+  await Promise.all([qk.me, qk.accounts, qk.goals, qk.bills, ['actions'], qk.history, qk.home, ['transactions'], qk.nudges, ['contribution-limit']].map((key) =>
+    client.invalidateQueries({ queryKey: key }),
+  ));
 }
 
 // ---------- Session ----------
@@ -72,7 +73,10 @@ export function useSendChat() {
       const body: ChatRequest = location ? { message, location } : { message };
       return api.sendChat(body);
     },
-    onSuccess: () => client.invalidateQueries({ queryKey: qk.history }),
+    onSuccess: () => Promise.all([
+      client.invalidateQueries({ queryKey: qk.history }),
+      client.invalidateQueries({ queryKey: ['actions'] }),
+    ]),
   });
 }
 
@@ -80,6 +84,7 @@ export function useSendChat() {
 
 export const useAccounts = () => useQuery({ queryKey: qk.accounts, queryFn: api.accounts });
 export const useGoals = () => useQuery({ queryKey: qk.goals, queryFn: api.goals });
+export const useContributionLimit = (accountId?: string) => useQuery({ queryKey: qk.contributionLimit(accountId), queryFn: () => api.contributionLimit(accountId!), enabled: !!accountId });
 export const useBills = () => useQuery({ queryKey: qk.bills, queryFn: api.bills });
 
 // ---------- Actions (approval flow) ----------
@@ -111,9 +116,9 @@ export function useApproveAction() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.approveAction(id),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       client.setQueryData(qk.action(res.action.id), res);
-      invalidateMoney(client);
+      await invalidateMoney(client);
     },
   });
 }
@@ -122,9 +127,9 @@ export function useRejectAction() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.rejectAction(id),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       client.setQueryData(qk.action(res.action.id), res);
-      client.invalidateQueries({ queryKey: ['actions'] });
+      await Promise.all([client.invalidateQueries({ queryKey: ['actions'] }), client.invalidateQueries({ queryKey: qk.history })]);
     },
   });
 }
@@ -167,6 +172,7 @@ export function useDismissNudge() {
     onSettled: () => {
       client.invalidateQueries({ queryKey: qk.nudges });
       client.invalidateQueries({ queryKey: qk.home });
+      client.invalidateQueries({ queryKey: ['contribution-limit'] });
     },
   });
 }
@@ -196,9 +202,9 @@ export function useUpdateSettings() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (body: UpdateSettingsRequest) => api.updateSettings(body),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       client.setQueryData(qk.settings, res);
-      client.invalidateQueries({ queryKey: qk.home });
+      await Promise.all([client.invalidateQueries({ queryKey: qk.home }), client.invalidateQueries({ queryKey: ['contribution-limit'] })]);
     },
   });
 }

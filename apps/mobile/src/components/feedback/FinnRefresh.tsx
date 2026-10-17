@@ -5,14 +5,16 @@ import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
+  withTiming,
+  Easing,
   useReducedMotion,
 } from "react-native-reanimated";
 import { FinnSphere } from "@/components/finn/FinnSphere";
 import { LoopView } from "@/components/ui/MotionView";
 import { haptics } from "@/lib/haptics";
-import { colors, fonts, motion } from "@/theme/tokens";
+import { colors, fonts } from "@/theme/tokens";
 import { refreshDistance, shouldRefresh } from "./refresh";
+import { RefreshTicks } from './RefreshTicks';
 
 export function FinnRefresh({
   onRefresh,
@@ -40,10 +42,11 @@ export function FinnRefresh({
       setRefreshing(false);
       setExcited(false);
       busy.value = false;
-      pull.value = withSpring(0, motion.finnSpring);
+      pull.value = withTiming(0, { duration: reduced ? 150 : 300, easing: Easing.bezier(0.2, 0.8, 0.3, 1) });
     }
   };
   const pan = Gesture.Pan()
+    .withTestId('finn-refresh-gesture')
     .activeOffsetY(10)
     .failOffsetX([-15, 15])
     .onBegin(() => {
@@ -69,8 +72,12 @@ export function FinnRefresh({
         busy.value = true;
         pull.value = 76;
         runOnJS(refresh)();
-      } else {
-        pull.value = withSpring(0, motion.finnSpring);
+      }
+    })
+    .onFinalize(() => {
+      // Interrupted gestures do not reach onEnd. Always release their indicator.
+      if (!busy.value) {
+        pull.value = withTiming(0, { duration: reduced ? 150 : 300, easing: Easing.bezier(0.2, 0.8, 0.3, 1) });
         runOnJS(setExcited)(false);
       }
     });
@@ -87,10 +94,11 @@ export function FinnRefresh({
     <View style={{ flex: 1 }}>
       <Animated.View
         style={[
-          { position: "absolute", top: 18, alignSelf: "center" },
+          { position: "absolute", top: 18, alignSelf: "center", width: 108, alignItems: 'center' },
           indicatorStyle,
         ]}
       >
+        <RefreshTicks pull={pull} />
         {refreshing ? (
           <LoopView kind="bob" fast>
             <FinnSphere size={52} head="curious" />

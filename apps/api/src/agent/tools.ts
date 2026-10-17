@@ -312,7 +312,7 @@ export const TOOLS: Record<string, Tool> = {
     },
     args: z.object({ from_account_id: z.string(), to_account_id: z.string(), amount: z.number().positive(), reason: z.string().max(120).optional() }),
     run: async (a, ctx) =>
-      propose(ctx, { type: "transfer", fromAccountId: a.from_account_id, toAccountId: a.to_account_id, amountCents: Math.round(a.amount) * 100, reason: a.reason }),
+      propose(ctx, { type: "transfer", fromAccountId: a.from_account_id, toAccountId: a.to_account_id, amountCents: Math.round(a.amount * 100), reason: a.reason }),
   }),
 
   propose_bill_payment: tool({

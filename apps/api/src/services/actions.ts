@@ -1,4 +1,4 @@
-import { formatCents, type Account, type Card, type CreateActionRequest, type Goal, type PendingAction, type PendingActionSource, type PendingActionStatus } from "@finni/shared";
+import { formatCents, withoutEmoji, type Account, type Card, type CreateActionRequest, type Goal, type PendingAction, type PendingActionSource, type PendingActionStatus } from "@finni/shared";
 import { and, desc, eq, gt, inArray, lt } from "drizzle-orm";
 import { db, schema } from "../db/client.js";
 import type {
@@ -29,6 +29,8 @@ import { scanNudges } from "./nudges.js";
 import { ownedAccount, ownedBill } from "./ownership.js";
 import { listPurchases } from "./transactions.js";
 import { HttpError } from "./users.js";
+import { requireContribution } from './contributions.js';
+import { withApprovalLock } from './approvalLock.js';
 
 // Pending actions: the only way money moves. Chat tools and UI buttons create them; nothing touches
 // Nessie until the user approves (and passes step-up MFA for large amounts).
@@ -96,6 +98,7 @@ export async function createAction(user: User, req: CreateActionRequest, source:
 
   switch (req.type) {
     case "transfer": {
+      if (!Number.isSafeInteger(req.amountCents) || req.amountCents % 100 !== 0) throw new HttpError(400, 'invalid_amount', 'Enter a positive amount in whole dollars.');
       amountCents = wholeDollars(req.amountCents);
       if (amountCents <= 0) throw new HttpError(400, "invalid_amount", "Amount must be at least $1");
       if (req.fromAccountId === req.toAccountId) throw new HttpError(400, "same_account", "From and to accounts must differ");
@@ -104,6 +107,7 @@ export async function createAction(user: User, req: CreateActionRequest, source:
       const to = await ownedAccount(user, req.toAccountId, accounts);
       requireFunds(from, amountCents);
       const goalRow = to.isGoal ? await findGoalRow(user, { nessieAccountId: to.id }) : undefined;
+      if (goalRow) await requireContribution(user, from, amountCents);
       payload = {
         fromAccountId: from.id,
         toAccountId: to.id,
@@ -289,6 +293,14 @@ interface Execution {
 const isUniqueViolation = (err: unknown) => (err as { code?: string }).code === "23505" || (err as { cause?: { code?: string } }).cause?.code === "23505";
 
 export async function approveAction(user: User, id: string): Promise<PendingAction> {
+  return withApprovalLock(user.id, async () => {
+    const fresh = await db.query.users.findFirst({ where: eq(schema.users.id, user.id) });
+    if (!fresh) throw new HttpError(404, 'user_not_found', 'User not found');
+    return approveActionLocked(fresh, id);
+  });
+}
+
+async function approveActionLocked(user: User, id: string): Promise<PendingAction> {
   // Atomic claim: only one request can move pending → executing, so an action never runs twice.
   // A unique index also stops two different dispute actions for one purchase from both claiming.
   const claim = db
@@ -321,17 +333,20 @@ export async function approveAction(user: User, id: string): Promise<PendingActi
     throw new HttpError(409, "action_not_pending", `This action is already ${current.status}`);
   }
 
+  let result: Execution;
   try {
-    const result = await execute(user, claimed);
-    const done = await finish(claimed, { status: "executed", executedAt: new Date(), nessieRef: result.ref, resultLine: result.resultLine });
-    await db.insert(schema.chatMessages).values({ userId: user.id, role: "finn", text: result.chatText ?? result.resultLine, mood: "celebrating", cards: result.cards });
-    // Whatever this fixed (bill due, duplicate, plan) resolves now, not on the next lazy scan.
-    void scanNudges(user).catch((err) => console.error("post-action nudge scan failed", err));
-    return toPendingAction(done);
+    result = await execute(user, claimed);
   } catch (err) {
     console.error(`action ${id} failed`, err);
     return toPendingAction(await finish(claimed, { status: "failed", error: (err as Error).message }));
   }
+  // Execution has succeeded. Failure to persist/display a confirmation must never mark money as unmoved.
+  const done = await finish(claimed, { status: 'executed', executedAt: new Date(), nessieRef: result.ref, resultLine: withoutEmoji(result.resultLine) });
+  try {
+    await db.insert(schema.chatMessages).values({ userId: user.id, role: 'finn', text: withoutEmoji(result.chatText ?? result.resultLine), mood: 'celebrating', cards: result.cards });
+  } catch (err) { console.error(`action ${id} confirmation failed`, err); }
+  void scanNudges(user).catch((err) => console.error('post-action nudge scan failed', err));
+  return toPendingAction(done);
 }
 
 export async function rejectAction(user: User, id: string): Promise<PendingAction> {
@@ -348,7 +363,8 @@ export async function rejectAction(user: User, id: string): Promise<PendingActio
 /** Saves the final state and updates the approval card in the chat message that proposed it. */
 async function finish(row: ActionRow, patch: Partial<Pick<ActionRow, "status" | "executedAt" | "nessieRef" | "error" | "resultLine">>): Promise<ActionRow> {
   const [updated] = await db.update(schema.pendingActions).set(patch).where(eq(schema.pendingActions.id, row.id)).returning();
-  await syncChatCard(updated);
+  try { await syncChatCard(updated); }
+  catch (err) { console.error(`action ${row.id} card sync failed`, err); }
   return updated;
 }
 
@@ -388,23 +404,32 @@ async function executeTransfer(user: User, row: ActionRow, p: TransferPayload): 
   // Balances may have changed since the proposal.
   if (from.balanceCents < amountCents) throw new Error(`Not enough in ${from.nickname} (${formatCents(from.balanceCents)})`);
 
+  const destinationGoal = await findGoalRow(user, { nessieAccountId: to.id });
+  if (destinationGoal) await requireContribution(user, from, amountCents);
+
   const moved = await moveMoney({ fromAccountId: from.id, toAccountId: to.id, amountCents, fromLabel: from.nickname, toLabel: to.nickname, ref: row.id });
   const ref = `${moved.withdrawalId},${moved.depositId}`;
   const resultLine = resultLineFor({ type: "transfer", amountCents, to: to.nickname, from: from.nickname, fromBalanceCents: from.balanceCents - amountCents });
 
-  const goalRow = await findGoalRow(user, { nessieAccountId: to.id });
+  const goalRow = destinationGoal;
   if (!goalRow) return { ref, resultLine, cards: [] };
 
-  // A planned contribution (from its nudge) moves the next one forward.
-  if (row.nudgeId && goalRow.cadence) {
-    await db
-      .update(schema.goals)
-      .set({ nextContributionOn: advanceContribution(goalRow.nextContributionOn ?? isoDay(), goalRow.cadence) })
-      .where(eq(schema.goals.id, goalRow.id));
+  try {
+    // A planned contribution (from its nudge) moves the next one forward.
+    if (row.nudgeId && goalRow.cadence) {
+      await db
+        .update(schema.goals)
+        .set({ nextContributionOn: advanceContribution(goalRow.nextContributionOn ?? isoDay(), goalRow.cadence) })
+        .where(eq(schema.goals.id, goalRow.id));
+    }
+    const { goal, crossed } = await recordGoalProgress(goalRow);
+    const chatText = crossed.includes(100) ? `${goal.name} is fully funded.` : crossed.length ? `${goal.name} just crossed ${Math.max(...crossed)}%.` : resultLine;
+    return { ref, resultLine, chatText, cards: [{ type: "goal_progress", goals: [goal] }] };
+  } catch (err) {
+    // The deposit is already recorded. Progress can be fetched again without repeating the transfer.
+    console.error(`action ${row.id} progress refresh failed`, err);
+    return { ref, resultLine, cards: [] };
   }
-  const { goal, crossed } = await recordGoalProgress(goalRow);
-  const chatText = crossed.includes(100) ? `${goal.name} is fully funded.` : crossed.length ? `${goal.name} just crossed ${Math.max(...crossed)}%.` : resultLine;
-  return { ref, resultLine, chatText, cards: [{ type: "goal_progress", goals: [goal] }] };
 }
 
 /** Records newly crossed 25/50/75/100% milestones; a fully funded goal becomes completed. */
@@ -478,9 +503,12 @@ async function executeCreateGoal(user: User, p: CreateGoalPayload): Promise<Exec
       nextContributionOn: planned ? today : null,
     })
     .returning();
+  let cards: Card[] = [];
+  try { cards = [{ type: 'goal_progress', goals: [await toGoal(row)] }]; }
+  catch (err) { console.error(`goal ${row.id} initial progress refresh failed`, err); }
   return {
     ref: account._id,
     resultLine: resultLineFor({ type: "create_goal", goal: p.name, ...(planned ? { contributionCents: p.contributionCents, firstDate: today } : {}) }),
-    cards: [{ type: "goal_progress", goals: [await toGoal(row)] }],
+    cards,
   };
 }

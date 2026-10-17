@@ -7,7 +7,7 @@ import { AppState } from 'react-native';
  */
 export function useForegroundPoll(fn: () => void, intervalMs: number, enabled = true) {
   const fnRef = useRef(fn);
-  fnRef.current = fn;
+  useEffect(() => { fnRef.current = fn; }, [fn]);
 
   useEffect(() => {
     if (!enabled) return;

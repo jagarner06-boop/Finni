@@ -7,6 +7,8 @@ import { approveAction, createAction, getActionRow, listActions, rejectAction, t
 import { listBills } from "../services/bills.js";
 import { listGoals } from "../services/goals.js";
 import { requireUser } from "../services/users.js";
+import { contributionLimit } from '../services/contributions.js';
+import { ownedAccount } from '../services/ownership.js';
 
 // REST routes behind the Goals / Money / Inbox tabs and approval sheets (see apps/mobile/src/api/endpoints.ts).
 export const moneyRouter = Router();
@@ -38,6 +40,12 @@ const user = (req: Parameters<typeof getSub>[0]) => requireUser(getSub(req));
 moneyRouter.get("/accounts", async (req, res) => {
   const body: AccountsResponse = { accounts: await listAccounts(await user(req)) };
   res.json(body);
+});
+
+moneyRouter.get('/contribution-limit/:accountId', async (req, res) => {
+  const current = await user(req);
+  const from = await ownedAccount(current, String(req.params.accountId));
+  res.json(await contributionLimit(current, from));
 });
 
 moneyRouter.get("/goals", async (req, res) => {

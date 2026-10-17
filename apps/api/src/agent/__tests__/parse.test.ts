@@ -14,6 +14,24 @@ describe("parseReply", () => {
   it("strips tool names written instead of called", () =>
     expect(parseReply("[mood:happy] Here is your progress.\n\n[get_goals] [make_chart(spending)] [chips: a | b]").text).toBe("Here is your progress."));
   it("keeps ordinary bracketed text", () => expect(parseReply("[mood:happy] Pay [Visible] today").text).toBe("Pay [Visible] today"));
+  it("removes emoji sequences from replies and chips without changing amounts", () => {
+    expect(parseReply('[mood:happy] Saved $50! 🎉 👩🏽‍💻 🇺🇸 [chips: View goals 🎯 | 👍🏽 | Save $25]')).toEqual({
+      mood: 'happy', text: 'Saved $50!', chips: ['View goals', 'Save $25'],
+    });
+  });
+  it("unwraps a JSON reply instead of displaying raw data", () => {
+    expect(parseReply('```json\n{"text":"Ready 🎉","mood":"happy","chips":["Review"]}\n```')).toEqual({ mood: 'happy', text: 'Ready', chips: ['Review'] });
+  });
+  it("does not display tool payloads as a reply", () => {
+    expect(parseReply('{"name":"propose_goal","args":{"name":"Laptop","target_amount":900}}').text).toBe("I couldn't finish that request. Please try again.");
+  });
+  it.each([
+    '{"text":"propose_goal({\\"name\\":\\"Laptop\\"})"}',
+    '[mood:happy] {"name":"propose_transfer","args":{"amount":50}}',
+    '[mood:happy] ```json\n{"name":"propose_goal"}\n```',
+  ])('rejects wrapped tool payloads: %s', (raw) => {
+    expect(parseReply(raw).text).toBe("I couldn't finish that request. Please try again.");
+  });
 });
 
 describe("namesToolInsteadOfCalling", () => {

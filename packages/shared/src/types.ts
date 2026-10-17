@@ -205,6 +205,8 @@ export interface CardSummary {
 export interface Prefs {
   notifications: boolean;
   hideBalance: boolean;
+  /** Total goal contributions per calendar month (UTC); null/absent means no budget. */
+  monthlySavingsBudgetCents?: Cents | null;
 }
 
 // ---------- Chat cards (rendered under Finn's bubbles) ----------

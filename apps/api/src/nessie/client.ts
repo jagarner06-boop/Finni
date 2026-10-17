@@ -26,6 +26,8 @@ export class NessieError extends Error {
 }
 
 const cache = new Map<string, { at: number; data: unknown }>();
+let cacheEpoch = 0;
+let activeWrites = 0;
 
 function url(path: string, query: Record<string, string | number | undefined> = {}) {
   const u = new URL(BASE + path);
@@ -39,6 +41,22 @@ async function request<T>(
   path: string,
   opts: { query?: Record<string, string | number | undefined>; body?: unknown; ttlMs?: number; emptyList?: boolean } = {},
 ): Promise<T> {
+  if (method === 'GET') return requestUncached<T>(method, path, opts);
+  cacheEpoch++;
+  activeWrites++;
+  cache.clear();
+  try {
+    return await requestUncached<T>(method, path, opts);
+  } finally {
+    activeWrites--;
+    cacheEpoch++;
+    cache.clear();
+  }
+}
+
+async function requestUncached<T>(method: string, path: string, opts: { query?: Record<string, string | number | undefined>; body?: unknown; ttlMs?: number; emptyList?: boolean }): Promise<T> {
+  const startedAtEpoch = cacheEpoch;
+  const canCache = () => method === 'GET' && activeWrites === 0 && startedAtEpoch === cacheEpoch;
   const u = url(path, opts.query);
   const cacheKey = u.toString();
   const ttl = opts.ttlMs ?? GET_TTL_MS;
@@ -63,7 +81,7 @@ async function request<T>(
       const text = await res.text();
       // List endpoints answer "No transfers found for this account" instead of [].
       if (!res.ok && opts.emptyList && res.status === 404) {
-        if (method === "GET") cache.set(cacheKey, { at: Date.now(), data: [] });
+        if (canCache()) cache.set(cacheKey, { at: Date.now(), data: [] });
         return [] as T;
       }
       if (!res.ok) {
@@ -71,7 +89,7 @@ async function request<T>(
         throw Object.assign(new NessieError(res.status, `Nessie ${method} ${path} → ${res.status}: ${text.slice(0, 300)}`), { final: true });
       }
       const data = (text ? JSON.parse(text) : null) as T;
-      if (method === "GET") cache.set(cacheKey, { at: Date.now(), data });
+      if (canCache()) cache.set(cacheKey, { at: Date.now(), data });
       return data;
     } catch (err) {
       lastErr = err;
@@ -88,7 +106,8 @@ function unwrap<T>(res: T[] | { data: T[] }): T[] {
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
-const list = <T>(path: string, query?: Record<string, string | number | undefined>) => request<T[]>("GET", path, { query, emptyList: true });
+// Financial lists must be fresh across API workers too; a process-local cache cannot see another worker's writes.
+const list = <T>(path: string, query?: Record<string, string | number | undefined>) => request<T[]>("GET", path, { query, emptyList: true, ttlMs: 0 });
 
 export const nessie = {
   // Customers
