@@ -1,7 +1,7 @@
 import type { BootstrapResponse, Me } from "@finni/shared";
 import { Router } from "express";
 import { z } from "zod";
-import { getSub } from "../auth.js";
+import { fetchUserInfo, getSub } from "../auth.js";
 import type { User } from "../db/schema.js";
 import { listAccounts } from "../services/accounts.js";
 import { bootstrapUser, findUserBySub, requireUser } from "../services/users.js";
@@ -21,8 +21,10 @@ const toMe = async (user: User): Promise<Me> => ({
 meRouter.post("/me/bootstrap", async (req, res) => {
   const profile = bootstrapBody.parse(req.body ?? {});
   const sub = getSub(req);
-  const created = !(await findUserBySub(sub));
-  const user = await bootstrapUser(sub, profile);
+  // The app sends no body; fill the profile from Auth0, but only on the first call.
+  const isNew = !(await findUserBySub(sub));
+  const fromAuth0 = isNew && !profile.firstName ? await fetchUserInfo(req) : {};
+  const { user, created } = await bootstrapUser(sub, { ...fromAuth0, ...profile });
   const body: BootstrapResponse = { me: await toMe(user), created };
   res.json(body);
 });

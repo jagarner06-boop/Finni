@@ -62,6 +62,9 @@ export const chatMessages = pgTable(
 export type TransferPayload = { fromAccountId: string; toAccountId: string; reason?: string };
 export type BillPaymentPayload = { billId: string; fromAccountId: string };
 export type CreateGoalPayload = { name: string; emoji?: string; targetCents: number; targetDate?: string };
+/** What the approval card shows; stored with the payload so cards render without re-fetching Nessie. */
+export type ActionDisplay = { title: string; fromLabel?: string; toLabel?: string; reason?: string };
+export type ActionPayload = (TransferPayload | BillPaymentPayload | CreateGoalPayload) & { display: ActionDisplay };
 
 export const pendingActions = pgTable(
   "pending_actions",
@@ -69,7 +72,7 @@ export const pendingActions = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     type: actionTypeEnum("type").notNull(),
-    payload: jsonb("payload").$type<TransferPayload | BillPaymentPayload | CreateGoalPayload>().notNull(),
+    payload: jsonb("payload").$type<ActionPayload>().notNull(),
     amountCents: integer("amount_cents"),
     requiresStepUp: boolean("requires_step_up").notNull(),
     status: actionStatusEnum("status").notNull().default("pending"),
@@ -103,3 +106,4 @@ export const nudges = pgTable(
 );
 
 export type User = typeof users.$inferSelect;
+export type ActionRow = typeof pendingActions.$inferSelect;

@@ -9,8 +9,12 @@
     "typecheck": "tsc --noEmit",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "seed:merchants": "tsx --env-file=.env scripts/seed-merchants.ts",
     "spike:nessie": "tsx --env-file=.env scripts/spike-nessie.ts",
     "spike:gemini": "tsx --env-file=.env scripts/spike-gemini.ts",
+    "demo:reset": "tsx --env-file=.env scripts/demo-reset.ts",
+    "smoke:seed": "tsx --env-file=.env scripts/smoke-seed.ts",
+    "smoke:actions": "tsx --env-file=.env scripts/smoke-actions.ts",
     "smoke:agent": "tsx --env-file=.env scripts/smoke-agent.ts"
   },
   "dependencies": {

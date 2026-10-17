@@ -3,7 +3,7 @@ import { z } from "zod";
 const schema = z.object({
   NESSIE_KEY: z.string().min(1),
   GEMINI_API_KEY: z.string().min(1),
-  GEMINI_MODEL: z.string().default("gemini-3.8-flash"),
+  GEMINI_MODEL: z.string().default("gemini-3.1-flash-lite"),
   AUTH0_DOMAIN: z.string().min(1),
   AUTH0_AUDIENCE: z.string().min(1),
   DATABASE_URL: z.string().url(),

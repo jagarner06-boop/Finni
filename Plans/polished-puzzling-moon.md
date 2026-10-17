@@ -547,8 +547,9 @@ Backup: record the full script as a video on Sat night after the integration che
 - **Live balance = opening balance + Σdeposits − Σwithdrawals − Σpurchases** (`apps/api/src/services/ledger.ts`). Money movement between the user's accounts = **withdrawal on source + deposit on destination**, linked by the pending-action id in the description. Bill payment = withdrawal + `PUT /bills/{id}`.
 - Required fields: purchase `merchant_id, medium, amount` (+ `purchase_date, status, description`); deposit `medium, transaction_date, status, amount, description`; withdrawal `medium, amount`; bill `status, payee, payment_amount` (+ `nickname, payment_date, recurring_date`; `upcoming_payment_date` is computed); merchant `name` (+ `category` as a **string**, `address`, `geocode`).
 - Empty lists return 404 with a string like "No transfers found for this account" → the client maps that to `[]`.
+- **Bills need both `payment_date` and `recurring_date`** or `GET /customers/{id}/bills` 400s for the whole customer (verified 10/17). One-off bills use recurring_date = due day-of-month. `PUT /bills/{id} {status:"completed"}` works.
 - `/atms` returns 13 ATMs, all DC/Arlington; the geo filter is ignored.
-- Gemini: `gemini-2.5-flash` is closed to new keys → **`GEMINI_MODEL=gemini-3.8-flash`** (function calling verified).
+- Gemini: `gemini-2.5-flash` is closed to new keys → **`GEMINI_MODEL=gemini-3.1-flash-lite`** (10/17: 3.8-flash free tier is only 20 req/day).
 - Tooling: npm workspaces (not pnpm), **Expo SDK 57** (store Expo Go on iPhone only supports 57; SDK 58 template was downgraded 10/17), Node 26.
 
 ## Auth0 setup gotchas (verified 10/17)

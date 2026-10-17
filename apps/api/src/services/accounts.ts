@@ -9,16 +9,17 @@ import { liveBalanceCents } from "./ledger.js";
 export async function listAccounts(user: User): Promise<Account[]> {
   const [raw, goalRows] = await Promise.all([
     nessie.getCustomerAccounts(user.nessieCustomerId),
-    db.select({ accountId: schema.goals.nessieAccountId }).from(schema.goals).where(eq(schema.goals.userId, user.id)),
+    db.select({ id: schema.goals.id, accountId: schema.goals.nessieAccountId }).from(schema.goals).where(eq(schema.goals.userId, user.id)),
   ]);
-  const goalIds = new Set(goalRows.map((g) => g.accountId));
+  const goalByAccount = new Map(goalRows.map((g) => [g.accountId, g.id]));
   return Promise.all(
     raw.map(async (a) => ({
       id: a._id,
       nickname: a.nickname,
       type: a.type,
       balanceCents: await liveBalanceCents(a),
-      isGoal: goalIds.has(a._id),
+      isGoal: goalByAccount.has(a._id),
+      goalId: goalByAccount.get(a._id),
     })),
   );
 }
