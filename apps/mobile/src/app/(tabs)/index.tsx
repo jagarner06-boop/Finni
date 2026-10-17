@@ -69,14 +69,14 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.foam },
+  safe: { flex: 1, backgroundColor: colors.canvas },
   flex: { flex: 1 },
   list: { padding: 16, gap: 12 },
-  empty: { textAlign: 'center', color: colors.muted, fontFamily: fonts.body, marginTop: 40 },
-  error: { textAlign: 'center', color: colors.berry, fontFamily: fonts.body },
+  empty: { textAlign: 'center', color: colors.muted, fontFamily: fonts.regular, marginTop: 40 },
+  error: { textAlign: 'center', color: colors.dangerInk, fontFamily: fonts.regular },
   composer: { flexDirection: 'row', gap: 8, padding: 12, borderTopWidth: StyleSheet.hairlineWidth, borderColor: colors.muted, backgroundColor: colors.surface },
-  input: { flex: 1, borderRadius: radius.bubble, backgroundColor: colors.foam, paddingHorizontal: 16, paddingVertical: 10, fontSize: 16, fontFamily: fonts.body, color: colors.deep },
-  send: { borderRadius: radius.bubble, backgroundColor: colors.ocean, paddingHorizontal: 18, justifyContent: 'center' },
+  input: { flex: 1, borderRadius: radius.bubble, backgroundColor: colors.canvas, paddingHorizontal: 16, paddingVertical: 10, fontSize: 16, fontFamily: fonts.regular, color: colors.ink },
+  send: { borderRadius: radius.bubble, backgroundColor: colors.accent, paddingHorizontal: 18, justifyContent: 'center' },
   disabled: { opacity: 0.4 },
   sendText: { color: '#FFFFFF', fontFamily: fonts.bold, fontSize: 16 },
 });

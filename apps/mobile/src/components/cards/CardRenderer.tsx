@@ -91,7 +91,7 @@ function ApprovalCard({ card }: { card: Extract<Card, { type: 'approval' }> }) {
       {status === 'pending' ? (
         <View style={styles.buttons}>
           {busy ? (
-            <ActivityIndicator color={colors.ocean} />
+            <ActivityIndicator color={colors.accent} />
           ) : (
             <>
               <Pressable style={[styles.button, styles.secondary]} onPress={() => reject.mutate(card.actionId)}>
@@ -114,16 +114,16 @@ function ApprovalCard({ card }: { card: Extract<Card, { type: 'approval' }> }) {
 const Box = ({ children }: { children: ReactNode }) => <View style={styles.card}>{children}</View>;
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: radius.card, padding: 14, gap: 10, ...shadow },
+  card: { backgroundColor: colors.surface, borderRadius: radius.card, padding: 14, gap: 10, boxShadow: shadow.card },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   rowText: { flexShrink: 1 },
-  title: { fontSize: 16, fontWeight: '700', color: colors.deep },
+  title: { fontSize: 16, fontWeight: '700', color: colors.ink },
   caption: { fontSize: 13, color: colors.muted },
-  money: { fontSize: 18, fontWeight: '800', color: colors.deep, fontVariant: ['tabular-nums'] },
+  money: { fontSize: 18, fontWeight: '800', color: colors.ink, fontVariant: ['tabular-nums'] },
   buttons: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
-  button: { backgroundColor: colors.ocean, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 18 },
+  button: { backgroundColor: colors.accent, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 18 },
   buttonText: { color: '#FFFFFF', fontWeight: '700' },
-  secondary: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.ocean },
-  secondaryText: { color: colors.ocean },
-  error: { color: colors.berry, fontSize: 13 },
+  secondary: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.accent },
+  secondaryText: { color: colors.accent },
+  error: { color: colors.dangerInk, fontSize: 13 },
 });
