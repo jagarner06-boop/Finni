@@ -1,3 +1,4 @@
+import { FinnTyping as TypingBubble } from '@/components/feedback/FinnTyping';
 import type { ChatMessage } from '@finni/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -8,7 +9,7 @@ import { useChatHistory, useMe, useScanNudges, useSendChat } from '@/api/queries
 import { AgentHeader } from '@/components/chat/AgentHeader';
 import { Composer } from '@/components/chat/Composer';
 import { groupPositions } from '@/components/chat/grouping';
-import { MessageBubble, TypingBubble } from '@/components/chat/MessageBubble';
+import { MessageBubble } from '@/components/chat/MessageBubble';
 import { SuggestionChips } from '@/components/chat/SuggestionChips';
 import { SafeAreaView } from '@/components/ui/SafeAreaView';
 import { showToast } from '@/lib/toast';
@@ -115,7 +116,7 @@ export default function FinnScreen() {
           {send.isPending && <TypingBubble />}
         </ScrollView>
 
-        {!send.isPending && <SuggestionChips chips={lastFinn?.chips ?? []} onPick={sendText} />}
+        <SuggestionChips chips={lastFinn?.chips ?? []} onPick={sendText} disabled={send.isPending} />
         <Composer ref={input} value={draft} onChange={setDraft} onSend={submit} sending={send.isPending} />
       </KeyboardAvoidingView>
     </SafeAreaView>

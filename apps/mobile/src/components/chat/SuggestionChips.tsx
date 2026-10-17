@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { haptics } from '@/lib/haptics';
 import { colors, fonts, motion, radius, shadow } from '@/theme/tokens';
@@ -19,6 +19,7 @@ export function SuggestionChips({ chips, onPick, disabled = false }: { chips: st
 }
 
 function Chip({ text, disabled, onPick }: { text: string; disabled: boolean; onPick: (text: string) => void }) {
+  const reduced = useReducedMotion();
   const scale = useSharedValue(1);
   const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
@@ -28,13 +29,14 @@ function Chip({ text, disabled, onPick }: { text: string; disabled: boolean; onP
       accessibilityLabel={`Ask Finn: ${text}`}
       accessibilityState={{ disabled }}
       disabled={disabled}
-      onPressIn={() => scale.set(withTiming(0.96, { duration: motion.micro }))}
+      hitSlop={{ top: 4, bottom: 4 }}
+      onPressIn={() => !reduced && scale.set(withTiming(0.96, { duration: motion.micro }))}
       onPressOut={() => scale.set(withTiming(1, { duration: motion.micro }))}
       onPress={() => {
         haptics.selection();
         onPick(text);
       }}>
-      <Animated.View style={[styles.chip, style]}>
+      <Animated.View style={[styles.chip, { opacity: disabled ? .5 : 1 }, style]}>
         <Text style={styles.text}>{text}</Text>
       </Animated.View>
     </Pressable>

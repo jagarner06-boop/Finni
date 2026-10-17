@@ -4,6 +4,8 @@ import { Text } from 'react-native';
 
 import TabsLayout from '@/app/(tabs)/_layout';
 
+jest.mock('@/components/session/FirstAnalysisGate', () => ({ FirstAnalysisGate: ({ children }: { children: unknown }) => children }));
+
 jest.mock('@/auth/useSession', () => ({ useSession: () => ({ phase: 'ready', retry: jest.fn() }) }));
 jest.mock('@/lib/useNudgeNotifier', () => ({ useNudgeNotifier: () => 2 }));
 

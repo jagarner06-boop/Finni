@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F1EEE7;font-family:Figtree,system-ui,sans-serif;color:#14213D;-webkit-font-smoothing:antialiased}
+a{color:#2563EB}a:hover{color:#1E4FD0}
+button{font-family:Figtree,system-ui,sans-serif}
+@keyframes ob-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes ob-pop{0%{opacity:0;transform:translateY(8px) scale(.94)}70%{opacity:1;transform:translateY(-2px) scale(1.01)}100%{transform:none}}
+@keyframes ob-hop{0%,100%{transform:none}18%{transform:scale(1.08,.88)}45%{transform:translateY(-22px) scale(.94,1.08)}72%{transform:scale(1.06,.92)}}
+@keyframes ob-tick{0%{transform:scale(0);opacity:0}30%{transform:scale(1.2);opacity:1}65%{transform:scale(1)}100%{opacity:0}}
+@keyframes ob-dot{0%,60%,100%{transform:none}30%{transform:translateY(-3px)}}
+@keyframes ob-shim{from{background-position:-200px 0}to{background-position:200px 0}}
+@keyframes ob-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+input[type=range]{accent-color:#2563EB}
+</style>
+</helmet>
+<div style="padding:56px 64px 80px;display:flex;flex-direction:column;gap:36px;min-width:1640px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:40px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:8px;max-width:640px">
+      <div style="font:600 12px Figtree;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82">Finni · Onboarding</div>
+      <div style="font:700 36px/1.1 Figtree">Four decks that teach Finn about you</div>
+      <div style="font:400 16px/1.5 Figtree;color:#5B6B82;text-wrap:pretty">Each phone is a working deck. Answers carry across decks, so the name from deck 1 shows up in deck 4. Each deck has its own color, and cobalt is still the only action color.</div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <div style="font:600 12px Figtree;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82;margin-right:4px">Expanded palette</div>
+      <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #EDEAE3;border-radius:999px;padding:6px 12px 6px 6px"><div style="width:22px;height:22px;border-radius:50%;background:#FF6B57"></div><div style="font:600 13px Figtree">Coral</div></div>
+      <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #EDEAE3;border-radius:999px;padding:6px 12px 6px 6px"><div style="width:22px;height:22px;border-radius:50%;background:#FFB020"></div><div style="font:600 13px Figtree">Sun</div></div>
+      <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #EDEAE3;border-radius:999px;padding:6px 12px 6px 6px"><div style="width:22px;height:22px;border-radius:50%;background:#7C6CF2"></div><div style="font:600 13px Figtree">Lilac</div></div>
+      <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #EDEAE3;border-radius:999px;padding:6px 12px 6px 6px"><div style="width:22px;height:22px;border-radius:50%;background:#22B98A"></div><div style="font:600 13px Figtree">Mint</div></div>
+      <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #EDEAE3;border-radius:999px;padding:6px 12px 6px 6px"><div style="width:22px;height:22px;border-radius:50%;background:#1FA8E8"></div><div style="font:600 13px Figtree">Sky</div></div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:40px;align-items:flex-start">
+
+    <!-- DECK 1 -->
+    <div data-screen-label="Deck 1 · Basics" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="height:26px;padding:0 10px;border-radius:999px;background:#FF6B57;color:#fff;font:700 13px/26px Figtree">Deck 1</div><div style="font:700 17px Figtree">Basics</div><div style="font:400 14px Figtree;color:#5B6B82">Name and life stage</div></div>
+      <div style="position:relative;width:360px;height:760px;border-radius:44px;background:#FAF8F3;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px #E2DDD2,0 30px 60px -30px rgba(20,33,61,.35)">
+        <div style="height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font:600 14px Figtree"><span>9:41</span><span style="display:flex;gap:5px"><span style="width:16px;height:10px;border-radius:2px;background:#14213D"></span><span style="width:22px;height:10px;border-radius:3px;border:1.5px solid #14213D"></span></span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:4px 16px 8px">
+          <button onClick="{{ back1 }}" aria-label="Back" style="width:40px;height:40px;flex:none;border-radius:50%;border:1px solid #D9D4C9;background:#fff;box-shadow:0 2px 0 #E6E1D6;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:{{ b1op }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#14213D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+          <div style="flex:1;display:flex;gap:4px"><sc-for list="{{ seg1 }}" as="s" hint-placeholder-count="4"><div style="flex:1;height:6px;border-radius:999px;background:{{ s.c }};transition:background .25s"></div></sc-for></div>
+          <div style="font:600 12px Figtree;color:#5B6B82;width:40px;text-align:right">1 of 4</div>
+        </div>
+        <div style="flex:1;position:relative;overflow:hidden">
+
+          <sc-if value="{{ s1is0 }}" hint-placeholder-val="{{ true }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:0 28px;text-align:center;animation:ob-rise .3s ease-out">
+              <div style="position:relative;width:290px;height:240px;display:flex;align-items:center;justify-content:center">
+                <div style="position:absolute;left:6px;top:24px;width:54px;height:54px;border-radius:18px;background:#FFEDE9;transform:rotate(-10deg);display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF6B57" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9H4zM10 20v-5h4v5"></path></svg></div>
+                <div style="position:absolute;right:4px;top:10px;width:48px;height:48px;border-radius:16px;background:#FFF5DC;transform:rotate(9deg);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E09400" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v18M16 7H10a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6H8"></path></svg></div>
+                <div style="position:absolute;left:18px;bottom:4px;width:44px;height:44px;border-radius:15px;background:#EFEDFE;transform:rotate(7deg);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C6CF2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4h11l-2 4 2 4H5"></path></svg></div>
+                <div style="position:absolute;right:16px;bottom:14px;width:46px;height:46px;border-radius:15px;background:#E1F7EF;transform:rotate(-8deg);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22B98A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h12v9H6zM8 11V8a4 4 0 0 1 8 0v3"></path></svg></div>
+                <div style="position:relative;display:flex;flex-direction:column;align-items:center"><img src="assets/finn/plush-wave.png" alt="Finn waves hello" style="width:200px;height:200px;object-fit:cover;mix-blend-mode:multiply;animation:ob-float 3.5s ease-in-out infinite"><div style="width:110px;height:12px;margin-top:-14px;border-radius:50%;background:radial-gradient(closest-side,rgba(20,33,61,.2),transparent)"></div></div>
+              </div>
+              <div style="font:700 30px/1.1 Figtree">Hi, I'm Finn.</div>
+              <div style="font:400 16px/1.45 Figtree;color:#5B6B82;text-wrap:pretty">Four quick decks so my advice fits your life. About three minutes, and you can skip anything.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s1is1 }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;gap:18px;padding:12px 20px;animation:ob-rise .3s ease-out">
+              <div style="display:flex;align-items:flex-end;gap:10px">
+                <div style="width:48px;height:48px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),inset 0 2px 1px rgba(255,255,255,.9),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-curious.png" alt="Finn is thinking" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                <div style="background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:12px 16px;font:400 17px/1.4 Figtree">What should I call you?</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+                <div style="font:600 12px Figtree;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82">First name</div>
+                <input value="{{ name }}" onChange="{{ onName }}" placeholder="Your name" style="height:58px;border-radius:16px;border:1.5px solid {{ nameBd }};background:#fff;padding:0 18px;font:600 22px Figtree;color:#14213D;outline:none;box-shadow:inset 0 2px 4px rgba(20,33,61,.06)">
+              </div>
+              <sc-if value="{{ hasName }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:flex-end;gap:10px;animation:ob-pop .32s ease-out">
+                  <div style="width:48px;height:48px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),inset 0 2px 1px rgba(255,255,255,.9),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                  <div style="background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:12px 16px;font:400 17px/1.4 Figtree">Nice to meet you, <b style="font-weight:700">{{ name }}</b>.</div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s1is2 }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;gap:16px;padding:12px 20px;animation:ob-rise .3s ease-out">
+              <div style="display:flex;align-items:flex-end;gap:10px">
+                <div style="width:48px;height:48px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),inset 0 2px 1px rgba(255,255,255,.9),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-curious.png" alt="Finn is thinking" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                <div style="background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:12px 16px;font:400 17px/1.4 Figtree">Which sounds most like you right now?</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <sc-for list="{{ stages }}" as="o" hint-placeholder-count="6">
+                  <button onClick="{{ o.pick }}" style="position:relative;text-align:left;display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:18px;background:{{ o.bg }};border:{{ o.bd }};box-shadow:{{ o.sh }};cursor:pointer;transition:all .15s" style-active="transform:translateY(2px)">
+                    <div style="width:40px;height:40px;border-radius:13px;background:{{ o.tint }};display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ o.col }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ o.d }}"></path></svg></div>
+                    <div style="display:flex;flex-direction:column;gap:2px"><div style="font:700 15px/1.25 Figtree;color:#14213D">{{ o.label }}</div><div style="font:400 12px/1.3 Figtree;color:#5B6B82">{{ o.sub }}</div></div>
+                    <sc-if value="{{ o.on }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;background:#2563EB;display:flex;align-items:center;justify-content:center;animation:ob-pop .25s ease-out"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg></div></sc-if>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s1is3 }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:0 28px;text-align:center;animation:ob-rise .3s ease-out">
+              <div style="position:relative">
+                <div style="width:104px;height:104px;border-radius:50%;padding:3px;background:#FF6B57;animation:ob-hop .7s .1s both"><div style="width:100%;height:100%;border-radius:50%;border:3px solid #FAF8F3;box-sizing:border-box;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-excited.png" alt="Finn is celebrating" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div></div>
+                <svg width="34" height="34" viewBox="0 0 20 20" fill="none" stroke="#FF6B57" stroke-width="2.4" stroke-linecap="round" style="position:absolute;right:-30px;top:-10px;overflow:visible"><path d="M4 14L9 6" style="animation:ob-tick .9s .3s both;transform-origin:center"></path><path d="M11 16l5-6" style="animation:ob-tick .9s .34s both;transform-origin:center"></path></svg>
+              </div>
+              <div style="font:700 26px/1.15 Figtree">Basics done.</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
+                <div style="height:32px;padding:0 12px;border-radius:999px;background:#FFEDE9;color:#B23A28;font:700 14px/32px Figtree">{{ nameShow }}</div>
+                <div style="height:32px;padding:0 12px;border-radius:999px;background:#FFEDE9;color:#B23A28;font:700 14px/32px Figtree">{{ stageLabel }}</div>
+              </div>
+              <div style="font:400 15px/1.45 Figtree;color:#5B6B82">Up next in deck 2: income and spending.</div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="padding:12px 20px 30px">
+          <sc-if value="{{ c1on }}" hint-placeholder-val="{{ true }}"><button onClick="{{ next1 }}" style="width:100%;height:52px;border-radius:999px;border:none;background:linear-gradient(180deg,#3D78F2 0%,#2563EB 60%,#2159DC 100%);color:#fff;font:700 17px Figtree;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 -1px 0 rgba(10,30,90,.25),0 3px 0 #1B47B5,0 8px 16px -6px rgba(37,99,235,.5);cursor:pointer;transition:transform .09s" style-active="transform:translateY(3px);box-shadow:inset 0 2px 4px rgba(10,30,90,.35)">{{ c1label }}</button></sc-if>
+          <sc-if value="{{ c1off }}" hint-placeholder-val="{{ false }}"><button disabled style="width:100%;height:52px;border-radius:999px;border:none;background:#E3E8F0;color:#7D8AA0;font:700 17px Figtree;box-shadow:inset 0 2px 5px rgba(20,33,61,.08)">{{ c1label }}</button></sc-if>
+        </div>
+        <canvas ref="{{ cv1 }}" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
+      </div>
+    </div>
+
+    <!-- DECK 2 -->
+    <div data-screen-label="Deck 2 · Income & spending" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="height:26px;padding:0 10px;border-radius:999px;background:#FFB020;color:#14213D;font:700 13px/26px Figtree">Deck 2</div><div style="font:700 17px Figtree">Income &amp; spending</div><div style="font:400 14px Figtree;color:#5B6B82">Pay and bills</div></div>
+      <div style="position:relative;width:360px;height:760px;border-radius:44px;background:#FAF8F3;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px #E2DDD2,0 30px 60px -30px rgba(20,33,61,.35)">
+        <div style="height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font:600 14px Figtree"><span>9:41</span><span style="display:flex;gap:5px"><span style="width:16px;height:10px;border-radius:2px;background:#14213D"></span><span style="width:22px;height:10px;border-radius:3px;border:1.5px solid #14213D"></span></span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:4px 16px 8px">
+          <button onClick="{{ back2 }}" aria-label="Back" style="width:40px;height:40px;flex:none;border-radius:50%;border:1px solid #D9D4C9;background:#fff;box-shadow:0 2px 0 #E6E1D6;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:{{ b2op }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#14213D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+          <div style="flex:1;display:flex;gap:4px"><sc-for list="{{ seg2 }}" as="s" hint-placeholder-count="4"><div style="flex:1;height:6px;border-radius:999px;background:{{ s.c }};transition:background .25s"></div></sc-for></div>
+          <div style="font:600 12px Figtree;color:#5B6B82;width:40px;text-align:right">2 of 4</div>
+        </div>
+        <div style="flex:1;position:relative;overflow:hidden">
+
+          <sc-if value="{{ s2is0 }}" hint-placeholder-val="{{ true }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;gap:18px;padding:12px 20px;animation:ob-rise .3s ease-out">
+              <div style="display:flex;align-items:flex-end;gap:10px">
+                <div style="width:48px;height:48px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),inset 0 2px 1px rgba(255,255,255,.9),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-curious.png" alt="Finn is thinking" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                <div style="background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:12px 16px;font:400 17px/1.4 Figtree">{{ greet2 }} Roughly how much lands in your account each month?</div>
+              </div>
+              <div style="margin-top:6px;background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:22px 18px 18px;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(20,33,61,.04),0 8px 20px -10px rgba(20,33,61,.14)">
+                <div style="font:600 12px Figtree;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82">Take-home per month</div>
+                <div style="font:700 44px/1 Figtree;font-variant-numeric:tabular-nums;color:#14213D">{{ incomeFmt }}</div>
+                <input type="range" min="500" max="12000" step="50" value="{{ income }}" onChange="{{ onIncome }}" style="width:100%;height:28px">
+                <div style="width:100%;display:flex;justify-content:space-between;font:400 12px Figtree;color:#7D8AA0;font-variant-numeric:tabular-nums"><span>$500</span><span>$12,000+</span></div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <sc-for list="{{ incPresets }}" as="p" hint-placeholder-count="4"><button onClick="{{ p.pick }}" style="height:36px;padding:0 14px;border-radius:999px;border:none;background:linear-gradient(180deg,#FFFBF0,#FFF1CC);color:#8A5A00;font:700 14px Figtree;font-variant-numeric:tabular-nums;box-shadow:inset 0 1px 0 #fff,0 1px 0 #F4DFA6,0 3px 6px -3px rgba(224,148,0,.3);cursor:pointer" style-active="transform:scale(.96)">{{ p.label }}</button></sc-for>
+              </div>
+              <div style="font:400 14px/1.45 Figtree;color:#5B6B82">After taxes. A rough number is fine. I'll refine it once your bank is connected.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s2is1 }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;gap:14px;padding:12px 20px;animation:ob-rise .3s ease-out">
+              <div style="display:flex;align-items:flex-end;gap:10px">
+                <div style="width:48px;height:48px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),inset 0 2px 1px rgba(255,255,255,.9),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-curious.png" alt="Finn is thinking" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                <div style="background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:12px 16px;font:400 17px/1.4 Figtree">How often do you get paid?</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ pays }}" as="o" hint-placeholder-count="5">
+                  <button onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:12px;min-height:54px;padding:0 14px;border-radius:16px;background:{{ o.bg }};border:{{ o.bd }};box-shadow:{{ o.sh }};cursor:pointer;text-align:left;transition:all .15s" style-active="transform:translateY(2px)">
+                    <div style="width:22px;height:22px;flex:none;border-radius:50%;border:{{ o.ring }};box-sizing:border-box;display:flex;align-items:center;justify-content:center"><sc-if value="{{ o.on }}" hint-placeholder-val="{{ false }}"><div style="width:10px;height:10px;border-radius:50%;background:#2563EB"></div></sc-if></div>
+                    <div style="flex:1;font:700 15px Figtree;color:#14213D">{{ o.label }}</div>
+                    <div style="font:400 13px Figtree;color:#5B6B82">{{ o.sub }}</div>
+                  </button>
+                </sc-for>
+              </div>
+              <div style="font:600 12px Figtree;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82;margin-top:4px">Next payday</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <sc-for list="{{ paydays }}" as="p" hint-placeholder-count="3"><button onClick="{{ p.pick }}" style="height:38px;padding:0 14px;border-radius:999px;background:{{ p.bg }};border:{{ p.bd }};color:{{ p.fg }};font:700 14px Figtree;cursor:pointer;box-shadow:0 2px 0 #E6E1D6" style-active="transform:scale(.96)">{{ p.label }}</button></sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s2is2 }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;gap:14px;padding:12px 20px;animation:ob-rise .3s ease-out">
+              <div style="display:flex;align-items:flex-end;gap:10px">
+                <div style="width:48px;height:48px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),inset 0 2px 1px rgba(255,255,255,.9),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-curious.png" alt="Finn is thinking" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                <div style="background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:12px 16px;font:400 17px/1.4 Figtree">Which bills come out every month?</div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <sc-for list="{{ billChips }}" as="b" hint-placeholder-count="8"><button onClick="{{ b.pick }}" style="display:flex;align-items:center;gap:7px;height:38px;padding:0 13px;border-radius:999px;background:{{ b.bg }};border:{{ b.bd }};color:{{ b.fg }};font:700 14px Figtree;cursor:pointer;box-shadow:{{ b.sh }};transition:all .15s" style-active="transform:scale(.96)"><span style="width:9px;height:9px;border-radius:50%;background:{{ b.dot }}"></span>{{ b.label }}</button></sc-for>
+              </div>
+              <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(20,33,61,.04),0 8px 20px -10px rgba(20,33,61,.14)">
+                <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:600 12px Figtree;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82">About how much, together?</div><div style="font:700 22px Figtree;font-variant-numeric:tabular-nums">{{ billsFmt }}</div></div>
+                <input type="range" min="0" max="{{ billsMax }}" step="25" value="{{ billsAmt }}" onChange="{{ onBills }}" style="width:100%;height:24px">
+                <div style="height:10px;border-radius:999px;background:#F1EEE7;overflow:hidden;display:flex;box-shadow:inset 0 1px 2px rgba(20,33,61,.1)"><div style="width:{{ billsPct }};background:#FFB020;transition:width .2s"></div><div style="flex:1;background:#E6E1D6"></div></div>
+                <div style="display:flex;justify-content:space-between;font:600 12px Figtree;color:#5B6B82"><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#FFB020"></span>Bills</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#E6E1D6"></span>Everything else</span></div>
+              </div>
+              <div style="display:flex;align-items:flex-end;gap:10px">
+                <div style="width:32px;height:32px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -3px 6px rgba(130,100,50,.14),0 3px 8px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px 20px 20px 6px;padding:10px 14px;font:400 15px/1.4 Figtree">That leaves about <b style="font-weight:700;color:#1E4FD0;font-variant-numeric:tabular-nums">{{ leftFmt }}</b> a month for everything else.</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s2is3 }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:0 28px;text-align:center;animation:ob-rise .3s ease-out">
+              <div style="position:relative">
+                <div style="width:104px;height:104px;border-radius:50%;padding:3px;background:#FFB020;animation:ob-hop .7s .1s both"><div style="width:100%;height:100%;border-radius:50%;border:3px solid #FAF8F3;box-sizing:border-box;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-excited.png" alt="Finn is celebrating" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div></div>
+                <svg width="34" height="34" viewBox="0 0 20 20" fill="none" stroke="#E09400" stroke-width="2.4" stroke-linecap="round" style="position:absolute;right:-30px;top:-10px;overflow:visible"><path d="M4 14L9 6" style="animation:ob-tick .9s .3s both;transform-origin:center"></path><path d="M11 16l5-6" style="animation:ob-tick .9s .34s both;transform-origin:center"></path></svg>
+              </div>
+              <div style="font:700 26px/1.15 Figtree">Income and bills, got it.</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
+                <div style="height:32px;padding:0 12px;border-radius:999px;background:#FFF5DC;color:#8A5A00;font:700 14px/32px Figtree;font-variant-numeric:tabular-nums">{{ incomeFmt }}/mo</div>
+                <div style="height:32px;padding:0 12px;border-radius:999px;background:#FFF5DC;color:#8A5A00;font:700 14px/32px Figtree">Paid {{ payShort }}</div>
+                <div style="height:32px;padding:0 12px;border-radius:999px;background:#FFF5DC;color:#8A5A00;font:700 14px/32px Figtree;font-variant-numeric:tabular-nums">{{ leftFmt }} free</div>
+              </div>
+              <div style="font:400 15px/1.45 Figtree;color:#5B6B82">Up next in deck 3: how you like to handle money.</div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="padding:12px 20px 30px">
+          <sc-if value="{{ c2on }}" hint-placeholder-val="{{ true }}"><button onClick="{{ next2 }}" style="width:100%;height:52px;border-radius:999px;border:none;background:linear-gradient(180deg,#3D78F2 0%,#2563EB 60%,#2159DC 100%);color:#fff;font:700 17px Figtree;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 -1px 0 rgba(10,30,90,.25),0 3px 0 #1B47B5,0 8px 16px -6px rgba(37,99,235,.5);cursor:pointer;transition:transform .09s" style-active="transform:translateY(3px);box-shadow:inset 0 2px 4px rgba(10,30,90,.35)">{{ c2label }}</button></sc-if>
+          <sc-if value="{{ c2off }}" hint-placeholder-val="{{ false }}"><button disabled style="width:100%;height:52px;border-radius:999px;border:none;background:#E3E8F0;color:#7D8AA0;font:700 17px Figtree;box-shadow:inset 0 2px 5px rgba(20,33,61,.08)">{{ c2label }}</button></sc-if>
+        </div>
+        <canvas ref="{{ cv2 }}" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
+      </div>
+    </div>
+
+    <!-- DECK 3 -->
+    <div data-screen-label="Deck 3 · Money personality" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="height:26px;padding:0 10px;border-radius:999px;background:#7C6CF2;color:#fff;font:700 13px/26px Figtree">Deck 3</div><div style="font:700 17px Figtree">Money personality</div><div style="font:400 14px Figtree;color:#5B6B82">Habits and approvals</div></div>
+      <div style="position:relative;width:360px;height:760px;border-radius:44px;background:#FAF8F3;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px #E2DDD2,0 30px 60px -30px rgba(20,33,61,.35)">
+        <div style="height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font:600 14px Figtree"><span>9:41</span><span style="display:flex;gap:5px"><span style="width:16px;height:10px;border-radius:2px;background:#14213D"></span><span style="width:22px;height:10px;border-radius:3px;border:1.5px solid #14213D"></span></span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:4px 16px 8px">
+          <button onClick="{{ back3 }}" aria-label="Back" style="width:40px;height:40px;flex:none;border-radius:50%;border:1px solid #D9D4C9;background:#fff;box-shadow:0 2px 0 #E6E1D6;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:{{ b3op }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#14213D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+          <div style="flex:1;display:flex;gap:4px"><sc-for list="{{ seg3 }}" as="s" hint-placeholder-count="4"><div style="flex:1;height:6px;border-radius:999px;background:{{ s.c }};transition:background .25s"></div></sc-for></div>
+          <div style="font:600 12px Figtree;color:#5B6B82;width:40px;text-align:right">3 of 4</div>
+        </div>
+        <div style="flex:1;position:relative;overflow:hidden">
+
+          <sc-if value="{{ s3is0 }}" hint-placeholder-val="{{ true }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;gap:14px;padding:12px 20px;animation:ob-rise .3s ease-out">
+              <div style="display:flex;align-items:flex-end;gap:10px">
+                <div style="width:48px;height:48px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),inset 0 2px 1px rgba(255,255,255,.9),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-curious.png" alt="Finn is thinking" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                <div style="background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:12px 16px;font:400 17px/1.4 Figtree">This or that? No wrong answers.</div>
+              </div>
+              <sc-for list="{{ habits }}" as="q" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="font:600 14px Figtree;color:#14213D">{{ q.q }}</div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.pick }}" style="min-height:56px;padding:10px 12px;border-radius:16px;background:{{ o.bg }};border:{{ o.bd }};box-shadow:{{ o.sh }};color:{{ o.fg }};font:700 14px/1.25 Figtree;cursor:pointer;text-align:center;transition:all .15s" style-active="transform:translateY(2px)">{{ o.label }}</button></sc-for>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s3is1 }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;gap:16px;padding:12px 20px;animation:ob-rise .3s ease-out">
+              <div style="position:relative;border-radius:24px;padding:24px 20px 22px;background:radial-gradient(120% 90% at 90% -20%,rgba(255,255,255,.3),transparent 55%),linear-gradient(135deg,{{ persA }},{{ persB }});color:#fff;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 3px 0 {{ persLip }},0 18px 30px -14px {{ persGlow }};animation:ob-pop .4s ease-out">
+                <div style="position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.12)"></div>
+                <div style="position:absolute;right:30px;bottom:-40px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.1)"></div>
+                <div style="position:relative;display:flex;flex-direction:column;gap:10px">
+                  <div style="font:600 12px Figtree;letter-spacing:.04em;text-transform:uppercase;opacity:.9">Your money style</div>
+                  <div style="font:700 30px/1.1 Figtree">{{ persName }}</div>
+                  <div style="font:400 15px/1.45 Figtree;opacity:.95;text-wrap:pretty">{{ persDesc }}</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:flex-end;gap:10px">
+                <div style="width:48px;height:48px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),inset 0 2px 1px rgba(255,255,255,.9),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-excited.png" alt="Finn is celebrating" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                <div style="background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:12px 16px;font:400 16px/1.4 Figtree">{{ persFinn }}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ persTraits }}" as="t" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:10px;font:400 15px/1.35 Figtree"><div style="width:26px;height:26px;flex:none;border-radius:9px;background:#EFEDFE;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7C6CF2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg></div>{{ t }}</div></sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s3is2 }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;gap:14px;padding:12px 20px;animation:ob-rise .3s ease-out">
+              <div style="display:flex;align-items:flex-end;gap:10px">
+                <div style="width:48px;height:48px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),inset 0 2px 1px rgba(255,255,255,.9),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-confident.png" alt="Finn looks confident" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                <div style="background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:12px 16px;font:400 17px/1.4 Figtree">How hands-on should I be?</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ hands }}" as="o" hint-placeholder-count="3">
+                  <button onClick="{{ o.pick }}" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:18px;background:{{ o.bg }};border:{{ o.bd }};box-shadow:{{ o.sh }};cursor:pointer;text-align:left;transition:all .15s" style-active="transform:translateY(2px)">
+                    <div style="width:40px;height:40px;flex:none;border-radius:13px;background:{{ o.tint }};display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ o.col }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ o.d }}"></path></svg></div>
+                    <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+                      <div style="display:flex;align-items:center;gap:8px"><div style="font:700 15px Figtree;color:#14213D">{{ o.label }}</div><sc-if value="{{ o.rec }}" hint-placeholder-val="{{ false }}"><div style="height:20px;padding:0 8px;border-radius:999px;background:#EFEDFE;color:#4E3FC4;font:700 11px/20px Figtree">Suggested</div></sc-if></div>
+                      <div style="font:400 13px/1.4 Figtree;color:#5B6B82">{{ o.sub }}</div>
+                    </div>
+                    <div style="width:22px;height:22px;flex:none;border-radius:50%;border:{{ o.ring }};box-sizing:border-box;display:flex;align-items:center;justify-content:center;margin-top:9px"><sc-if value="{{ o.on }}" hint-placeholder-val="{{ false }}"><div style="width:10px;height:10px;border-radius:50%;background:#2563EB"></div></sc-if></div>
+                  </button>
+                </sc-for>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:16px;background:#F1EEE7;box-shadow:inset 0 2px 4px rgba(20,33,61,.08)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#14213D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"></path></svg>
+                <div style="font:400 13px/1.45 Figtree;color:#14213D">Moving money always needs your OK. Moves over $100 also need Face ID.</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s3is3 }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:0 28px;text-align:center;animation:ob-rise .3s ease-out">
+              <div style="position:relative">
+                <div style="width:104px;height:104px;border-radius:50%;padding:3px;background:#7C6CF2;animation:ob-hop .7s .1s both"><div style="width:100%;height:100%;border-radius:50%;border:3px solid #FAF8F3;box-sizing:border-box;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-excited.png" alt="Finn is celebrating" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div></div>
+                <svg width="34" height="34" viewBox="0 0 20 20" fill="none" stroke="#7C6CF2" stroke-width="2.4" stroke-linecap="round" style="position:absolute;right:-30px;top:-10px;overflow:visible"><path d="M4 14L9 6" style="animation:ob-tick .9s .3s both;transform-origin:center"></path><path d="M11 16l5-6" style="animation:ob-tick .9s .34s both;transform-origin:center"></path></svg>
+              </div>
+              <div style="font:700 26px/1.15 Figtree">I know how you like it.</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
+                <div style="height:32px;padding:0 12px;border-radius:999px;background:#EFEDFE;color:#4E3FC4;font:700 14px/32px Figtree">{{ persName }}</div>
+                <div style="height:32px;padding:0 12px;border-radius:999px;background:#EFEDFE;color:#4E3FC4;font:700 14px/32px Figtree">{{ handsLabel }}</div>
+              </div>
+              <div style="font:400 15px/1.45 Figtree;color:#5B6B82">Up next in deck 4: connect your bank and pick alerts.</div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="padding:12px 20px 30px">
+          <sc-if value="{{ c3on }}" hint-placeholder-val="{{ true }}"><button onClick="{{ next3 }}" style="width:100%;height:52px;border-radius:999px;border:none;background:linear-gradient(180deg,#3D78F2 0%,#2563EB 60%,#2159DC 100%);color:#fff;font:700 17px Figtree;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 -1px 0 rgba(10,30,90,.25),0 3px 0 #1B47B5,0 8px 16px -6px rgba(37,99,235,.5);cursor:pointer;transition:transform .09s" style-active="transform:translateY(3px);box-shadow:inset 0 2px 4px rgba(10,30,90,.35)">{{ c3label }}</button></sc-if>
+          <sc-if value="{{ c3off }}" hint-placeholder-val="{{ false }}"><button disabled style="width:100%;height:52px;border-radius:999px;border:none;background:#E3E8F0;color:#7D8AA0;font:700 17px Figtree;box-shadow:inset 0 2px 5px rgba(20,33,61,.08)">{{ c3label }}</button></sc-if>
+        </div>
+        <canvas ref="{{ cv3 }}" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
+      </div>
+    </div>
+
+    <!-- DECK 4 -->
+    <div data-screen-label="Deck 4 · Connect" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="height:26px;padding:0 10px;border-radius:999px;background:#22B98A;color:#fff;font:700 13px/26px Figtree">Deck 4</div><div style="font:700 17px Figtree">Connect</div><div style="font:400 14px Figtree;color:#5B6B82">Bank, alerts, finish</div></div>
+      <div style="position:relative;width:360px;height:760px;border-radius:44px;background:#FAF8F3;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px #E2DDD2,0 30px 60px -30px rgba(20,33,61,.35)">
+        <div style="height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font:600 14px Figtree"><span>9:41</span><span style="display:flex;gap:5px"><span style="width:16px;height:10px;border-radius:2px;background:#14213D"></span><span style="width:22px;height:10px;border-radius:3px;border:1.5px solid #14213D"></span></span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:4px 16px 8px">
+          <button onClick="{{ back4 }}" aria-label="Back" style="width:40px;height:40px;flex:none;border-radius:50%;border:1px solid #D9D4C9;background:#fff;box-shadow:0 2px 0 #E6E1D6;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:{{ b4op }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#14213D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+          <div style="flex:1;display:flex;gap:4px"><sc-for list="{{ seg4 }}" as="s" hint-placeholder-count="3"><div style="flex:1;height:6px;border-radius:999px;background:{{ s.c }};transition:background .25s"></div></sc-for></div>
+          <div style="font:600 12px Figtree;color:#5B6B82;width:40px;text-align:right">4 of 4</div>
+        </div>
+        <div style="flex:1;position:relative;overflow:hidden">
+
+          <sc-if value="{{ bankIntro }}" hint-placeholder-val="{{ true }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;gap:16px;padding:12px 20px;animation:ob-rise .3s ease-out">
+              <div style="display:flex;align-items:flex-end;gap:10px">
+                <div style="position:relative;flex:none">
+                  <div style="width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),inset 0 2px 1px rgba(255,255,255,.9),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-happy.png" alt="Finn looks happy" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                  <div style="position:absolute;right:-4px;bottom:-4px;width:22px;height:22px;border-radius:8px;background:#2563EB;border:2px solid #FAF8F3;display:flex;align-items:center;justify-content:center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"></path></svg></div>
+                </div>
+                <div style="background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:12px 16px;font:400 17px/1.4 Figtree">Last part. Connect your bank so I can work with real numbers.</div>
+              </div>
+              <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;overflow:hidden;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(20,33,61,.04),0 8px 20px -10px rgba(20,33,61,.14)">
+                <sc-for list="{{ trust }}" as="t" hint-placeholder-count="3">
+                  <div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-top:{{ t.bt }}">
+                    <div style="width:40px;height:40px;flex:none;border-radius:13px;background:{{ t.tint }};display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{ t.col }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ t.d }}"></path></svg></div>
+                    <div style="display:flex;flex-direction:column;gap:2px"><div style="font:700 15px Figtree">{{ t.title }}</div><div style="font:400 13px/1.4 Figtree;color:#5B6B82">{{ t.sub }}</div></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="font:400 12px/1.4 Figtree;color:#5B6B82;text-align:center">Bank connections are handled by Plaid. Finni never sees your bank password.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ bankPick }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;padding:12px 20px;animation:ob-rise .3s ease-out">
+              <div style="font:700 22px Figtree">Pick your bank</div>
+              <div style="display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border-radius:14px;background:#fff;border:1px solid #EDEAE3;box-shadow:inset 0 2px 4px rgba(20,33,61,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7D8AA0" stroke-width="2.2" stroke-linecap="round"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4"></path></svg><span style="font:400 16px Figtree;color:#7D8AA0">Search 12,000+ banks</span></div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ banks }}" as="b" hint-placeholder-count="5">
+                  <button onClick="{{ b.pick }}" style="display:flex;align-items:center;gap:12px;min-height:58px;padding:0 14px;border-radius:16px;background:#fff;border:1px solid #EDEAE3;cursor:pointer;text-align:left" style-hover="border-color:#C9D6F5" style-active="transform:translateY(1px);background:#F7F9FF">
+                    <div style="width:38px;height:38px;flex:none;border-radius:12px;background:{{ b.tint }};color:{{ b.ink }};font:700 15px/38px Figtree;text-align:center">{{ b.mono }}</div>
+                    <div style="flex:1;font:700 15px Figtree;color:#14213D">{{ b.name }}</div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7D8AA0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ bankLinking }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;gap:18px;padding:24px 20px;animation:ob-rise .3s ease-out">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px 0 6px">
+                <div style="width:88px;height:88px;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),inset 0 2px 1px rgba(255,255,255,.9),0 6px 14px -4px rgba(20,33,61,.24);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-curious.png" alt="Finn is thinking" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                <div style="font:700 18px Figtree">Connecting to {{ bankName }}…</div>
+                <div style="display:flex;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#22B98A;animation:ob-dot 1.2s infinite"></span><span style="width:8px;height:8px;border-radius:50%;background:#22B98A;opacity:.7;animation:ob-dot 1.2s .15s infinite"></span><span style="width:8px;height:8px;border-radius:50%;background:#22B98A;opacity:.45;animation:ob-dot 1.2s .3s infinite"></span></div>
+              </div>
+              <sc-for list="{{ skel }}" as="k" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:18px;background:#fff;border:1px solid #EDEAE3">
+                  <div style="width:40px;height:40px;border-radius:13px;background:linear-gradient(90deg,#F1EEE7 0%,#FAF8F3 50%,#F1EEE7 100%);background-size:400px 100%;animation:ob-shim 1.2s linear infinite"></div>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:8px"><div style="width:60%;height:12px;border-radius:6px;background:linear-gradient(90deg,#F1EEE7 0%,#FAF8F3 50%,#F1EEE7 100%);background-size:400px 100%;animation:ob-shim 1.2s linear infinite"></div><div style="width:35%;height:10px;border-radius:5px;background:linear-gradient(90deg,#F1EEE7 0%,#FAF8F3 50%,#F1EEE7 100%);background-size:400px 100%;animation:ob-shim 1.2s linear infinite"></div></div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ bankLinked }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;gap:16px;padding:16px 20px;animation:ob-rise .3s ease-out">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:6px 0">
+                <div style="position:relative">
+                  <div style="width:88px;height:88px;border-radius:50%;padding:3px;background:#22B98A;animation:ob-hop .7s .1s both"><div style="width:100%;height:100%;border-radius:50%;border:3px solid #FAF8F3;box-sizing:border-box;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-excited.png" alt="Finn is celebrating" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div></div>
+                  <svg width="30" height="30" viewBox="0 0 20 20" fill="none" stroke="#22B98A" stroke-width="2.4" stroke-linecap="round" style="position:absolute;right:-26px;top:-8px;overflow:visible"><path d="M4 14L9 6" style="animation:ob-tick .9s .3s both;transform-origin:center"></path><path d="M11 16l5-6" style="animation:ob-tick .9s .34s both;transform-origin:center"></path></svg>
+                </div>
+                <div style="font:700 22px Figtree">{{ bankName }} connected</div>
+                <div style="font:400 14px Figtree;color:#5B6B82">I found 2 accounts. Read-only for now.</div>
+              </div>
+              <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;overflow:hidden;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(20,33,61,.04),0 8px 20px -10px rgba(20,33,61,.14)">
+                <div style="display:flex;align-items:center;gap:12px;padding:14px 16px"><div style="width:40px;height:40px;border-radius:13px;background:#E1F7EF;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22B98A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-6 9 6M5 10v8M19 10v8M9 10v8M15 10v8M3 20h18"></path></svg></div><div style="flex:1"><div style="font:700 15px Figtree">Checking</div><div style="font:400 13px Figtree;color:#5B6B82">•••• 1203</div></div><div style="font:700 16px Figtree;font-variant-numeric:tabular-nums">$2,410<span style="font-weight:400;color:#5B6B82">.55</span></div></div>
+                <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-top:1px solid #EDEAE3"><div style="width:40px;height:40px;border-radius:13px;background:#E1F7EF;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22B98A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3zM3 10h18M7 15h4"></path></svg></div><div style="flex:1"><div style="font:700 15px Figtree">Closer Card</div><div style="font:400 13px Figtree;color:#5B6B82">•••• 4821</div></div><div style="font:700 16px Figtree;font-variant-numeric:tabular-nums">$1,364<span style="font-weight:400;color:#5B6B82">.20</span></div></div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s4is1 }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;gap:14px;padding:12px 20px;animation:ob-rise .3s ease-out">
+              <div style="display:flex;align-items:flex-end;gap:10px">
+                <div style="width:48px;height:48px;flex:none;border-radius:50%;background:radial-gradient(circle at 34% 26%,#FFFFFF 0%,#FBF6EC 42%,#EADFC8 100%);box-shadow:inset 0 -4px 8px rgba(130,100,50,.14),inset 0 2px 1px rgba(255,255,255,.9),0 4px 10px -3px rgba(20,33,61,.22);overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="assets/finn/head-curious.png" alt="Finn is thinking" style="width:120%;height:120%;object-fit:cover;mix-blend-mode:multiply;flex:none"></div>
+                <div style="background:#fff;border:1px solid #EDEAE3;border-radius:22px 22px 22px 6px;padding:12px 16px;font:400 17px/1.4 Figtree">When should I tap you on the shoulder?</div>
+              </div>
+              <div style="background:#fff;border:1px solid #EDEAE3;border-radius:20px;overflow:hidden;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(20,33,61,.04),0 8px 20px -10px rgba(20,33,61,.14)">
+                <sc-for list="{{ notifs }}" as="n" hint-placeholder-count="4">
+                  <button onClick="{{ n.toggle }}" style="width:100%;display:flex;align-items:center;gap:12px;padding:12px 16px;background:transparent;border:none;border-top:{{ n.bt }};cursor:pointer;text-align:left">
+                    <div style="width:38px;height:38px;flex:none;border-radius:12px;background:{{ n.tint }};display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="{{ n.col }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg></div>
+                    <div style="flex:1;display:flex;flex-direction:column;gap:1px"><div style="font:700 15px Figtree;color:#14213D">{{ n.title }}</div><div style="font:400 12px/1.35 Figtree;color:#5B6B82">{{ n.sub }}</div></div>
+                    <div style="width:48px;height:30px;flex:none;border-radius:999px;background:{{ n.track }};position:relative;transition:background .2s;box-shadow:inset 0 2px 4px rgba(20,33,61,.15)"><div style="position:absolute;top:3px;left:{{ n.knob }};width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(20,33,61,.25);transition:left .2s cubic-bezier(.34,1.4,.64,1)"></div></div>
+                  </button>
+                </sc-for>
+              </div>
+              <div style="font:600 12px Figtree;letter-spacing:.04em;text-transform:uppercase;color:#5B6B82">Quiet hours</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <sc-for list="{{ quiets }}" as="p" hint-placeholder-count="3"><button onClick="{{ p.pick }}" style="height:38px;padding:0 14px;border-radius:999px;background:{{ p.bg }};border:{{ p.bd }};color:{{ p.fg }};font:700 14px Figtree;cursor:pointer;box-shadow:0 2px 0 #E6E1D6" style-active="transform:scale(.96)">{{ p.label }}</button></sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ s4is2 }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;gap:14px;padding:4px 22px;text-align:center;animation:ob-rise .3s ease-out;background:radial-gradient(80% 50% at 50% 22%,#FFF5DC 0%,rgba(255,245,220,0) 70%)">
+              <img src="assets/finn/plush-celebrate.png" alt="Finn is celebrating" style="width:210px;height:210px;object-fit:cover;mix-blend-mode:multiply;animation:ob-hop .8s .1s both, ob-float 3.5s 1s ease-in-out infinite">
+              <div style="font:700 28px/1.1 Figtree">You're all set, {{ nameShow }}.</div>
+              <div style="font:400 15px/1.45 Figtree;color:#5B6B82">Here's what I learned. Change any of it later in Settings.</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
+                <sc-for list="{{ learned }}" as="l" hint-placeholder-count="6"><div style="height:32px;padding:0 12px;border-radius:999px;background:{{ l.t }};color:{{ l.i }};font:700 13px/32px Figtree;font-variant-numeric:tabular-nums;animation:ob-pop .3s both;animation-delay:{{ l.delay }}">{{ l.label }}</div></sc-for>
+              </div>
+              <button onClick="{{ replay }}" style="height:36px;padding:0 14px;border-radius:999px;border:none;background:transparent;color:#2563EB;font:600 14px Figtree;cursor:pointer">Replay confetti</button>
+            </div>
+          </sc-if>
+        </div>
+        <div style="padding:12px 20px 30px">
+          <sc-if value="{{ c4on }}" hint-placeholder-val="{{ true }}"><button onClick="{{ next4 }}" style="width:100%;height:52px;border-radius:999px;border:none;background:linear-gradient(180deg,#3D78F2 0%,#2563EB 60%,#2159DC 100%);color:#fff;font:700 17px Figtree;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 -1px 0 rgba(10,30,90,.25),0 3px 0 #1B47B5,0 8px 16px -6px rgba(37,99,235,.5);cursor:pointer;transition:transform .09s" style-active="transform:translateY(3px);box-shadow:inset 0 2px 4px rgba(10,30,90,.35)">{{ c4label }}</button></sc-if>
+          <sc-if value="{{ c4off }}" hint-placeholder-val="{{ false }}"><button disabled style="width:100%;height:52px;border-radius:999px;border:none;background:#E3E8F0;color:#7D8AA0;font:700 17px Figtree;box-shadow:inset 0 2px 5px rgba(20,33,61,.08)">{{ c4label }}</button></sc-if>
+        </div>
+        <canvas ref="{{ cv4 }}" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;reduceMotion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;confetti&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.3,&quot;max&quot;:2,&quot;step&quot;:0.1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;}}">
+const PAL={coral:{c:'#FF6B57',t:'#FFEDE9',i:'#B23A28'},sun:{c:'#FFB020',t:'#FFF5DC',i:'#8A5A00'},mint:{c:'#22B98A',t:'#E1F7EF',i:'#137255'},lilac:{c:'#7C6CF2',t:'#EFEDFE',i:'#4E3FC4'},sky:{c:'#1FA8E8',t:'#E2F4FC',i:'#0B6E9C'},cobalt:{c:'#2563EB',t:'#E8F0FE',i:'#1E4FD0'}};
+const RAISED='inset 0 -2px 0 rgba(20,33,61,.05),0 2px 0 #E6E1D6,0 4px 8px -4px rgba(20,33,61,.12)';
+const sel=on=>on?{bg:'#F5F8FF',bd:'1.5px solid #2563EB',sh:'0 0 0 3px rgba(37,99,235,.12),0 2px 0 #CBD9F8',ring:'2px solid #2563EB'}:{bg:'#fff',bd:'1px solid #D9D4C9',sh:RAISED,ring:'2px solid #C3CCDA'};
+const chip=on=>on?{bg:'#2563EB',bd:'1px solid #2563EB',fg:'#fff'}:{bg:'#fff',bd:'1px solid #D9D4C9',fg:'#14213D'};
+const money=n=>'$'+Math.round(n).toLocaleString('en-US');
+const STAGES=[
+ {id:'student',label:'Student',sub:'In school or just out',p:'coral',d:'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11'},
+ {id:'start',label:'Starting out',sub:'First real paychecks',p:'coral',d:'M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6'},
+ {id:'career',label:'Building a career',sub:'Steady job, growing',p:'coral',d:'M4 8h16v11H4zM9 8V5h6v3M4 13h16'},
+ {id:'family',label:'Family',sub:'Partner or kids',p:'coral',d:'M4 11l8-7 8 7v9H4zM10 20v-5h4v5'},
+ {id:'self',label:'Self-employed',sub:'Income varies',p:'coral',d:'M5 6h14v9H5zM3 18h18'},
+ {id:'retired',label:'Winding down',sub:'Retired or close',p:'coral',d:'M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8zM12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5'}];
+const PAYS=[{id:'weekly',label:'Weekly',sub:'52 a year',short:'weekly'},{id:'biweekly',label:'Every 2 weeks',sub:'26 a year',short:'every 2 weeks'},{id:'semi',label:'Twice a month',sub:'1st and 15th',short:'twice a month'},{id:'monthly',label:'Monthly',sub:'12 a year',short:'monthly'},{id:'irregular',label:'It varies',sub:'Gig or freelance',short:'irregularly'}];
+const PAYDAYS=['Fri, Oct 23','Fri, Oct 30','Not sure'];
+const BILLS=[{l:'Rent',p:'coral'},{l:'Utilities',p:'sun'},{l:'Phone',p:'sky'},{l:'Car',p:'lilac'},{l:'Insurance',p:'mint'},{l:'Subscriptions',p:'coral'},{l:'Student loan',p:'sun'},{l:'Childcare',p:'lilac'}];
+const HABITS=[{q:'When money is left at month end…',a:'It goes to savings',b:'It gets spent'},{q:'I check my balance…',a:'Most days',b:'When I have to'},{q:'A surprise $400 bill shows up.',a:'I have a cushion',b:'I would need a plan'}];
+const PERS=[
+ {name:'The Fresh Start',a:'#9487F7',b:'#6152DE',lip:'#4A3CB8',glow:'rgba(124,108,242,.5)',desc:'You want money to feel less stressful. We will build a small cushion first.',finn:'Great place to start. I will keep things simple and flag anything urgent.',traits:['Early heads-up before bills hit','A starter cushion goal','Plain weekly recaps']},
+ {name:'The Free Spirit',a:'#9487F7',b:'#6152DE',lip:'#4A3CB8',glow:'rgba(124,108,242,.5)',desc:'You enjoy your money and check in when you need to. I will do the watching.',finn:'Love it. I will keep an eye out so you do not have to.',traits:['Alerts only when something is off','Spending check-ins, not lectures','Round-up savings on autopilot']},
+ {name:'The Steady One',a:'#9487F7',b:'#6152DE',lip:'#4A3CB8',glow:'rgba(124,108,242,.5)',desc:'You have good habits and a little room. I will help it go further.',finn:'Nice. I will look for small wins you might be missing.',traits:['Smarter bill timing','Goal nudges when you are ahead','Subscription cleanup']},
+ {name:'The Planner',a:'#9487F7',b:'#6152DE',lip:'#4A3CB8',glow:'rgba(124,108,242,.5)',desc:'You save first and watch closely. I will bring the detail you like.',finn:'A fellow planner. I will show my math every time.',traits:['Detailed weekly breakdowns','Utilization and interest tips','Goal forecasts with dates']}];
+const HANDS=[
+ {id:'watch',label:'Just keep watch',sub:'I flag things. You decide what to do.',p:'lilac',d:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z'},
+ {id:'suggest',label:'Suggest and ask',sub:'I draft fixes and ask before anything moves.',p:'lilac',d:'M4 5h16v11H9l-5 4zM9 10h6',rec:true},
+ {id:'prep',label:'Have it ready',sub:'I line up bills and transfers so each is one tap to approve.',p:'lilac',d:'M13 3L5 14h6l-1 7 8-11h-6z'}];
+const BANKS=[{name:'Capital One',mono:'C1'},{name:'Chase',mono:'Ch'},{name:'Bank of America',mono:'BA'},{name:'Wells Fargo',mono:'WF'},{name:'A credit union',mono:'CU'}];
+const TRUST=[{title:'Read-only',sub:'I can see balances and transactions. I cannot move money on my own.',p:'mint',d:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z'},{title:'Encrypted',sub:'Your login goes straight to your bank through Plaid.',p:'mint',d:'M6 11h12v9H6zM8 11V8a4 4 0 0 1 8 0v3'},{title:'Disconnect anytime',sub:'One tap in Settings removes access and data.',p:'mint',d:'M9 15l-2 2a3 3 0 0 1-4-4l2-2M15 9l2-2a3 3 0 0 1 4 4l-2 2M8 8L4 4M20 20l-4-4'}];
+const NOTIFS=[{id:'bills',title:'Bills due',sub:'3 days before, with the amount',p:'mint',d:'M4 6h16v14H4zM4 10h16M9 3v4M15 3v4'},{id:'unusual',title:'Unusual spending',sub:'Duplicate charges, price jumps',p:'mint',d:'M13 3L5 14h6l-1 7 8-11h-6z'},{id:'goals',title:'Goal milestones',sub:'25%, 50%, 75% and done',p:'mint',d:'M5 21V4h11l-2 4 2 4H5'},{id:'recap',title:'Weekly recap',sub:'Sunday evening, one message',p:'mint',d:'M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 21h4'}];
+const QUIETS=['10pm–7am','11pm–8am','None'];
+const DECKC=['#FF6B57','#FFB020','#7C6CF2','#22B98A'];
+
+class Component extends DCLogic {
+  state={s1:0,s2:0,s3:0,s4:0,name:'',stage:null,income:4200,pay:'biweekly',payday:0,bills:['Rent','Phone','Subscriptions'],billsAmt:1850,hab:[null,null,null],hands:'suggest',bank:'intro',bankName:'',notifs:{bills:true,unusual:true,goals:true,recap:false},quiet:0};
+  cv=[React.createRef(),React.createRef(),React.createRef(),React.createRef()];
+  raf=[];
+  componentWillUnmount(){this.raf.forEach(r=>cancelAnimationFrame(r));clearTimeout(this.lt)}
+  burst(i,big){
+    const cv=this.cv[i].current; if(!cv||this.props.reduceMotion) return;
+    const ctx=cv.getContext('2d'); const W=cv.width=cv.offsetWidth*2, H=cv.height=cv.offsetHeight*2;
+    const n=Math.round((big?170:80)*(this.props.confetti??1)); const ps=[]; const CONF=[DECKC[i],DECKC[i],DECKC[i]+'99','#2563EB','#F4E9D2'];
+    for(let k=0;k<n;k++){const a=-Math.PI/2+(Math.random()-.5)*(big?2.2:1.5), sp=(big?22:17)+Math.random()*16;
+      ps.push({x:W/2+(Math.random()-.5)*60,y:H*(big?.3:.36),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:Math.random()*6,vr:(Math.random()-.5)*.35,w:10+Math.random()*10,h:6+Math.random()*7,c:CONF[k%CONF.length],s:Math.random()<.28?1:Math.random()<.15?2:0,ph:Math.random()*6});}
+    let t=0; const T=big?170:120;
+    const step=()=>{ctx.clearRect(0,0,W,H); t++;
+      for(const p of ps){p.vy+=.55;p.vx*=.975;p.vy*=.975;p.x+=p.vx+Math.sin(t/9+p.ph)*.8;p.y+=p.vy;p.r+=p.vr;
+        ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.globalAlpha=Math.max(0,Math.min(1,(T-t)/30));ctx.fillStyle=p.c;
+        if(p.s===1){ctx.beginPath();ctx.arc(0,0,p.h*.6,0,7);ctx.fill()}
+        else if(p.s===2){ctx.strokeStyle=p.c;ctx.lineWidth=4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-8,0);ctx.quadraticCurveTo(-3,-7,2,0);ctx.quadraticCurveTo(6,7,10,0);ctx.stroke()}
+        else ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h*Math.abs(Math.cos(p.r*1.5))+1);
+        ctx.restore();}
+      if(t<T) this.raf[i]=requestAnimationFrame(step); else ctx.clearRect(0,0,W,H);};
+    cancelAnimationFrame(this.raf[i]); step();
+  }
+  go(k,v,b){this.setState({[k]:v},()=>{if(b) this.burst(b[0],b[1])})}
+  pers(){const a=this.state.hab.filter(x=>x==='a').length;return PERS[a]}
+  renderVals(){
+    const st=this.state, segs=(n,s,col)=>Array.from({length:n},(_,i)=>({c:i<=s?col:'#E6E1D6'}));
+    const name=st.name.trim(), nameShow=name||'friend';
+    const stage=STAGES.find(x=>x.id===st.stage);
+    const pay=PAYS.find(x=>x.id===st.pay);
+    const billsMax=Math.max(500,Math.round(st.income*.9/25)*25), billsAmt=Math.min(st.billsAmt,billsMax);
+    const left=Math.max(0,st.income-billsAmt);
+    const habDone=st.hab.every(x=>x);
+    const P=this.pers(); const hand=HANDS.find(x=>x.id===st.hands);
+    const c1=[['Let\u2019s go',true],['Continue',!!name],['Continue',!!st.stage],['Replay deck',true]][st.s1];
+    const c2=[['Continue',true],['Continue',true],['Continue',st.bills.length>0],['Replay deck',true]][st.s2];
+    const c3=[['See my style',habDone],['Continue',true],['Continue',true],['Replay deck',true]][st.s3];
+    const bankC={intro:['Connect with Plaid',true],pick:['Choose your bank',false],linking:['Connecting…',false],linked:['Continue',true]}[st.bank];
+    const c4=[bankC,['Finish setup',true],['Go to Home',true]][st.s4];
+    return {
+      cv1:this.cv[0],cv2:this.cv[1],cv3:this.cv[2],cv4:this.cv[3],
+      name:st.name, nameShow, hasName:!!name, nameBd:name?'#2563EB':'#E2DDD2',
+      onName:e=>this.setState({name:e.target.value}),
+      seg1:segs(4,st.s1,'#FF6B57'), seg2:segs(4,st.s2,'#FFB020'), seg3:segs(4,st.s3,'#7C6CF2'), seg4:segs(3,st.s4,'#22B98A'),
+      b1op:st.s1?1:.35,b2op:st.s2?1:.35,b3op:st.s3?1:.35,b4op:(st.s4||st.bank!=='intro')?1:.35,
+      back1:()=>this.setState({s1:Math.max(0,st.s1-1)}), back2:()=>this.setState({s2:Math.max(0,st.s2-1)}), back3:()=>this.setState({s3:Math.max(0,st.s3-1)}),
+      back4:()=>{ if(st.s4>0) this.setState({s4:st.s4-1}); else if(st.bank!=='intro'){clearTimeout(this.lt);this.setState({bank:st.bank==='linked'?'pick':st.bank==='linking'?'pick':'intro'})} },
+      s1is0:st.s1===0,s1is1:st.s1===1,s1is2:st.s1===2,s1is3:st.s1===3,
+      s2is0:st.s2===0,s2is1:st.s2===1,s2is2:st.s2===2,s2is3:st.s2===3,
+      s3is0:st.s3===0,s3is1:st.s3===1,s3is2:st.s3===2,s3is3:st.s3===3,
+      s4is1:st.s4===1,s4is2:st.s4===2,
+      bankIntro:st.s4===0&&st.bank==='intro',bankPick:st.s4===0&&st.bank==='pick',bankLinking:st.s4===0&&st.bank==='linking',bankLinked:st.s4===0&&st.bank==='linked',
+      c1label:c1[0],c1on:c1[1],c1off:!c1[1], c2label:c2[0],c2on:c2[1],c2off:!c2[1], c3label:c3[0],c3on:c3[1],c3off:!c3[1], c4label:c4[0],c4on:c4[1],c4off:!c4[1],
+      next1:()=>st.s1===3?this.setState({s1:0}):this.go('s1',st.s1+1,st.s1===2?[0,false]:null),
+      next2:()=>st.s2===3?this.setState({s2:0}):this.go('s2',st.s2+1,st.s2===2?[1,false]:null),
+      next3:()=>st.s3===3?this.setState({s3:0}):this.go('s3',st.s3+1,st.s3===0?[2,false]:st.s3===2?[2,false]:null),
+      next4:()=>{
+        if(st.s4===0){ if(st.bank==='intro') this.setState({bank:'pick'}); else if(st.bank==='linked') this.setState({s4:1}); }
+        else if(st.s4===1) this.go('s4',2,[3,true]);
+        else this.setState({s4:0,bank:'intro'});
+      },
+      replay:()=>this.burst(3,true),
+      stages:STAGES.map(o=>({...o,...sel(st.stage===o.id),on:st.stage===o.id,col:PAL[o.p].c,tint:PAL[o.p].t,pick:()=>this.setState({stage:o.id})})),
+      stageLabel:stage?stage.label:'Life stage',
+      greet2:name?`Okay, ${name}.`:'Okay.',
+      income:st.income, incomeFmt:money(st.income), onIncome:e=>this.setState({income:+e.target.value}),
+      incPresets:[2500,4200,6000,9000].map(v=>({label:money(v),pick:()=>this.setState({income:v})})),
+      pays:PAYS.map(o=>({...o,...sel(st.pay===o.id),on:st.pay===o.id,pick:()=>this.setState({pay:o.id})})),
+      paydays:PAYDAYS.map((l,i)=>({label:l,...chip(st.payday===i),pick:()=>this.setState({payday:i})})),
+      payShort:pay?pay.short:'',
+      billChips:BILLS.map(b=>{const on=st.bills.includes(b.l);return {label:b.l,dot:on?'#E09400':'#D9D4C9',bg:on?'#FFF5DC':'#fff',bd:on?'1.5px solid #FFB020':'1px solid #D9D4C9',fg:on?'#8A5A00':'#14213D',sh:on?'0 2px 0 #F4DFA6':RAISED,pick:()=>this.setState(s=>({bills:on?s.bills.filter(x=>x!==b.l):[...s.bills,b.l]}))}}),
+      billsAmt, billsMax, billsFmt:money(billsAmt), onBills:e=>this.setState({billsAmt:+e.target.value}),
+      billsPct:Math.round(billsAmt/Math.max(1,st.income)*100)+'%', leftFmt:money(left),
+      habits:HABITS.map((h,qi)=>({q:h.q,opts:['a','b'].map(k=>{const on=st.hab[qi]===k;return {label:h[k],bg:on?'#7C6CF2':'#fff',bd:on?'1.5px solid #7C6CF2':'1px solid #D9D4C9',fg:on?'#fff':'#14213D',sh:on?'0 3px 0 #5A4BD0,0 8px 16px -8px rgba(124,108,242,.6)':RAISED,pick:()=>this.setState(s=>{const hab=[...s.hab];hab[qi]=k;return {hab}})}})})),
+      persName:P.name,persDesc:P.desc,persFinn:P.finn,persTraits:P.traits,persA:P.a,persB:P.b,persLip:P.lip,persGlow:P.glow,
+      hands:HANDS.map(o=>({...o,...sel(st.hands===o.id),on:st.hands===o.id,rec:!!o.rec,col:PAL[o.p].c,tint:PAL[o.p].t,pick:()=>this.setState({hands:o.id})})),
+      handsLabel:hand.label,
+      trust:TRUST.map((t,i)=>({...t,bt:i?'1px solid #EDEAE3':'none',col:PAL[t.p].c,tint:PAL[t.p].t})),
+      banks:BANKS.map(b=>({...b,tint:'#F1EEE7',ink:'#14213D',pick:()=>{this.setState({bank:'linking',bankName:b.name});clearTimeout(this.lt);this.lt=setTimeout(()=>this.go('bank','linked',[3,false]),1800)}})),
+      bankName:st.bankName, skel:[1,2],
+      notifs:NOTIFS.map((n,i)=>{const on=st.notifs[n.id];return {...n,bt:i?'1px solid #EDEAE3':'none',col:PAL[n.p].c,tint:PAL[n.p].t,track:on?'#2563EB':'#D9DEE7',knob:on?'21px':'3px',toggle:()=>this.setState(s=>({notifs:{...s.notifs,[n.id]:!on}}))}}),
+      quiets:QUIETS.map((l,i)=>({label:l,...chip(st.quiet===i),pick:()=>this.setState({quiet:i})})),
+      learned:[
+        {label:stage?stage.label:'Life stage skipped',...PAL.coral},
+        {label:money(st.income)+'/mo',...PAL.sun},
+        {label:'Paid '+(pay?pay.short:''),...PAL.sun},
+        {label:P.name,...PAL.lilac},
+        {label:hand.label,...PAL.lilac},
+        {label:(st.bankName||'Bank')+' linked',...PAL.mint}
+      ].map((x,i)=>({label:x.label,t:PAL.mint.t,i:PAL.mint.i,delay:(0.35+i*0.08).toFixed(2)+'s'}))
+    };
+  }
+}
+</script>
+</body>
+</html>

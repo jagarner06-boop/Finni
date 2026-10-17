@@ -96,7 +96,7 @@ describe('Approve screen step-up', () => {
 });
 
 describe('Approve screen goal complete', () => {
-  const goal = (percent: number) => ({ id: 'g1', name: 'Car repair', percent, status: percent >= 100 ? 'completed' : 'active' });
+  const goal = (percent: number) => ({ id: 'g1', name: 'Car repair', currentCents: percent * 1200, targetCents: 120000, percent, status: percent >= 100 ? 'completed' : 'active' });
 
   it('celebrates when a transfer fills a goal', async () => {
     const transfer: PendingAction = { ...pending, type: 'transfer', toLabel: 'Car repair', requiresStepUp: false, amountCents: 5_000 };
@@ -110,6 +110,6 @@ describe('Approve screen goal complete', () => {
     await fireEvent(await screen.findByRole('button', { name: 'Hold to approve' }), 'accessibilityAction', {
       nativeEvent: { actionName: 'activate' },
     });
-    expect(await screen.findByText('Car repair is fully funded.')).toBeTruthy();
+    expect(await screen.findByText('Car repair complete.')).toBeTruthy();
   });
 });
