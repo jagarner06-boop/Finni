@@ -202,6 +202,20 @@ export interface CardSummary {
   closesInDays: number;
 }
 
+export type LifeStage = 'student' | 'start' | 'career' | 'family' | 'self' | 'retired';
+export type PaySchedule = 'weekly' | 'biweekly' | 'semi' | 'monthly' | 'irregular';
+export type MoneyStyle = 'fresh_start' | 'free_spirit' | 'steady' | 'planner';
+export type HandsOn = 'watch' | 'suggest' | 'prep';
+
+export interface FinnProfile {
+  lifeStage: LifeStage | null;
+  paySchedule: PaySchedule;
+  /** The payday picked in onboarding; null for Not sure. */
+  nextPayday: ISODate | null;
+  style: MoneyStyle;
+  handsOn: HandsOn;
+}
+
 export interface Prefs {
   notifications: boolean;
   hideBalance: boolean;
