@@ -86,6 +86,12 @@ describe('CardRenderer', () => {
     expect(screen.getByText(/Nothing was moved\./)).toBeTruthy();
   });
 
+  it('shows a stale pending approval as expired instead of offering Review', async () => {
+    await render(<CardRenderer card={{ ...approval('pending'), expiresAt: '2020-01-01T00:00:00.000Z' } as Card} />);
+    expect(screen.getByText('Expired. Nothing was moved.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Review payment' })).toBeNull();
+  });
+
   it('leaves rows as plain text when nothing handles taps', async () => {
     await render(<CardRenderer card={transactions} />);
     expect(screen.queryByRole('button', { name: /Spotify/ })).toBeNull();

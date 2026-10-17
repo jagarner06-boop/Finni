@@ -8,9 +8,11 @@ import { listAccounts } from "../services/accounts.js";
 import { getCardSummary } from "../services/card.js";
 import { listNudges } from "../services/nudges.js";
 import { generateWithFallback } from "./generate.js";
-import { DEFAULT_CHIPS, parseReply } from "./parse.js";
+import { DEFAULT_CHIPS, namesToolInsteadOfCalling, parseReply } from "./parse.js";
 import { systemPrompt } from "./prompt.js";
 import { functionDeclarations, runTool, type ToolContext } from "./tools.js";
+
+const TOOL_NAMES = functionDeclarations.map((d) => d.name!).filter(Boolean);
 
 const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
 const MAX_TOOL_ROUNDS = 5;
@@ -58,10 +60,17 @@ export async function runAgent(user: User, message: string, opts: { location?: L
     ]);
     const system = systemPrompt(user, accounts, { card, alerts });
     const contents: Content[] = [...history, { role: "user", parts: [{ text: message }] }];
+    let nudged = false;
 
     for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
       const res = await generate(contents, system);
       const calls = res.functionCalls ?? [];
+      if (calls.length === 0 && !nudged && round < MAX_TOOL_ROUNDS && namesToolInsteadOfCalling(res.text ?? "", TOOL_NAMES)) {
+        // It wrote "[get_goals]" instead of calling get_goals: send it back once to actually call it.
+        nudged = true;
+        contents.push(res.candidates![0].content!, { role: "user", parts: [{ text: "You wrote a tool name instead of calling it. Call the tool now, then answer." }] });
+        continue;
+      }
       if (calls.length === 0 || round === MAX_TOOL_ROUNDS) {
         const raw = res.text ?? "";
         return done(raw.trim() ? parseReply(raw) : FALLBACK);

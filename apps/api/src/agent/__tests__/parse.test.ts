@@ -1,7 +1,7 @@
 import type { Account, CardSummary } from "@finni/shared";
 import { describe, expect, it } from "vitest";
 import type { User } from "../../db/schema.js";
-import { DEFAULT_CHIPS, parseReply } from "../parse.js";
+import { DEFAULT_CHIPS, namesToolInsteadOfCalling, parseReply } from "../parse.js";
 import { systemPrompt } from "../prompt.js";
 
 describe("parseReply", () => {
@@ -11,6 +11,16 @@ describe("parseReply", () => {
   it("keeps at most three chips", () => expect(parseReply("[mood:happy] Hi [chips: a | b | c | d]").chips).toHaveLength(3));
   it("trims long chips", () => expect(parseReply("[mood:happy] Hi [chips: " + "x".repeat(40) + "]").chips[0]).toHaveLength(28));
   it("defaults the mood", () => expect(parseReply("Hi there").mood).toBe("happy"));
+  it("strips tool names written instead of called", () =>
+    expect(parseReply("[mood:happy] Here is your progress.\n\n[get_goals] [make_chart(spending)] [chips: a | b]").text).toBe("Here is your progress."));
+  it("keeps ordinary bracketed text", () => expect(parseReply("[mood:happy] Pay [Visible] today").text).toBe("Pay [Visible] today"));
+});
+
+describe("namesToolInsteadOfCalling", () => {
+  const tools = ["get_goals", "make_chart", "get_bills"];
+  it("spots a tool name written in the reply", () => expect(namesToolInsteadOfCalling("Here you go.\n\n[get_goals]", tools)).toBe(true));
+  it("ignores replies that don't name a tool", () => expect(namesToolInsteadOfCalling("You've saved $270 toward Spring Break.", tools)).toBe(false));
+  it("matches whole names only", () => expect(namesToolInsteadOfCalling("get_goals_extra", tools)).toBe(false));
 });
 
 describe("systemPrompt", () => {
