@@ -286,9 +286,12 @@ interface Execution {
 }
 
 /** Step-up (if required) must already have been checked by the route. */
+const isUniqueViolation = (err: unknown) => (err as { code?: string }).code === "23505" || (err as { cause?: { code?: string } }).cause?.code === "23505";
+
 export async function approveAction(user: User, id: string): Promise<PendingAction> {
   // Atomic claim: only one request can move pending → executing, so an action never runs twice.
-  const [claimed] = await db
+  // A unique index also stops two different dispute actions for one purchase from both claiming.
+  const claim = db
     .update(schema.pendingActions)
     .set({ status: "executing" })
     .where(
@@ -300,6 +303,14 @@ export async function approveAction(user: User, id: string): Promise<PendingActi
       ),
     )
     .returning();
+  let claimed: ActionRow | undefined;
+  try {
+    [claimed] = await claim;
+  } catch (err) {
+    if (!isUniqueViolation(err)) throw err;
+    const row = await getActionRow(user, id);
+    return toPendingAction(await finish(row, { status: "failed", error: "That charge was already refunded" }));
+  }
 
   if (!claimed) {
     const current = await getActionRow(user, id);
