@@ -3,6 +3,7 @@ import express, { type ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 import { checkJwt, getSub } from "./auth.js";
 import { env } from "./env.js";
+import { activityRouter } from "./routes/activity.js";
 import { chatRouter } from "./routes/chat.js";
 import { meRouter } from "./routes/me.js";
 import { moneyRouter } from "./routes/money.js";
@@ -29,6 +30,7 @@ app.get("/whoami", (req, res) => {
 app.use(meRouter);
 app.use(chatRouter);
 app.use(moneyRouter);
+app.use(activityRouter);
 
 const onError: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof ZodError) {
