@@ -63,6 +63,7 @@ function RootNavigator() {
           name="approve/[id]"
           options={{ presentation: 'transparentModal', animation: 'fade', contentStyle: { backgroundColor: 'transparent' } }}
         />
+        <Stack.Screen name="goals" />
         <Stack.Screen name="goal/new" options={{ presentation: 'modal' }} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
