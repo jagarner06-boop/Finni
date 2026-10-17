@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { CardRenderer } from '@/components/cards/CardRenderer';
 import { FinnAvatar } from '@/components/finn/FinnAvatar';
+import { FinnTyping } from '@/components/finn/FinnTyping';
 import { colors, radius, shadow } from '@/theme/tokens';
 
 export function MessageBubble({ message }: { message: ChatMessage }) {
@@ -33,7 +34,7 @@ export function TypingBubble() {
     <View style={styles.finnRow}>
       <FinnAvatar mood="thinking" size={32} />
       <View style={[styles.bubble, styles.finn]}>
-        <Text style={[styles.finnText, { color: colors.muted }]}>Finn is thinking…</Text>
+        <FinnTyping />
       </View>
     </View>
   );
