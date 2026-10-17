@@ -2,7 +2,7 @@ import type { Account, CardSummary } from "@finni/shared";
 import { describe, expect, it } from "vitest";
 import type { User } from "../../db/schema.js";
 import { DEFAULT_CHIPS, namesToolInsteadOfCalling, parseReply } from "../parse.js";
-import { systemPrompt } from "../prompt.js";
+import { profileLines, systemPrompt } from "../prompt.js";
 
 describe("parseReply", () => {
   it("reads mood, text and chips", () =>
@@ -53,4 +53,15 @@ describe("systemPrompt", () => {
   });
   it("knows the card", () => expect(prompt).toContain("Closer Card: owes $1,364.00 of $2,000.00 limit, 68% utilization"));
   it("asks for chips", () => expect(prompt).toContain("[chips:"));
+  const planner = { firstName: "Gabe", profile: { lifeStage: "student", paySchedule: "biweekly", nextPayday: null, style: "planner", handsOn: "watch" } } as User;
+  it("adapts to how they like help", () => {
+    const p = systemPrompt(planner, accounts, { card, alerts: [] });
+    expect(p).toContain("ABOUT GABE");
+    expect(p).toContain("- Gabe is a student. They said they are paid every 2 weeks.");
+    expect(p).toContain("Show the key numbers behind a suggestion");
+    expect(p).toContain("Only propose an action when they ask for one.");
+  });
+  it("works without a profile", () => expect(prompt).not.toContain("ABOUT"));
+  it("writes profile lines without em dashes", () => expect(profileLines("Gabe", planner.profile)).not.toContain("\u2014"));
+
 });
