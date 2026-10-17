@@ -1,4 +1,4 @@
-import { Image, StyleSheet, View } from 'react-native';
+import { Image } from 'react-native';
 
 import { FINN_POSE } from '@/components/finn/assets';
 
@@ -14,19 +14,13 @@ const LABEL: Record<FinnPoseName, string> = {
 
 export function FinnPose({ pose, size = 72 }: { pose: FinnPoseName; size?: number }) {
   return (
-    // Multiply on the wrapper hides the placeholder art's light background.
-    <View style={styles.blend}>
-      <Image
-        testID="finn-pose"
-        accessibilityRole="image"
-        accessibilityLabel={LABEL[pose]}
-        source={FINN_POSE[pose]}
-        style={{ width: size, height: size }}
-      />
-    </View>
+    // Pose PNGs have transparent backgrounds, so no blend trick is needed.
+    <Image
+      testID="finn-pose"
+      accessibilityRole="image"
+      accessibilityLabel={LABEL[pose]}
+      source={FINN_POSE[pose]}
+      style={{ width: size, height: size }}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  blend: { mixBlendMode: 'multiply' },
-});

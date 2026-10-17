@@ -53,7 +53,7 @@ export default function HomeScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.muted} />}>
         <View style={styles.header}>
           <Text style={styles.greeting} accessibilityRole="header">
-            Good <Text style={styles.bold}>{timeOfDay(new Date().getHours())},</Text> <Text style={styles.bold}>{name}</Text>
+            Good <Text>{timeOfDay(new Date().getHours())},</Text> <Text style={styles.bold}>{name}</Text>
           </Text>
           <Pressable accessibilityRole="button" accessibilityLabel="Settings" onPress={() => router.push('/settings')} style={styles.profile}>
             <Text style={styles.initial}>{name.slice(0, 1)}</Text>

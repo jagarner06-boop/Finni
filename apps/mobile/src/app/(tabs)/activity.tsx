@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import type { LedgerEntry, Nudge } from '@finni/shared';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useActOnNudge, useDismissNudge, useMarkNudgeRead, useNudges, useTransactions } from '@/api/queries';
@@ -57,8 +57,6 @@ export default function ActivityScreen() {
   const dismiss = useDismissNudge();
   const markRead = useMarkNudgeRead();
   const act = useActOnNudge();
-  const peek = usePeek();
-
   const nudges = nudgesQuery.data?.nudges ?? [];
   const fresh = nudges.filter((n) => !n.readAt && !n.resolvedAt);
   const earlier = nudges.filter((n) => n.readAt || n.resolvedAt);
@@ -83,9 +81,28 @@ export default function ActivityScreen() {
     segment === 'finn' ? 'That’s everything from Finn.' : entries.length ? `That’s all of ${monthOf(entries[entries.length - 1].date)}.` : '';
   const hasItems = segment === 'finn' ? nudges.length > 0 : entries.length > 0;
 
+  const peek = usePeek({ ready: hasItems });
+  // Tabs stay mounted: re-arm the peek on arrival and put Finn away when leaving.
+  useFocusEffect(
+    useCallback(() => {
+      peek.recheck();
+      return peek.reset;
+    }, [peek.recheck, peek.reset]),
+  );
+  const switchSegment = (k: Segment) => {
+    if (k === segment) return;
+    peek.reset();
+    setSegment(k);
+  };
+
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.content} onScroll={peek.onScroll} scrollEventThrottle={16}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        onScroll={peek.onScroll}
+        onLayout={peek.onLayout}
+        onContentSizeChange={peek.onContentSizeChange}
+        scrollEventThrottle={16}>
         <Text style={styles.title} accessibilityRole="header">
           Activity
         </Text>
@@ -95,7 +112,7 @@ export default function ActivityScreen() {
             { key: 'transactions', label: 'Transactions' },
           ]}
           value={segment}
-          onChange={(k) => setSegment(k as Segment)}
+          onChange={(k) => switchSegment(k as Segment)}
         />
 
         {segment === 'finn' ? (

@@ -10,7 +10,7 @@ const TINT = `linear-gradient(180deg, ${colors.chipGradient[0]}, ${colors.chipGr
 export function SuggestionChips({ chips, onPick, disabled = false }: { chips: string[]; onPick: (text: string) => void; disabled?: boolean }) {
   if (chips.length === 0) return null;
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} keyboardShouldPersistTaps="handled">
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.strip} contentContainerStyle={styles.row} keyboardShouldPersistTaps="handled">
       {chips.map((chip) => (
         <Chip key={chip} text={chip} disabled={disabled} onPick={onPick} />
       ))}
@@ -42,6 +42,8 @@ function Chip({ text, disabled, onPick }: { text: string; disabled: boolean; onP
 }
 
 const styles = StyleSheet.create({
+  // ScrollView grows to fill free space by default; the strip should only be as tall as its chips.
+  strip: { flexGrow: 0, flexShrink: 0 },
   row: { gap: 8, paddingHorizontal: 16, paddingVertical: 8 },
   chip: {
     height: 36,
