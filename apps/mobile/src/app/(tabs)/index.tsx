@@ -4,13 +4,14 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput
 import { LayoutAnimationConfig } from 'react-native-reanimated';
 
 import { useChatHistory, useSendChat } from '@/api/queries';
+import { AgentHeader } from '@/components/chat/AgentHeader';
 import { groupPositions } from '@/components/chat/grouping';
 import { MessageBubble, TypingBubble } from '@/components/chat/MessageBubble';
 import { Button } from '@/components/ui/Button';
 import { SafeAreaView } from '@/components/ui/SafeAreaView';
 import { colors, fonts, radius } from '@/theme/tokens';
 
-// Chat with Finn: history, optimistic user bubble, typing indicator. Header and composer redesign come later.
+// Agent: chat with Finn. Expressive element: the 64pt Finn header. Composer redesign comes later.
 export default function ChatScreen() {
   const history = useChatHistory();
   const send = useSendChat();
@@ -24,6 +25,7 @@ export default function ChatScreen() {
     : null;
   const shown = pending ? [...messages, pending] : messages;
   const positions = groupPositions(shown);
+  const replyMood = messages.findLast((m) => m.role === 'finn')?.mood ?? 'happy';
 
   const submit = () => {
     const text = draft.trim();
@@ -34,6 +36,7 @@ export default function ChatScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
+      <AgentHeader sending={send.isPending} replyMood={replyMood} />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           ref={scroll}
