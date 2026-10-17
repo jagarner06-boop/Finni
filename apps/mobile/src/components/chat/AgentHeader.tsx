@@ -52,7 +52,7 @@ export function AgentHeader({ sending, replyMood }: { sending: boolean; replyMoo
         size={64}
         fallback={
           <Animated.View style={finn.style}>
-            <FinnAvatar mood={mood} size={64} />
+            <FinnAvatar mood={mood} size={64} animated />
           </Animated.View>
         }
       />
