@@ -259,6 +259,7 @@ export interface ChartSeries {
 }
 
 export type Card =
+  | { type: 'safe_to_spend'; forecast: CashflowForecast; askedCents?: Cents }
   | { type: 'account_list'; accounts: Account[] }
   | { type: 'transaction_list'; title?: string; transactions: Transaction[] }
   | {
