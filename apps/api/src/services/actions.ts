@@ -1,13 +1,33 @@
-import { formatCents, type Card, type CreateActionRequest, type Goal, type PendingAction, type PendingActionSource, type PendingActionStatus } from "@finni/shared";
+import { formatCents, type Account, type Card, type CreateActionRequest, type Goal, type PendingAction, type PendingActionSource, type PendingActionStatus } from "@finni/shared";
 import { and, desc, eq, gt, inArray, lt } from "drizzle-orm";
 import { db, schema } from "../db/client.js";
-import type { ActionPayload, ActionRow, BillPaymentPayload, CreateGoalPayload, TransferPayload, User } from "../db/schema.js";
+import type {
+  ActionPayload,
+  ActionRow,
+  BillPaymentPayload,
+  CancelSubscriptionPayload,
+  CardPaymentPayload,
+  CreateGoalPayload,
+  DisputePayload,
+  TransferPayload,
+  User,
+} from "../db/schema.js";
+import { reference, resultLineFor } from "../domain/actionCopy.js";
+import { utilizationPct } from "../domain/card.js";
+import { advanceContribution, cadenceLabel, goalEta } from "../domain/goals.js";
+import { findDuplicateCharges } from "../domain/insights.js";
 import { env } from "../env.js";
+import { shortDate } from "../lib/buckets.js";
+import { isoDay } from "../lib/dates.js";
 import { nessie } from "../nessie/client.js";
 import { listAccounts } from "./accounts.js";
+import { refundDescription, refundedPurchaseIds } from "./activity.js";
+import { getCardSummary } from "./card.js";
 import { findGoalRow, toGoal } from "./goals.js";
 import { moveMoney } from "./ledger.js";
+import { scanNudges } from "./nudges.js";
 import { ownedAccount, ownedBill } from "./ownership.js";
+import { listPurchases } from "./transactions.js";
 import { HttpError } from "./users.js";
 
 // Pending actions: the only way money moves. Chat tools and UI buttons create them; nothing touches
@@ -16,11 +36,8 @@ import { HttpError } from "./users.js";
 const EXPIRY_MS = 15 * 60_000;
 const MILESTONES = [25, 50, 75, 100];
 
-/** "$60" for whole dollars, "$60.50" otherwise. */
-const dollars = (cents: number) => formatCents(cents).replace(/\.00$/, "");
 /** Nessie truncates cents, so every movement is rounded to whole dollars. */
 const wholeDollars = (cents: number) => Math.round(cents / 100) * 100;
-const goalLabel = (g: { name: string; emoji?: string | null }) => (g.emoji ? `${g.emoji} ${g.name}` : g.name);
 
 const statusOf = (row: ActionRow): PendingActionStatus => (row.status === "pending" && row.expiresAt < new Date() ? "expired" : row.status);
 
@@ -33,6 +50,8 @@ export function toPendingAction(row: ActionRow): PendingAction {
     amountCents: row.amountCents,
     fromLabel: d.fromLabel,
     toLabel: d.toLabel,
+    fromDetail: d.fromDetail,
+    toDetail: d.toDetail,
     reason: d.reason,
     requiresStepUp: row.requiresStepUp,
     status: statusOf(row),
@@ -41,6 +60,8 @@ export function toPendingAction(row: ActionRow): PendingAction {
     expiresAt: row.expiresAt.toISOString(),
     executedAt: row.executedAt?.toISOString() ?? null,
     error: row.error,
+    resultLine: row.resultLine,
+    reference: row.status === "executed" ? reference(row.type, row.id) : null,
   };
 }
 
@@ -61,7 +82,15 @@ export function toApprovalCard(a: PendingAction): Card {
 
 // ---------- Create ----------
 
-export async function createAction(user: User, req: CreateActionRequest, source: PendingActionSource): Promise<PendingAction> {
+const available = (a: { mask: string; balanceCents: number }) => `•••• ${a.mask} · ${formatCents(a.balanceCents)} available`;
+const monthYear = (date: string) => new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
+
+function requireFunds(from: Account, amountCents: number) {
+  if (from.type === "Credit Card") throw new HttpError(400, "cannot_pay_from_card", "Money can't move out of a credit card here");
+  if (from.balanceCents < amountCents) throw new HttpError(400, "insufficient_funds", `${from.nickname} only has ${formatCents(from.balanceCents)}`);
+}
+
+export async function createAction(user: User, req: CreateActionRequest, source: PendingActionSource, opts: { nudgeId?: string } = {}): Promise<PendingAction> {
   let payload: ActionPayload;
   let amountCents: number | null;
 
@@ -73,25 +102,98 @@ export async function createAction(user: User, req: CreateActionRequest, source:
       const accounts = await listAccounts(user);
       const from = await ownedAccount(user, req.fromAccountId, accounts);
       const to = await ownedAccount(user, req.toAccountId, accounts);
-      if (from.balanceCents < amountCents) throw new HttpError(400, "insufficient_funds", `${from.nickname} only has ${formatCents(from.balanceCents)}`);
+      requireFunds(from, amountCents);
+      const goalRow = to.isGoal ? await findGoalRow(user, { nessieAccountId: to.id }) : undefined;
       payload = {
         fromAccountId: from.id,
         toAccountId: to.id,
         reason: req.reason,
-        display: { title: `Move ${dollars(amountCents)} to ${to.nickname}`, fromLabel: from.nickname, toLabel: to.nickname, reason: req.reason },
+        display: {
+          title: `Move ${formatCents(amountCents)} to ${to.nickname}`,
+          fromLabel: from.nickname,
+          toLabel: to.nickname,
+          fromDetail: available(from),
+          toDetail: goalRow ? `${formatCents(to.balanceCents)} of ${formatCents(goalRow.targetCents)}` : `•••• ${to.mask}`,
+          reason: req.reason,
+        },
       };
       break;
     }
     case "bill_payment": {
       const bill = await ownedBill(user, req.billId);
       if (bill.status === "completed" || bill.status === "cancelled") throw new HttpError(409, "bill_not_payable", `That bill is already ${bill.status}`);
-      const from = await ownedAccount(user, req.fromAccountId ?? bill.accountId);
+      const from = await ownedAccount(user, req.fromAccountId ?? (bill.accountId === user.creditAccountId ? user.checkingAccountId : bill.accountId));
       amountCents = bill.amountCents;
-      if (from.balanceCents < amountCents) throw new HttpError(400, "insufficient_funds", `${from.nickname} only has ${formatCents(from.balanceCents)}`);
+      requireFunds(from, amountCents);
       payload = {
         billId: bill.id,
         fromAccountId: from.id,
-        display: { title: `Pay ${bill.nickname ?? bill.payee} bill`, fromLabel: from.nickname, toLabel: bill.payee },
+        display: {
+          title: `Pay ${bill.nickname ?? bill.payee} bill`,
+          fromLabel: from.nickname,
+          toLabel: bill.payee,
+          fromDetail: available(from),
+          toDetail: bill.dueDate ? `Due ${shortDate(bill.dueDate)}` : undefined,
+        },
+      };
+      break;
+    }
+    case "card_payment": {
+      const card = await getCardSummary(user);
+      if (!card) throw new HttpError(409, "no_card", "There's no credit card to pay");
+      amountCents = wholeDollars(req.amountCents);
+      if (amountCents <= 0) throw new HttpError(400, "invalid_amount", "Amount must be at least $1");
+      if (amountCents > card.balanceCents) throw new HttpError(400, "overpayment", `${card.nickname} only owes ${formatCents(card.balanceCents)}`);
+      const from = await ownedAccount(user, req.fromAccountId ?? user.checkingAccountId);
+      requireFunds(from, amountCents);
+      const close = shortDate(card.statementCloseDate);
+      payload = {
+        fromAccountId: from.id,
+        toAccountId: card.accountId,
+        display: {
+          title: `Pay ${formatCents(amountCents)} to ${card.nickname} before ${close}`,
+          fromLabel: from.nickname,
+          toLabel: card.nickname,
+          fromDetail: available(from),
+          toDetail: `•••• ${card.mask} · ${formatCents(card.balanceCents)} owed`,
+          reason: `Paying before the statement closes drops your utilization from ${card.utilization}% to ${utilizationPct(card.balanceCents - amountCents, card.limitCents)}%.`,
+        },
+      };
+      break;
+    }
+    case "dispute_charge": {
+      const [purchases, refunded, accounts] = await Promise.all([listPurchases(user, { days: 60 }), refundedPurchaseIds(user), listAccounts(user)]);
+      const dup = findDuplicateCharges(purchases).find((d) => d.duplicate.id === req.purchaseId)?.duplicate;
+      if (!dup || refunded.has(dup.id)) throw new HttpError(409, "not_a_duplicate", "That charge isn't a duplicate we can get back");
+      const account = await ownedAccount(user, dup.accountId, accounts);
+      amountCents = dup.amountCents;
+      payload = {
+        purchaseId: dup.id,
+        accountId: account.id,
+        merchant: dup.merchantName,
+        display: {
+          title: `Get ${formatCents(amountCents)} back from ${dup.merchantName}`,
+          fromLabel: dup.merchantName,
+          toLabel: account.nickname,
+          fromDetail: `Charged twice on ${shortDate(dup.date)}`,
+          toDetail: `•••• ${account.mask}`,
+          reason: `${dup.merchantName} charged you twice on ${shortDate(dup.date)}.`,
+        },
+      };
+      break;
+    }
+    case "cancel_subscription": {
+      const bill = await ownedBill(user, req.billId);
+      if (bill.status !== "recurring") throw new HttpError(409, "not_a_subscription", "That isn't a recurring charge");
+      amountCents = null;
+      payload = {
+        billId: bill.id,
+        display: {
+          title: `Cancel ${bill.payee}`,
+          toLabel: bill.payee,
+          toDetail: `${formatCents(bill.amountCents)} each month`,
+          reason: `Stops the ${formatCents(bill.amountCents)} ${bill.payee} charge each month.`,
+        },
       };
       break;
     }
@@ -100,14 +202,29 @@ export async function createAction(user: User, req: CreateActionRequest, source:
       const name = req.name.trim();
       if (!name) throw new HttpError(400, "invalid_name", "Goal needs a name");
       if (targetCents <= 0) throw new HttpError(400, "invalid_amount", "Target must be at least $1");
+      const contributionCents = req.cadence && req.contributionCents ? wholeDollars(req.contributionCents) : undefined;
+      const from = req.cadence ? await ownedAccount(user, req.fromAccountId ?? user.checkingAccountId) : undefined;
+      const eta = req.cadence && contributionCents ? goalEta({ currentCents: 0, targetCents, contributionCents, cadence: req.cadence }, isoDay()) : null;
       amountCents = null;
-      const label = goalLabel({ name, emoji: req.emoji });
       payload = {
         name,
-        emoji: req.emoji,
+        icon: req.icon,
         targetCents,
         targetDate: req.targetDate,
-        display: { title: `Start a goal: ${label}`, toLabel: label, reason: `Target ${dollars(targetCents)}${req.targetDate ? ` by ${req.targetDate}` : ""}` },
+        cadence: req.cadence,
+        contributionCents,
+        fromAccountId: from?.id,
+        display: {
+          title: `Start a goal: ${name}`,
+          fromLabel: from?.nickname,
+          fromDetail: req.cadence && contributionCents ? `${formatCents(contributionCents)} ${cadenceLabel(req.cadence)}` : undefined,
+          toLabel: name,
+          toDetail: "New savings account · no fees",
+          reason:
+            eta && req.cadence && contributionCents
+              ? `${formatCents(contributionCents)} ${cadenceLabel(req.cadence)} gets you to ${formatCents(targetCents)} by ${monthYear(eta)}.`
+              : `Target ${formatCents(targetCents)}${req.targetDate ? ` by ${shortDate(req.targetDate)}` : ""}`,
+        },
       };
       break;
     }
@@ -122,6 +239,7 @@ export async function createAction(user: User, req: CreateActionRequest, source:
       amountCents,
       requiresStepUp: amountCents !== null && amountCents >= env.STEP_UP_THRESHOLD * 100,
       source,
+      nudgeId: opts.nudgeId ?? null,
       expiresAt: new Date(Date.now() + EXPIRY_MS),
     })
     .returning();
@@ -160,14 +278,20 @@ export async function listActions(user: User, status?: PendingActionStatus): Pro
 
 interface Execution {
   ref: string;
-  text: string;
+  /** Shown on the executed sheet and stored on the action. */
+  resultLine: string;
+  /** Finn's chat line when it should differ from the result line (milestones). */
+  chatText?: string;
   cards: Card[];
 }
 
 /** Step-up (if required) must already have been checked by the route. */
+const isUniqueViolation = (err: unknown) => (err as { code?: string }).code === "23505" || (err as { cause?: { code?: string } }).cause?.code === "23505";
+
 export async function approveAction(user: User, id: string): Promise<PendingAction> {
   // Atomic claim: only one request can move pending → executing, so an action never runs twice.
-  const [claimed] = await db
+  // A unique index also stops two different dispute actions for one purchase from both claiming.
+  const claim = db
     .update(schema.pendingActions)
     .set({ status: "executing" })
     .where(
@@ -179,6 +303,14 @@ export async function approveAction(user: User, id: string): Promise<PendingActi
       ),
     )
     .returning();
+  let claimed: ActionRow | undefined;
+  try {
+    [claimed] = await claim;
+  } catch (err) {
+    if (!isUniqueViolation(err)) throw err;
+    const row = await getActionRow(user, id);
+    return toPendingAction(await finish(row, { status: "failed", error: "That charge was already refunded" }));
+  }
 
   if (!claimed) {
     const current = await getActionRow(user, id);
@@ -191,8 +323,10 @@ export async function approveAction(user: User, id: string): Promise<PendingActi
 
   try {
     const result = await execute(user, claimed);
-    const done = await finish(claimed, { status: "executed", executedAt: new Date(), nessieRef: result.ref });
-    await db.insert(schema.chatMessages).values({ userId: user.id, role: "finn", text: result.text, mood: "celebrating", cards: result.cards });
+    const done = await finish(claimed, { status: "executed", executedAt: new Date(), nessieRef: result.ref, resultLine: result.resultLine });
+    await db.insert(schema.chatMessages).values({ userId: user.id, role: "finn", text: result.chatText ?? result.resultLine, mood: "celebrating", cards: result.cards });
+    // Whatever this fixed (bill due, duplicate, plan) resolves now, not on the next lazy scan.
+    void scanNudges(user).catch((err) => console.error("post-action nudge scan failed", err));
     return toPendingAction(done);
   } catch (err) {
     console.error(`action ${id} failed`, err);
@@ -212,7 +346,7 @@ export async function rejectAction(user: User, id: string): Promise<PendingActio
 }
 
 /** Saves the final state and updates the approval card in the chat message that proposed it. */
-async function finish(row: ActionRow, patch: Partial<Pick<ActionRow, "status" | "executedAt" | "nessieRef" | "error">>): Promise<ActionRow> {
+async function finish(row: ActionRow, patch: Partial<Pick<ActionRow, "status" | "executedAt" | "nessieRef" | "error" | "resultLine">>): Promise<ActionRow> {
   const [updated] = await db.update(schema.pendingActions).set(patch).where(eq(schema.pendingActions.id, row.id)).returning();
   await syncChatCard(updated);
   return updated;
@@ -237,6 +371,12 @@ function execute(user: User, row: ActionRow): Promise<Execution> {
       return executeBillPayment(user, row, row.payload as BillPaymentPayload);
     case "create_goal":
       return executeCreateGoal(user, row.payload as CreateGoalPayload);
+    case "card_payment":
+      return executeCardPayment(user, row, row.payload as CardPaymentPayload);
+    case "dispute_charge":
+      return executeDispute(user, row, row.payload as DisputePayload);
+    case "cancel_subscription":
+      return executeCancel(user, row.payload as CancelSubscriptionPayload);
   }
 }
 
@@ -250,18 +390,21 @@ async function executeTransfer(user: User, row: ActionRow, p: TransferPayload): 
 
   const moved = await moveMoney({ fromAccountId: from.id, toAccountId: to.id, amountCents, fromLabel: from.nickname, toLabel: to.nickname, ref: row.id });
   const ref = `${moved.withdrawalId},${moved.depositId}`;
+  const resultLine = resultLineFor({ type: "transfer", amountCents, to: to.nickname, from: from.nickname, fromBalanceCents: from.balanceCents - amountCents });
 
   const goalRow = await findGoalRow(user, { nessieAccountId: to.id });
-  if (!goalRow) return { ref, text: `Done! Moved ${dollars(amountCents)} from ${from.nickname} to ${to.nickname} 🐟`, cards: [] };
+  if (!goalRow) return { ref, resultLine, cards: [] };
 
+  // A planned contribution (from its nudge) moves the next one forward.
+  if (row.nudgeId && goalRow.cadence) {
+    await db
+      .update(schema.goals)
+      .set({ nextContributionOn: advanceContribution(goalRow.nextContributionOn ?? isoDay(), goalRow.cadence) })
+      .where(eq(schema.goals.id, goalRow.id));
+  }
   const { goal, crossed } = await recordGoalProgress(goalRow);
-  const label = goalLabel(goal);
-  const text = crossed.includes(100)
-    ? `You did it! ${label} is fully funded 🎉`
-    : crossed.length
-      ? `Splash! ${label} just crossed ${Math.max(...crossed)}% 🎉`
-      : `Added ${dollars(amountCents)} to ${label}. You're at ${goal.percent}% 🌊`;
-  return { ref, text, cards: [{ type: "goal_progress", goals: [goal] }] };
+  const chatText = crossed.includes(100) ? `${goal.name} is fully funded.` : crossed.length ? `${goal.name} just crossed ${Math.max(...crossed)}%.` : resultLine;
+  return { ref, resultLine, chatText, cards: [{ type: "goal_progress", goals: [goal] }] };
 }
 
 /** Records newly crossed 25/50/75/100% milestones; a fully funded goal becomes completed. */
@@ -288,19 +431,56 @@ async function executeBillPayment(user: User, row: ActionRow, p: BillPaymentPayl
   // Nessie has no "pay bill" endpoint: withdraw the amount, then mark a one-off bill completed.
   const withdrawal = await nessie.createWithdrawal(from.id, { amount: amountCents / 100, description: `Bill payment · ${bill.payee} · ${row.id}` });
   if (bill.status === "pending") await nessie.updateBill(bill.id, { status: "completed" });
-  return { ref: withdrawal._id, text: `Paid! Your ${bill.nickname ?? bill.payee} bill (${dollars(amountCents)}) is all set ✅`, cards: [] };
+  return { ref: withdrawal._id, resultLine: resultLineFor({ type: "bill_payment", amountCents, payee: bill.payee }), cards: [] };
+}
+
+async function executeCardPayment(user: User, row: ActionRow, p: CardPaymentPayload): Promise<Execution> {
+  const amountCents = row.amountCents!;
+  const accounts = await listAccounts(user);
+  const from = await ownedAccount(user, p.fromAccountId, accounts);
+  const card = await ownedAccount(user, p.toAccountId, accounts);
+  if (from.balanceCents < amountCents) throw new Error(`Not enough in ${from.nickname} (${formatCents(from.balanceCents)})`);
+  const moved = await moveMoney({ fromAccountId: from.id, toAccountId: card.id, amountCents, fromLabel: from.nickname, toLabel: card.nickname, ref: row.id });
+  return { ref: `${moved.withdrawalId},${moved.depositId}`, resultLine: resultLineFor({ type: "card_payment", amountCents, to: card.nickname }), cards: [] };
+}
+
+async function executeDispute(user: User, row: ActionRow, p: DisputePayload): Promise<Execution> {
+  const amountCents = row.amountCents!;
+  if ((await refundedPurchaseIds(user)).has(p.purchaseId)) throw new Error("That charge was already refunded");
+  const card = await ownedAccount(user, p.accountId);
+  const deposit = await nessie.createDeposit(card.id, { amount: amountCents / 100, description: refundDescription(p.merchant, p.purchaseId) });
+  return { ref: deposit._id, resultLine: resultLineFor({ type: "dispute_charge", amountCents, merchant: p.merchant, card: card.nickname }), cards: [] };
+}
+
+async function executeCancel(user: User, p: CancelSubscriptionPayload): Promise<Execution> {
+  const bill = await ownedBill(user, p.billId);
+  if (bill.status !== "recurring") throw new Error(`That subscription is already ${bill.status}`);
+  await nessie.updateBill(bill.id, { status: "cancelled" });
+  return { ref: bill.id, resultLine: resultLineFor({ type: "cancel_subscription", payee: bill.payee }), cards: [] };
 }
 
 async function executeCreateGoal(user: User, p: CreateGoalPayload): Promise<Execution> {
-  const label = goalLabel(p);
-  const account = await nessie.createAccount(user.nessieCustomerId, { type: "Savings", nickname: label, rewards: 0, balance: 0 });
+  const account = await nessie.createAccount(user.nessieCustomerId, { type: "Savings", nickname: p.name, rewards: 0, balance: 0 });
+  const planned = !!(p.cadence && p.contributionCents);
+  const today = isoDay();
   const [row] = await db
     .insert(schema.goals)
-    .values({ userId: user.id, name: p.name, emoji: p.emoji ?? null, targetCents: p.targetCents, targetDate: p.targetDate ?? null, nessieAccountId: account._id })
+    .values({
+      userId: user.id,
+      name: p.name,
+      emoji: p.icon ?? null,
+      targetCents: p.targetCents,
+      targetDate: p.targetDate ?? null,
+      nessieAccountId: account._id,
+      cadence: planned ? p.cadence : null,
+      contributionCents: planned ? p.contributionCents : null,
+      fromAccountId: planned ? (p.fromAccountId ?? user.checkingAccountId) : null,
+      nextContributionOn: planned ? today : null,
+    })
     .returning();
   return {
     ref: account._id,
-    text: `Your ${label} goal is live! Target ${dollars(p.targetCents)}. Let's fill it up 🌊`,
+    resultLine: resultLineFor({ type: "create_goal", goal: p.name, ...(planned ? { contributionCents: p.contributionCents, firstDate: today } : {}) }),
     cards: [{ type: "goal_progress", goals: [await toGoal(row)] }],
   };
 }

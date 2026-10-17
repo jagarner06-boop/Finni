@@ -1,7 +1,9 @@
-import type { Request } from "express";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { auth } from "express-oauth2-jwt-bearer";
 import { ID_TOKEN_HEADER, MFA_AT_CLAIM, STEP_UP_REQUIRED } from "@finni/shared";
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import type { User } from "./db/schema.js";
+import { demoSubFromHeader, stepUpFresh } from "./domain/demoToken.js";
 import { env } from "./env.js";
 import { HttpError } from "./services/users.js";
 
@@ -11,6 +13,19 @@ export const checkJwt = auth({
   audience: env.AUTH0_AUDIENCE,
   tokenSigningAlg: "RS256",
 });
+
+/** AUTH_MODE=demo: `Bearer demo.<deviceId>` → user `demo|<deviceId>`; anything else is a 401. */
+function demoAuth(req: Request, res: Response, next: NextFunction) {
+  const sub = demoSubFromHeader(req.header("authorization"));
+  if (!sub) {
+    res.status(401).json({ error: "unauthorized", message: "Missing or invalid demo token" });
+    return;
+  }
+  req.auth = { payload: { sub }, header: { alg: "none" }, token: req.header("authorization")!.slice(7) } as Request["auth"];
+  next();
+}
+
+export const authenticate: RequestHandler = env.AUTH_MODE === "demo" ? demoAuth : checkJwt;
 
 const STEP_UP_MAX_AGE_S = 5 * 60;
 const jwks = createRemoteJWKSet(new URL(`https://${env.AUTH0_DOMAIN}/.well-known/jwks.json`));
@@ -32,7 +47,12 @@ async function hasFreshLogin(req: Request): Promise<boolean> {
  * access token (if an Auth0 Action stamps MFA_AT_CLAIM), or an ID token from a login in the last
  * 5 minutes. The app re-logs in and retries after a 403 step_up_required.
  */
-export async function requireStepUp(req: Request): Promise<void> {
+export async function requireStepUp(req: Request, user: User): Promise<void> {
+  // Demo mode: the app confirmed with Face ID on the device and called POST /me/step-up.
+  if (env.AUTH_MODE === "demo") {
+    if (stepUpFresh(user.stepUpAt)) return;
+    throw new HttpError(403, STEP_UP_REQUIRED, "Confirm it's you to approve this");
+  }
   const mfaAt = Number(req.auth?.payload[MFA_AT_CLAIM]);
   if (mfaAt && Date.now() / 1000 - mfaAt <= STEP_UP_MAX_AGE_S) return;
   if (await hasFreshLogin(req)) return;

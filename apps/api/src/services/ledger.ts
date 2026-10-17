@@ -1,10 +1,11 @@
 import { toCents } from "@finni/shared";
+import { ledgerBalanceCents } from "../domain/ledger.js";
 import { nessie } from "../nessie/client.js";
 import type { NessieAccount } from "../nessie/types.js";
 
 // This Nessie build never changes `account.balance` after creation and its transfers carry no payee.
 // So every money movement is recorded in Nessie as purchases / withdrawals / deposits, and the live
-// balance is derived from those records: opening + deposits − withdrawals − purchases.
+// balance is derived from those records (domain/ledger.ts; a credit card's balance is the amount owed).
 // Nessie also truncates every amount to whole dollars, so all movements must be whole dollars.
 
 const counts = (status: string) => status !== "cancelled";
@@ -16,7 +17,7 @@ export async function liveBalanceCents(account: NessieAccount): Promise<number> 
     nessie.getPurchases(account._id),
   ]);
   const sum = (xs: { amount: number; status: string }[]) => xs.filter((x) => counts(x.status)).reduce((s, x) => s + toCents(x.amount), 0);
-  return toCents(account.balance) + sum(deposits) - sum(withdrawals) - sum(purchases);
+  return ledgerBalanceCents(account.type, toCents(account.balance), sum(deposits), sum(withdrawals), sum(purchases));
 }
 
 /** Moves money between two of the user's accounts: withdrawal on `from` + deposit on `to`, linked by `ref`. */

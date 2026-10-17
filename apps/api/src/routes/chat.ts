@@ -19,7 +19,7 @@ const chatBody = z.object({
 const historyQuery = z.object({ limit: z.coerce.number().int().min(1).max(200).default(50) });
 
 type Row = typeof schema.chatMessages.$inferSelect;
-const toMessage = (r: Row): ChatMessage => ({ id: r.id, role: r.role, text: r.text, mood: r.mood, cards: r.cards, createdAt: r.createdAt.toISOString() });
+const toMessage = (r: Row): ChatMessage => ({ id: r.id, role: r.role, text: r.text, mood: r.mood, cards: r.cards, chips: r.chips, createdAt: r.createdAt.toISOString() });
 
 chatRouter.post("/chat", async (req, res) => {
   const { message, location } = chatBody.parse(req.body);
@@ -38,6 +38,13 @@ chatRouter.post("/chat", async (req, res) => {
   const finnMessage = toMessage(finn);
   const body: ChatResponse = { reply: finnMessage, cards: finnMessage.cards };
   res.json(body);
+});
+
+// Settings → Clear chat with Finn.
+chatRouter.delete("/chat/history", async (req, res) => {
+  const user = await requireUser(getSub(req));
+  await db.delete(schema.chatMessages).where(eq(schema.chatMessages.userId, user.id));
+  res.status(204).end();
 });
 
 chatRouter.get("/chat/history", async (req, res) => {

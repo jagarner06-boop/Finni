@@ -59,8 +59,6 @@ const EXPIRY_SKEW_S = 60;
 // finni://callback (dev build), http://localhost:8081/callback (web).
 export const redirectUri = makeRedirectUri({ scheme: 'finni', path: 'callback' });
 
-const MOCK_USER: AuthUser = { sub: 'mock|alex', email: 'alex@finni.app', name: 'Alex', givenName: 'Alex' };
-
 function userFromIdToken(idToken?: string): AuthUser | null {
   if (!idToken) return null;
   try {
@@ -105,11 +103,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Restore the session on launch.
   useEffect(() => {
-    if (config.useMocks) {
-      setUser(MOCK_USER);
-      setStatus('signedIn');
-      return;
-    }
     tokenStore.get().then((tokens) => {
       tokensRef.current = tokens;
       setUser(userFromIdToken(tokens?.idToken));
@@ -149,11 +142,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (opts?: { forcePrompt?: boolean }) => {
-      if (config.useMocks) {
-        setUser(MOCK_USER);
-        setStatus('signedIn');
-        return true;
-      }
       if (!discovery) return false;
       return (await authorize(discovery, {}, opts?.forcePrompt)) !== null;
     },
@@ -166,7 +154,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [saveTokens]);
 
   const getAccessToken = useCallback(async () => {
-    if (config.useMocks) return 'mock-token';
     const tokens = tokensRef.current;
     if (!tokens) return null;
     if (tokens.expiresAt - EXPIRY_SKEW_S > Date.now() / 1000) return tokens.accessToken;
@@ -189,7 +176,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [discovery, saveTokens]);
 
   const stepUp = useCallback(async () => {
-    if (config.useMocks) return 'mock-token-mfa';
     if (!discovery) return null;
     // max_age=0 makes Auth0 show the login screen and stamp a fresh auth_time on the ID token,
     // which the API checks for large approvals.
@@ -216,7 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       status,
       user,
-      ready: config.useMocks || discovery !== null,
+      ready: discovery !== null,
       login,
       logout,
       getAccessToken,

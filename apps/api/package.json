@@ -14,9 +14,12 @@
     "spike:gemini": "tsx --env-file=.env scripts/spike-gemini.ts",
     "demo:reset": "tsx --env-file=.env scripts/demo-reset.ts",
     "smoke:seed": "tsx --env-file=.env scripts/smoke-seed.ts",
-    "smoke:actions": "tsx --env-file=.env scripts/smoke-actions.ts",
+    "smoke:actions": "AUTH_MODE=auth0 tsx --env-file=.env scripts/smoke-actions.ts",
     "smoke:charts": "tsx --env-file=.env scripts/smoke-charts.ts",
-    "smoke:agent": "tsx --env-file=.env scripts/smoke-agent.ts"
+    "smoke:agent": "tsx --env-file=.env scripts/smoke-agent.ts",
+    "test": "vitest run",
+    "smoke:live": "tsx --env-file=.env scripts/smoke-live.ts",
+    "smoke:race": "tsx --env-file=.env scripts/smoke-race.ts"
   },
   "dependencies": {
     "@finni/shared": "*",
@@ -35,6 +38,7 @@
     "@types/node": "^26.6.5",
     "drizzle-kit": "^0.31.11",
     "tsx": "^4.23.15",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.5"
   }
 }
