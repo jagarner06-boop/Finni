@@ -4,7 +4,7 @@ import type { Transaction } from "@finni/shared";
 
 const DAY_MS = 86_400_000;
 const daysBetween = (a: string, b: string) => Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / DAY_MS);
-const oldestFirst = (a: Transaction, b: Transaction) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id);
+const oldestFirst = (a: Transaction, b: Transaction) => (a.date !== b.date ? (a.date < b.date ? -1 : 1) : a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 /**
  * Same merchant, amount and account within `windowDays` (default: the same day, since daily habits like
@@ -42,6 +42,8 @@ export function findSpendingSpikes(purchases: Transaction[], today: string): { c
   const week = new Map<string, number>();
   const before = new Map<string, number>();
   for (const p of purchases) {
+    // Subscription changes are duplicate or trial nudges, not spending habits.
+    if (p.category === "Subscriptions") continue;
     const age = daysBetween(p.date, today);
     const category = p.category ?? "Other";
     if (age >= 0 && age < 7) week.set(category, (week.get(category) ?? 0) + p.amountCents);

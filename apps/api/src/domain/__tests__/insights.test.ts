@@ -42,6 +42,8 @@ describe("findSpendingSpikes", () => {
   const week = ["2026-10-16", "2026-10-15", "2026-10-13", "2026-10-11"].map((d) => tx("DoorDash", 2500, d, "Food delivery"));
   it("flags a category well above its weekly average", () =>
     expect(findSpendingSpikes([...before, ...week], "2026-10-17")[0]).toMatchObject({ category: "Food delivery", weekCents: 10_000, avgWeekCents: 2_200 }));
+  it("ignores subscriptions (duplicate and trial nudges cover them)", () =>
+    expect(findSpendingSpikes([tx("Hulu", 1800, "2026-10-16", "Subscriptions"), tx("Spotify", 3000, "2026-10-14", "Subscriptions")], "2026-10-17")).toHaveLength(0));
   it("ignores normal weeks", () => expect(findSpendingSpikes([...before, week[0]], "2026-10-17")).toHaveLength(0));
   it("ignores small totals", () =>
     expect(findSpendingSpikes([tx("Wawa", 500, "2026-10-01", "Gas"), tx("Wawa", 1500, "2026-10-16", "Gas")], "2026-10-17")).toHaveLength(0));
