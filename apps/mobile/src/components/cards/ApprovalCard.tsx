@@ -19,13 +19,15 @@ const STATUS: Record<Exclude<PendingActionStatus, 'pending'>, { text: string; do
 /** Summary of a proposed money move. Approval itself happens in the approve/[id] sheet. */
 export function ApprovalCard({ card }: { card: Extract<Card, { type: 'approval' }> }) {
   const route = [card.fromLabel, card.toLabel].filter(Boolean).join(' → ');
+  // The card saved in chat history keeps saying `pending` after its 15-minute window; don't offer a dead Review.
+  const status = card.status === 'pending' && Date.parse(card.expiresAt) < Date.now() ? 'expired' : card.status;
 
   return (
     <Surface style={styles.card}>
       <Text style={styles.title}>{card.title}</Text>
       {route ? <Text style={styles.meta}>{route}</Text> : null}
       {card.amountCents != null && <Text style={styles.amount}>{formatCents(card.amountCents)}</Text>}
-      {card.status === 'pending' ? (
+      {status === 'pending' ? (
         <>
           {card.requiresStepUp && (
             <View style={styles.line}>
@@ -41,8 +43,8 @@ export function ApprovalCard({ card }: { card: Extract<Card, { type: 'approval' 
         </>
       ) : (
         <View style={styles.line}>
-          <View style={[styles.dot, { backgroundColor: STATUS[card.status].dot }]} />
-          <Text style={styles.status}>{STATUS[card.status].text}</Text>
+          <View style={[styles.dot, { backgroundColor: STATUS[status].dot }]} />
+          <Text style={styles.status}>{STATUS[status].text}</Text>
         </View>
       )}
     </Surface>

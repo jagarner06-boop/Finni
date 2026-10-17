@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { Easing, FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
+import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import Animated, { Easing, FadeIn, FadeOut, SlideOutDown, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAction, useApproveAction, useRejectAction } from '@/api/queries';
@@ -13,7 +13,6 @@ import { StepUpPhase } from '@/components/approval/StepUpPhase';
 import { FinnTyping } from '@/components/finn/FinnTyping';
 import { colors, motion, radius } from '@/theme/tokens';
 
-const sheetIn = SlideInDown.duration(motion.standard).easing(Easing.out(Easing.cubic));
 const sheetOut = SlideOutDown.duration(motion.standard);
 
 // Approval sheet. Every money move ends here: plain summary, hold to approve, explicit outcome.
@@ -31,6 +30,7 @@ export default function ApproveScreen() {
   const phase = action ? phaseFor(action.status, approve, steppingUp) : null;
   const completedGoal = useGoalCompleted(action);
   const close = () => router.back();
+  const sheetIn = useSlideUp();
 
   // Cancelled or failed sign-in keeps the step-up phase up (the 403 is still the last result).
   const continueStepUp = async (id: string) => {
@@ -45,7 +45,7 @@ export default function ApproveScreen() {
       <Animated.View entering={FadeIn.duration(motion.standard)} exiting={FadeOut.duration(motion.standard)} style={StyleSheet.absoluteFill}>
         <Pressable accessibilityLabel="Close" onPress={close} style={styles.scrim} />
       </Animated.View>
-      <Animated.View entering={sheetIn} exiting={sheetOut} style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
+      <Animated.View exiting={sheetOut} style={[styles.sheet, sheetIn, { paddingBottom: insets.bottom + 16 }]}>
         <View style={styles.grabber} />
         {!action || !phase ? (
           <View style={styles.loading}>
@@ -82,6 +82,20 @@ export default function ApproveScreen() {
       {completedGoal && <GoalCompleteOverlay name={completedGoal} />}
     </View>
   );
+}
+
+/**
+ * Slide the sheet up with a transform, not an `entering` layout animation. Layout animations pin the
+ * sheet's frame to where it was when it mounted (the short loading state), so when the real content
+ * loaded mid-slide the sheet grew downward and its bottom ended up off-screen.
+ */
+function useSlideUp() {
+  const { height } = useWindowDimensions();
+  const y = useSharedValue(height);
+  useEffect(() => {
+    y.value = withTiming(0, { duration: motion.standard, easing: Easing.out(Easing.cubic) });
+  }, [y]);
+  return useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
 }
 
 const styles = StyleSheet.create({
