@@ -62,11 +62,14 @@
     "preset": "jest-expo",
     "resolver": "react-native-worklets/jest/resolver.js",
     "setupFiles": [
-      "./jest.setup.ts"
+      "./jest.setup.tsx"
     ],
     "moduleNameMapper": {
       "^react$": "<rootDir>/node_modules/react",
       "^react/(.*)$": "<rootDir>/node_modules/react/$1"
+    },
+    "transform": {
+      "\\.riv$": "jest-expo/src/preset/assetFileTransformer.js"
     }
   }
 }
