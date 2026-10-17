@@ -4,6 +4,8 @@ import { OnboardingProvider } from "../OnboardingProvider";
 import {
   personalityFor,
   paydayLabels,
+  paydayDates,
+  toFinnProfile,
   incomePatch,
   canContinue,
 } from "../logic";
@@ -67,3 +69,11 @@ it("calculates payday labels from the current date and pay frequency", () => {
     "Not sure",
   ]);
 });
+
+it("turns payday choices into dates", () => {
+  expect(paydayDates("biweekly", new Date(2026, 9, 17))).toEqual(["2026-10-23", "2026-11-06", null]);
+  expect(paydayDates("irregular", new Date(2026, 9, 17))).toEqual([null, null, null]);
+});
+it("sends Finn the answers he uses", () =>
+  expect(toFinnProfile({ ...initialProfile(), lifeStage: "student", habits: ["a", "a", "a"], handsOn: "prep", nextPayday: 1 }, new Date(2026, 9, 17)))
+    .toEqual({ lifeStage: "student", paySchedule: "biweekly", nextPayday: "2026-11-06", style: "planner", handsOn: "prep" }));

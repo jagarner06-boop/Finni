@@ -1,4 +1,4 @@
-import type { ChatRequest, NudgesResponse, UpdateSettingsRequest, CreateActionRequest, CreateGoalRequest, PendingActionStatus } from '@finni/shared';
+import type { BootstrapRequest, ChatRequest, NudgesResponse, UpdateSettingsRequest, CreateActionRequest, CreateGoalRequest, PendingActionStatus } from '@finni/shared';
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { getLocation } from '@/lib/location';
@@ -53,8 +53,11 @@ export function useMe(opts: { enabled?: boolean; pollUntilSeeded?: boolean } = {
 export function useBootstrap() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: () => api.bootstrap(),
-    onSuccess: (res) => client.setQueryData(qk.me, res.me),
+    mutationFn: (body?: BootstrapRequest) => api.bootstrap(body),
+    onSuccess: async (res) => {
+      client.setQueryData(qk.me, res.me);
+      await Promise.all([qk.home, qk.settings].map((queryKey) => client.invalidateQueries({ queryKey })));
+    },
   });
 }
 
@@ -204,7 +207,7 @@ export function useUpdateSettings() {
     mutationFn: (body: UpdateSettingsRequest) => api.updateSettings(body),
     onSuccess: async (res) => {
       client.setQueryData(qk.settings, res);
-      await Promise.all([client.invalidateQueries({ queryKey: qk.home }), client.invalidateQueries({ queryKey: ['contribution-limit'] })]);
+      await Promise.all([client.invalidateQueries({ queryKey: qk.home }), client.invalidateQueries({ queryKey: qk.me }), client.invalidateQueries({ queryKey: ['contribution-limit'] })]);
     },
   });
 }

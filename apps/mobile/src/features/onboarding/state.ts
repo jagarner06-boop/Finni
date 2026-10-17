@@ -5,6 +5,9 @@ import {
   type OnboardingProfile,
 } from "./content";
 
+export const localDay = (d = new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
 export const initialProfile = (): OnboardingProfile => ({
   firstName: "",
   lifeStage: null,
@@ -38,6 +41,8 @@ function valid(value: unknown): value is OnboardingProfile {
     p.monthlyBills <= billsMaximum(p.monthlyIncome) &&
     PAY_SCHEDULES.some((s) => s.id === p.paySchedule) &&
     [0, 1, 2].includes(p.nextPayday) &&
+    (p.paydayReferenceDate === undefined || (typeof p.paydayReferenceDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(p.paydayReferenceDate) &&
+      Number.isFinite(Date.parse(`${p.paydayReferenceDate}T00:00:00Z`)))) &&
     Array.isArray(p.bills) &&
     p.bills.every((b) => (BILLS as readonly string[]).includes(b)) &&
     Array.isArray(p.habits) &&
@@ -77,7 +82,7 @@ export async function saveOnboarding(
 ) {
   await store.setItem(
     "finni.onboarding.v1",
-    JSON.stringify({ ...profile, firstName: profile.firstName.trim() }),
+    JSON.stringify({ ...profile, paydayReferenceDate: profile.paydayReferenceDate ?? localDay(), firstName: profile.firstName.trim() }),
   );
   await store.setItem("finni.onboarding.complete", "true");
 }

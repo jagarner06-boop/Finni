@@ -1,3 +1,4 @@
+import type { FinnProfile } from "@finni/shared";
 import { eq } from "drizzle-orm";
 import { db, schema } from "../db/client.js";
 import type { User } from "../db/schema.js";
@@ -73,4 +74,11 @@ export async function bootstrapUser(sub: string, profile: { firstName?: string; 
   // Not awaited: the app polls GET /me until `seeded` flips (seedPersona always sets seededAt).
   void seedPersona(row, plan);
   return { user: row, created: true };
+}
+
+export async function saveProfile(userId: string, profile: FinnProfile, firstName?: string): Promise<User> {
+  const name = firstName?.trim();
+  const [user] = await db.update(schema.users).set({ profile, ...(name ? { firstName: name } : {}) }).where(eq(schema.users.id, userId)).returning();
+  if (!user) throw new HttpError(404, "not_found");
+  return user;
 }

@@ -94,6 +94,25 @@ export interface Goal {
   behind: boolean;
 }
 
+  export interface CashflowPaycheck { date: ISODate; amountCents: Cents | null; source: string; basis: 'deposits' | 'profile' }
+  export interface CashflowCommitment { kind: 'bill' | 'goal'; id: string; label: string; date: ISODate; amountCents: Cents }
+  export interface CashflowForecast {
+    balanceCents: Cents;
+    paycheck: CashflowPaycheck | null;
+    /** Last day counted: the day before payday, or today + 13 without one. */
+    untilDate: ISODate;
+    /** By date; bills before goals on the same day. */
+    commitments: CashflowCommitment[];
+    billsCents: Cents;
+    goalsCents: Cents;
+    /** balance - bills - goals; negative when there isn't enough. */
+    safeCents: Cents;
+    /** How far bills alone overdraw Checking (0 when they fit). Goal savings never cause an overdraft: they need approval. */
+    shortCents: Cents;
+    /** The bill that first takes Checking below zero. */
+    firstShort: CashflowCommitment | null;
+  }
+  
 export type PendingActionType =
   | 'transfer'
   | 'bill_payment'
@@ -135,6 +154,7 @@ export interface PendingAction {
 }
 
 export type NudgeRule =
+  | 'cash_short'
   | 'bill_due'
   | 'spending_spike'
   | 'goal_milestone'
@@ -149,6 +169,7 @@ export type NudgeSeverity = 'danger' | 'warning' | 'info';
 export type NudgeFace = 'surprised' | 'skeptical';
 
 export type NudgeAction =
+  | { type: 'propose_transfer'; fromAccountId: string; toAccountId: string; amountCents: Cents; label: string }
   | { type: 'propose_bill_payment'; billId: string; label: string }
   | { type: 'propose_card_payment'; amountCents: Cents; label: string }
   | { type: 'propose_dispute'; purchaseId: string; label: string }
@@ -202,6 +223,20 @@ export interface CardSummary {
   closesInDays: number;
 }
 
+export type LifeStage = 'student' | 'start' | 'career' | 'family' | 'self' | 'retired';
+export type PaySchedule = 'weekly' | 'biweekly' | 'semi' | 'monthly' | 'irregular';
+export type MoneyStyle = 'fresh_start' | 'free_spirit' | 'steady' | 'planner';
+export type HandsOn = 'watch' | 'suggest' | 'prep';
+
+export interface FinnProfile {
+  lifeStage: LifeStage | null;
+  paySchedule: PaySchedule;
+  /** The payday picked in onboarding; null for Not sure. */
+  nextPayday: ISODate | null;
+  style: MoneyStyle;
+  handsOn: HandsOn;
+}
+
 export interface Prefs {
   notifications: boolean;
   hideBalance: boolean;
@@ -226,6 +261,7 @@ export interface ChartSeries {
 }
 
 export type Card =
+  | { type: 'safe_to_spend'; forecast: CashflowForecast; askedCents?: Cents }
   | { type: 'account_list'; accounts: Account[] }
   | { type: 'transaction_list'; title?: string; transactions: Transaction[] }
   | {

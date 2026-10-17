@@ -1,4 +1,4 @@
-import type { Account, Bill, CardSummary, Goal, Transaction } from "@finni/shared";
+import type { Account, Bill, CashflowForecast, CardSummary, Goal, Transaction } from "@finni/shared";
 import { describe, expect, it } from "vitest";
 import { buildNudges, type NudgeInput } from "../nudgeRules.js";
 
@@ -68,3 +68,27 @@ describe("buildNudges", () => {
     for (const x of n) expect(x.title + x.body + x.meta).not.toMatch(/\p{Extended_Pictographic}/u);
   });
 });
+
+const savings: Account = { id: "sav", nickname: "Rainy Day", type: "Savings", balanceCents: 40_000, mask: "2210", isGoal: false };
+const ins = { kind: "bill" as const, id: "ins", label: "Car insurance", date: "2026-10-24", amountCents: 9_000 };
+const short: CashflowForecast = {
+  balanceCents: 10_000, paycheck: { date: "2026-10-29", amountCents: 62_000, source: "Campus job", basis: "deposits" }, untilDate: "2026-10-28",
+  commitments: [{ kind: "bill", id: "b", label: "Phone", date: "2026-10-19", amountCents: 4_500 }, ins],
+  billsCents: 13_500, goalsCents: 0, safeCents: -3_500, shortCents: 3_500, firstShort: ins,
+};
+const cash = (over: Partial<NudgeInput>) => buildNudges({ ...base(), forecast: short, savings, ...over }).find((x) => x.rule === "cash_short");
+
+it("warns before bills overdraw Checking and offers to cover it", () => {
+  expect(cash({})).toMatchObject({ severity: "danger", mood: "worried", title: "Checking may run short", meta: "Car insurance · $90.00 · Oct 24", highlight: "$35.00", dedupeKey: "short:chk:2026-10-28" });
+  expect(cash({})!.body).toBe("Heads up, Car insurance is due Oct 24, before your paycheck on Oct 29. Checking would be $35.00 short. I can move $35.00 from Rainy Day.");
+  expect(cash({})!.action).toEqual({ type: "propose_transfer", fromAccountId: "sav", toAccountId: "chk", amountCents: 3_500, label: "Move $35.00" });
+});
+it("rounds the cover up to whole dollars", () => expect(cash({ forecast: { ...short, shortCents: 3_550 } })!.action).toMatchObject({ amountCents: 3_600, label: "Move $36.00" }));
+it("skips the offer when savings can't cover it", () => {
+  const n = cash({ savings: { ...savings, balanceCents: 2_000 } })!;
+  expect(n.action).toBeNull();
+  expect(n.body).toBe("Heads up, Car insurance is due Oct 24, before your paycheck on Oct 29. Checking would be $35.00 short.");
+});
+it("leaves out the paycheck when there isn't one", () =>
+  expect(cash({ forecast: { ...short, paycheck: null } })!.body).toBe("Heads up, Car insurance is due Oct 24. Checking would be $35.00 short. I can move $35.00 from Rainy Day."));
+it("stays quiet when bills fit", () => expect(cash({ forecast: { ...short, shortCents: 0, firstShort: null } })).toBeUndefined());
