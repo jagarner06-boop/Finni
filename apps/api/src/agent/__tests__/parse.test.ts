@@ -1,8 +1,8 @@
 import type { Account, CardSummary } from "@finni/shared";
 import { describe, expect, it } from "vitest";
 import type { User } from "../../db/schema.js";
-import { claimsCompletedAction, claimsProposal, DEFAULT_CHIPS, namesToolInsteadOfCalling, parseReply, plainText } from "../parse.js";
-import { systemPrompt } from "../prompt.js";
+import { DEFAULT_CHIPS, namesToolInsteadOfCalling, parseReply } from "../parse.js";
+import { profileLines, systemPrompt } from "../prompt.js";
 
 describe("parseReply", () => {
   it("reads mood, text and chips", () =>
@@ -14,6 +14,24 @@ describe("parseReply", () => {
   it("strips tool names written instead of called", () =>
     expect(parseReply("[mood:happy] Here is your progress.\n\n[get_goals] [make_chart(spending)] [chips: a | b]").text).toBe("Here is your progress."));
   it("keeps ordinary bracketed text", () => expect(parseReply("[mood:happy] Pay [Visible] today").text).toBe("Pay [Visible] today"));
+  it("removes emoji sequences from replies and chips without changing amounts", () => {
+    expect(parseReply('[mood:happy] Saved $50! 🎉 👩🏽‍💻 🇺🇸 [chips: View goals 🎯 | 👍🏽 | Save $25]')).toEqual({
+      mood: 'happy', text: 'Saved $50!', chips: ['View goals', 'Save $25'],
+    });
+  });
+  it("unwraps a JSON reply instead of displaying raw data", () => {
+    expect(parseReply('```json\n{"text":"Ready 🎉","mood":"happy","chips":["Review"]}\n```')).toEqual({ mood: 'happy', text: 'Ready', chips: ['Review'] });
+  });
+  it("does not display tool payloads as a reply", () => {
+    expect(parseReply('{"name":"propose_goal","args":{"name":"Laptop","target_amount":900}}').text).toBe("I couldn't finish that request. Please try again.");
+  });
+  it.each([
+    '{"text":"propose_goal({\\"name\\":\\"Laptop\\"})"}',
+    '[mood:happy] {"name":"propose_transfer","args":{"amount":50}}',
+    '[mood:happy] ```json\n{"name":"propose_goal"}\n```',
+  ])('rejects wrapped tool payloads: %s', (raw) => {
+    expect(parseReply(raw).text).toBe("I couldn't finish that request. Please try again.");
+  });
 });
 
 describe("plainText", () => {
@@ -76,4 +94,15 @@ describe("systemPrompt", () => {
   });
   it("knows the card", () => expect(prompt).toContain("Closer Card: owes $1,364.00 of $2,000.00 limit, 68% utilization"));
   it("asks for chips", () => expect(prompt).toContain("[chips:"));
+  const planner = { firstName: "Gabe", profile: { lifeStage: "student", paySchedule: "biweekly", nextPayday: null, style: "planner", handsOn: "watch" } } as User;
+  it("adapts to how they like help", () => {
+    const p = systemPrompt(planner, accounts, { card, alerts: [] });
+    expect(p).toContain("ABOUT GABE");
+    expect(p).toContain("- Gabe is a student. They said they are paid every 2 weeks.");
+    expect(p).toContain("Show the key numbers behind a suggestion");
+    expect(p).toContain("Only propose an action when they ask for one.");
+  });
+  it("works without a profile", () => expect(prompt).not.toContain("ABOUT"));
+  it("writes profile lines without em dashes", () => expect(profileLines("Gabe", planner.profile)).not.toContain("\u2014"));
+
 });

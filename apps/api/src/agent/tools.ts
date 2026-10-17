@@ -7,6 +7,7 @@ import { listAccounts } from "../services/accounts.js";
 import { createAction, toApprovalCard } from "../services/actions.js";
 import { findNearbyAtms } from "../services/atms.js";
 import { balanceHistoryChart, incomeVsSpendingChart, spendingBreakdownChart, spendingOverTimeChart, type ChartCard } from "../services/charts.js";
+import { getCashflow } from "../services/cashflow.js";
 import { listBills } from "../services/bills.js";
 import { getCardSummary } from "../services/card.js";
 import { planCardPayment } from "../domain/card.js";
@@ -53,6 +54,28 @@ const days = (def: number) => z.number().int().min(1).max(90).default(def);
 // Read tools run immediately. Write tools (propose_*) only create a pending action + approval card;
 // money moves only when the user taps Approve.
 export const TOOLS: Record<string, Tool> = {
+  safe_to_spend: tool({
+    declaration: {
+      name: "safe_to_spend",
+      description: "How much the user can spend before their next paycheck after bills and planned goal savings. Use for 'can I afford X', 'how much can I spend', 'am I okay until payday'. Pass amount when they name a price.",
+      parameters: { type: Type.OBJECT, properties: { amount: { type: Type.NUMBER, description: "Purchase price in dollars (optional)." } } },
+    },
+    args: z.object({ amount: z.number().positive().optional() }),
+    run: async (a, ctx) => {
+      const f = await getCashflow(ctx.user);
+      if (!f) return { error: "No checking account found." };
+      const askedCents = a.amount === undefined ? undefined : Math.round(a.amount * 100);
+      addCard(ctx, { type: "safe_to_spend", forecast: f, ...(askedCents === undefined ? {} : { askedCents }) });
+      return { checking: usd(f.balanceCents),
+        next_paycheck: f.paycheck ? { date: f.paycheck.date, amount: f.paycheck.amountCents === null ? null : usd(f.paycheck.amountCents), from: f.paycheck.source } : null,
+        counted_through: f.untilDate, bills_due: usd(f.billsCents), planned_savings: usd(f.goalsCents), safe_to_spend: usd(f.safeCents),
+        ...(askedCents === undefined ? {} : { can_afford: askedCents <= f.safeCents, left_after: usd(f.safeCents - askedCents) }),
+        ...(f.shortCents > 0 ? { short_by: usd(f.shortCents) } : {}),
+        ...(!f.paycheck ? { note: "No regular paycheck found, so this counts the next 14 days." } : {}),
+      };
+    },
+  }),
+
   get_accounts: tool({
     declaration: {
       name: "get_accounts",
@@ -122,6 +145,7 @@ export const TOOLS: Record<string, Tool> = {
           body: n.body,
           ...(n.action?.type === "propose_dispute" ? { purchase_id: n.action.purchaseId } : {}),
           ...(n.action?.type === "propose_cancel_subscription" || n.action?.type === "propose_bill_payment" ? { bill_id: n.action.billId } : {}),
+          ...(n.action?.type === "propose_transfer" ? { transfer: { from_account_id: n.action.fromAccountId, to_account_id: n.action.toAccountId, amount: usd(n.action.amountCents) } } : {}),
           ...(n.action?.type === "propose_card_payment" ? { suggested_payment: usd(n.action.amountCents) } : {}),
         })),
       };
@@ -326,7 +350,7 @@ export const TOOLS: Record<string, Tool> = {
     },
     args: z.object({ from_account_id: z.string(), to_account_id: z.string(), amount: z.number().positive(), reason: z.string().max(120).optional() }),
     run: async (a, ctx) =>
-      propose(ctx, { type: "transfer", fromAccountId: a.from_account_id, toAccountId: a.to_account_id, amountCents: Math.round(a.amount) * 100, reason: a.reason }),
+      propose(ctx, { type: "transfer", fromAccountId: a.from_account_id, toAccountId: a.to_account_id, amountCents: Math.round(a.amount * 100), reason: a.reason }),
   }),
 
   propose_bill_payment: tool({

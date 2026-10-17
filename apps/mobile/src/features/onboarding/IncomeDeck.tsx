@@ -12,7 +12,7 @@ import { DoneScreen } from "./DoneScreen";
 import { useOnboarding } from "./OnboardingProvider";
 import { BILLS, COPY, INCOME_PRESETS, PAY_SCHEDULES } from "./content";
 import { canContinue, dollars, incomePatch, paydayLabels } from "./logic";
-import { billsMaximum } from "./state";
+import { billsMaximum, localDay } from "./state";
 import { Card, layout, Micro } from "./presentation";
 
 export default function IncomeDeck({ onComplete }: { onComplete: () => void }) {
@@ -126,7 +126,7 @@ export default function IncomeDeck({ onComplete }: { onComplete: () => void }) {
                 sub={schedule.sub}
                 selected={p.paySchedule === schedule.id}
                 onPress={() =>
-                  update({ paySchedule: schedule.id, nextPayday: 0 })
+                  update({ paySchedule: schedule.id, nextPayday: 0, paydayReferenceDate: localDay() })
                 }
               />
             ))}
@@ -138,7 +138,7 @@ export default function IncomeDeck({ onComplete }: { onComplete: () => void }) {
                 key={label}
                 label={label}
                 selected={p.nextPayday === i}
-                onPress={() => update({ nextPayday: i as 0 | 1 | 2 })}
+                onPress={() => update({ nextPayday: i as 0 | 1 | 2, paydayReferenceDate: localDay() })}
               />
             ))}
           </View>

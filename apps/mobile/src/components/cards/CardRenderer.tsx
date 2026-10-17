@@ -9,7 +9,11 @@ import { ChartCard } from '@/components/cards/ChartCard';
 import { RichRow } from '@/components/cards/RichRow';
 import { SpendingBars } from '@/components/cards/SpendingBars';
 import { Surface } from '@/components/ui/Surface';
+<<<<<<< HEAD
 import { formatRelativeDay, formatShortDate, formatTime } from '@/lib/format';
+=======
+import { formatRelativeDay, formatShortDate } from '@/lib/format';
+>>>>>>> 6ece23a5f974b1f0aa2c380d38efcb2e0913281f
 import { colors, fonts, radius } from '@/theme/tokens';
 
 /** Data cards in chat older than this get an "As of" line: they're snapshots, the tabs are live. */
@@ -39,6 +43,21 @@ function CardBody({ card, onRowPress }: { card: Card; onRowPress?: (id: string) 
   const tap = (id: string) => (onRowPress ? () => onRowPress(id) : undefined);
 
   switch (card.type) {
+    case 'safe_to_spend': {
+      const f = card.forecast;
+      const left = f.safeCents - (card.askedCents ?? 0);
+      return (
+        <Shell header={f.paycheck ? `Before your paycheck ${formatShortDate(f.paycheck.date)}` : 'Next 2 weeks'}>
+          <RichRow icon="briefcase" title="Checking now" amount={formatCents(f.balanceCents)} />
+          {f.commitments.map((c, index) => (
+            <RichRow key={index} icon={c.kind === 'bill' ? 'calendar' : 'target'} title={c.label}
+              meta={`${c.kind === 'bill' ? 'Bill' : 'Goal savings'} · ${formatShortDate(c.date)}`} amount={`−${formatCents(c.amountCents)}`} />
+          ))}
+          {card.askedCents !== undefined ? <RichRow icon="shopping-bag" title="This purchase" amount={`−${formatCents(card.askedCents)}`} /> : null}
+          <RichRow icon="briefcase" title={left < 0 ? 'Short by' : 'Safe to spend'} amount={formatCents(Math.abs(left))} />
+        </Shell>
+      );
+    }
     case 'account_list':
       return (
         <Shell empty={card.accounts.length === 0 && 'No accounts to show.'}>

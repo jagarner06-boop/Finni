@@ -1,5 +1,6 @@
 import type {
   AccountsResponse,
+  ContributionLimit,
   ActionResponse,
   ActionsQuery,
   ActionsResponse,
@@ -32,7 +33,7 @@ const realApi = {
   bootstrap: (body?: BootstrapRequest) =>
     apiFetch<BootstrapResponse>('/me/bootstrap', {
       method: 'POST',
-      body: body ?? (config.authMode === 'demo' && config.demoName ? { firstName: config.demoName } : undefined),
+      body: { ...(config.authMode === 'demo' && config.demoName ? { firstName: config.demoName } : {}), ...body },
     }),
   me: () => apiFetch<Me>('/me'),
 
@@ -51,6 +52,7 @@ const realApi = {
   stepUp: () => apiFetch<void>('/me/step-up', { method: 'POST' }),
 
   accounts: () => apiFetch<AccountsResponse>('/accounts'),
+  contributionLimit: (accountId: string) => apiFetch<ContributionLimit>(`/contribution-limit/${encodeURIComponent(accountId)}`),
 
   goals: () => apiFetch<GoalsResponse>('/goals'),
   createGoal: (body: CreateGoalRequest) =>

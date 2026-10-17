@@ -1,6 +1,6 @@
 import { boolean, date, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import type { Card, NudgeAction, Prefs } from "@finni/shared";
+import type { Card, FinnProfile, NudgeAction, Prefs } from "@finni/shared";
 
 // Nessie is the source of truth for money; these tables hold only what Nessie can't.
 
@@ -12,6 +12,7 @@ export const actionStatusEnum = pgEnum("action_status", ["pending", "executing",
 export const actionSourceEnum = pgEnum("action_source", ["chat", "ui", "nudge"]);
 export const roleEnum = pgEnum("chat_role", ["user", "finn"]);
 export const nudgeRuleEnum = pgEnum("nudge_rule", [
+  "cash_short",
   "bill_due",
   "spending_spike",
   "goal_milestone",
@@ -38,6 +39,7 @@ export const users = pgTable("users", {
   creditLimitCents: integer("credit_limit_cents"),
   /** Day of month the card statement closes. */
   statementDay: integer("statement_day"),
+  profile: jsonb("profile").$type<FinnProfile | null>(),
   prefs: jsonb("prefs").$type<Prefs>().notNull().default({ notifications: true, hideBalance: false }),
   /** Demo auth: last on-device confirmation (Face ID) for large approvals. */
   stepUpAt: timestamp("step_up_at", { withTimezone: true }),
