@@ -1,17 +1,17 @@
 import type { Mood } from '@finni/shared';
 import { Fit, RiveView, useRiveBoolean, useRiveEnum, useRiveFile, useRiveTrigger, useViewModelInstance } from '@rive-app/react-native';
 import { useEffect, useImperativeHandle, type ReactNode, type Ref } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 
 import { FINN_LABEL } from '@/components/finn/assets';
 import { FINN_RIVE, FINN_RIVE_FILE, type FinnHeadTrigger } from '@/components/finn/rive';
 
 export type FinnRiveHandle = { fire: (name: FinnHeadTrigger) => void };
 
-/** Rive only runs natively; anything else (web, a load error, still loading) shows `fallback`. */
+/** Native only (web uses FinnRive.web.tsx). A load error or a file still loading shows `fallback`. */
 function useFinnFile() {
   const { riveFile, error } = useRiveFile(FINN_RIVE_FILE);
-  return Platform.OS === 'web' || error ? null : riveFile;
+  return error ? null : riveFile;
 }
 
 /** Full-vector Finn head driven by mood, with nod/hop/bob triggers. */
