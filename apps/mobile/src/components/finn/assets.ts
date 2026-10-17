@@ -54,3 +54,13 @@ export const FINN_LABEL: Record<Mood, string> = {
   worried: 'Finn looks worried',
   celebrating: 'Finn is celebrating',
 };
+
+/** Exact flat heads for the onboarding/motion handoff, independent of optional 3D overrides. */
+export const ONBOARDING_HEAD = {
+  happy: require('../../../assets/finn/head-happy.png'),
+  curious: require('../../../assets/finn/head-curious.png'),
+  excited: require('../../../assets/finn/head-excited.png'),
+  confident: require('../../../assets/finn/head-confident.png'),
+  surprised: require('../../../assets/finn/head-surprised.png'),
+  love: require('../../../assets/finn/head-love.png'),
+} as const;
