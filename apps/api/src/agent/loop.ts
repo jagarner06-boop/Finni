@@ -40,12 +40,14 @@ async function loadHistory(userId: string): Promise<Content[]> {
   return rows.reverse().map((r) => ({ role: r.role === "user" ? "user" : "model", parts: [{ text: r.text }] }));
 }
 
-async function generate(contents: Content[], system: string, forceTools: string[] = []) {
+async function generate(contents: Content[], system: string, forceTools: string[] = [], round = 0) {
   return generateWithFallback(
     (model) => ai.models.generateContent({ model, contents, config: { systemInstruction: system, tools: [{ functionDeclarations }], temperature: 0.4,
       ...(forceTools.length ? { toolConfig: { functionCallingConfig: { mode: FunctionCallingConfigMode.ANY, allowedFunctionNames: forceTools } } } : {}),
     } }),
     { primary: env.GEMINI_MODEL, fallback: env.GEMINI_FALLBACK_MODEL },
+    undefined,
+    (failure) => console.warn("Gemini generation failed", { ...failure, round }),
   );
 }
 
@@ -73,7 +75,7 @@ export async function runAgent(user: User, message: string, opts: { location?: L
     const results = new Map<string, unknown>();
 
     for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-      const res = await generate(contents, system, forceTools);
+      const res = await generate(contents, system, forceTools, round);
       forceTools = [];
       const calls = res.functionCalls ?? [];
       if (calls.length === 0 && !nudged && round < MAX_TOOL_ROUNDS && namesToolInsteadOfCalling(res.text ?? "", TOOL_NAMES)) {
