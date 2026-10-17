@@ -31,10 +31,10 @@ export const qk = {
 };
 
 /** Money moved / created: everything showing balances or actions is stale. */
-function invalidateMoney(client: QueryClient) {
-  for (const key of [qk.me, qk.accounts, qk.goals, qk.bills, ['actions'], qk.history, qk.home, ['transactions'], qk.nudges]) {
-    client.invalidateQueries({ queryKey: key });
-  }
+async function invalidateMoney(client: QueryClient) {
+  await Promise.all([qk.me, qk.accounts, qk.goals, qk.bills, ['actions'], qk.history, qk.home, ['transactions'], qk.nudges].map((key) =>
+    client.invalidateQueries({ queryKey: key }),
+  ));
 }
 
 // ---------- Session ----------
@@ -72,7 +72,10 @@ export function useSendChat() {
       const body: ChatRequest = location ? { message, location } : { message };
       return api.sendChat(body);
     },
-    onSuccess: () => client.invalidateQueries({ queryKey: qk.history }),
+    onSuccess: () => Promise.all([
+      client.invalidateQueries({ queryKey: qk.history }),
+      client.invalidateQueries({ queryKey: ['actions'] }),
+    ]),
   });
 }
 
@@ -111,9 +114,9 @@ export function useApproveAction() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.approveAction(id),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       client.setQueryData(qk.action(res.action.id), res);
-      invalidateMoney(client);
+      await invalidateMoney(client);
     },
   });
 }
@@ -122,9 +125,9 @@ export function useRejectAction() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.rejectAction(id),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       client.setQueryData(qk.action(res.action.id), res);
-      client.invalidateQueries({ queryKey: ['actions'] });
+      await Promise.all([client.invalidateQueries({ queryKey: ['actions'] }), client.invalidateQueries({ queryKey: qk.history })]);
     },
   });
 }
