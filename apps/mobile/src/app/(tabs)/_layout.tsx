@@ -1,16 +1,10 @@
 import { Tabs } from 'expo-router';
-import type { ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ActivityIcon, FinnGlyph, HomeIcon, SettingsIcon } from '@/components/nav/TabIcons';
 import { SessionGate } from '@/components/session/SessionGate';
 import { useNudgeNotifier } from '@/lib/useNudgeNotifier';
 import { colors, fonts } from '@/theme/tokens';
-
-type TabIcon = (props: { color: string; size: number }) => React.JSX.Element;
-const icon =
-  (Icon: TabIcon) =>
-  ({ color, size }: { color: ColorValue; size: number }) => <Icon color={String(color)} size={size} />;
 
 export default function TabsLayout() {
   return (
@@ -42,16 +36,23 @@ function SignedInTabs() {
         sceneStyle: { backgroundColor: colors.canvas },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: icon(HomeIcon) }} />
+      <Tabs.Screen
+        name="index"
+        options={{ title: 'Home', tabBarIcon: ({ color, size }) => <HomeIcon color={String(color)} size={size} /> }}
+      />
       <Tabs.Screen
         name="finn"
-        options={{ title: 'Finn', tabBarIcon: icon(FinnGlyph), tabBarAccessibilityLabel: 'Finn, chat with your money buddy' }}
+        options={{
+          title: 'Finn',
+          tabBarIcon: ({ color, size }) => <FinnGlyph color={String(color)} size={size} />,
+          tabBarAccessibilityLabel: 'Finn, chat with your money buddy',
+        }}
       />
       <Tabs.Screen
         name="activity"
         options={{
           title: 'Activity',
-          tabBarIcon: icon(ActivityIcon),
+          tabBarIcon: ({ color, size }) => <ActivityIcon color={String(color)} size={size} />,
           tabBarBadge: unread > 0 ? unread : undefined,
           tabBarBadgeStyle: {
             backgroundColor: colors.accent,
@@ -64,7 +65,10 @@ function SignedInTabs() {
           },
         }}
       />
-      <Tabs.Screen name="settings" options={{ title: 'Settings', tabBarIcon: icon(SettingsIcon) }} />
+      <Tabs.Screen
+        name="settings"
+        options={{ title: 'Settings', tabBarIcon: ({ color, size }) => <SettingsIcon color={String(color)} size={size} /> }}
+      />
     </Tabs>
   );
 }
