@@ -1,11 +1,11 @@
 import { Sheet } from '@/components/feedback/Sheet';
 import { FinnSphere } from '@/components/finn/FinnSphere';
-import { formatCents } from '@finni/shared';
+import { contributionError, formatCents, parseContribution } from '@finni/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { useAccounts, useCreateAction, useGoals } from '@/api/queries';
+import { useAccounts, useContributionLimit, useCreateAction, useGoals } from '@/api/queries';
 import { FinnAvatar } from '@/components/finn/FinnAvatar';
 import { CADENCES } from '@/components/goals/goalFlow';
 import { etaCopy } from '@/components/goals/GoalCard';
@@ -26,10 +26,14 @@ export default function GoalDetailScreen() {
   const add = useCreateAction();
   const [amountCents, setAmountCents] = useState(0);
   const [other, setOther] = useState(false);
+  const [customAmount, setCustomAmount] = useState('');
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const goal = goals.data?.goals.find((g) => g.id === id);
   const checking = accounts.data?.accounts.find((a) => a.type === 'Checking');
+  const limit = useContributionLimit(checking?.id);
+  const selectedCents = other ? parseContribution(customAmount) ?? 0 : amountCents;
+  const validation = other && customAmount && !parseContribution(customAmount) ? 'Enter a positive amount in whole dollars.' : contributionError(selectedCents, limit.data?.maxCents ?? 0);
 
   if (!goal) {
     return (
@@ -52,9 +56,9 @@ export default function GoalDetailScreen() {
   const eta = etaCopy(goal);
 
   const addMoney = () => {
-    if (!checking || amountCents <= 0) return;
+    if (!checking || validation || !limit.data) return;
     add.mutate(
-      { type: 'transfer', fromAccountId: checking.id, toAccountId: goal.nessieAccountId, amountCents, reason: 'Added from Goals' },
+      { type: 'transfer', fromAccountId: checking.id, toAccountId: goal.nessieAccountId, amountCents: selectedCents, reason: 'Added from Goals' },
       { onSuccess: (res) => { setSheetOpen(false); router.push(`/approve/${res.action.id}`); } },
     );
   };
@@ -89,6 +93,7 @@ export default function GoalDetailScreen() {
                     key={c}
                     accessibilityRole="button"
                     accessibilityState={{ selected }}
+                    disabled={!limit.data || c > limit.data.maxCents}
                     onPress={() => {
                       setOther(false);
                       setAmountCents(c);
@@ -104,6 +109,7 @@ export default function GoalDetailScreen() {
                 onPress={() => {
                   setOther(true);
                   setAmountCents(0);
+                  setCustomAmount('');
                 }}
                 style={[styles.preset, other && styles.selected]}>
                 <Text style={styles.presetText}>Other</Text>
@@ -112,19 +118,23 @@ export default function GoalDetailScreen() {
             {other && (
               <TextInput
                 style={styles.input}
-                keyboardType="number-pad"
+                keyboardType="decimal-pad"
                 placeholder="Amount in dollars"
                 placeholderTextColor={colors.placeholder}
                 accessibilityLabel="Amount in dollars"
                 autoFocus
-                onChangeText={(t) => setAmountCents(Math.min(1_000_000, Number(t.replace(/\D/g, '')) || 0) * 100)}
+                value={customAmount}
+                onChangeText={setCustomAmount}
               />
             )}
 
-        <Text style={styles.muted}>Lands today. You’ll be at <Text style={styles.bold}>{formatCents(goal.currentCents + amountCents)}</Text>.</Text>
-        <Button label={`Add ${formatCents(amountCents).replace(/\.00$/, '')}`} onPress={addMoney} loading={add.isPending} disabled={amountCents <= 0 || !checking} size="lg" />
+        {limit.data && <Text style={styles.muted}>You can add up to {formatCents(limit.data.maxCents)}.</Text>}
+        {limit.isError && <Text accessibilityRole="alert" style={styles.error}>Couldn’t check your available amount. <Text onPress={() => limit.refetch()}>Try again.</Text></Text>}
+        {(other ? !!customAmount : amountCents > 0) && validation && <Text accessibilityRole="alert" style={styles.error}>{validation}</Text>}
+        <Text style={styles.muted}>Lands today. You’ll be at <Text style={styles.bold}>{formatCents(goal.currentCents + selectedCents)}</Text>.</Text>
+        <Button label={`Add ${formatCents(selectedCents).replace(/\.00$/, '')}`} onPress={addMoney} loading={add.isPending} disabled={!!validation || !checking || !limit.data} size="lg" />
         <Button label="Not now" variant="ghost" onPress={() => setSheetOpen(false)} disabled={add.isPending} />
-        {add.isError && <Text style={styles.error}>Couldn’t set that up. Try again.</Text>}
+        {add.isError && <Text accessibilityRole="alert" style={styles.error}>{add.error.message}</Text>}
       </Sheet>
     </SafeAreaView>
   );

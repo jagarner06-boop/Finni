@@ -25,7 +25,7 @@ export function usePeek({
   const autoPeeked = useRef(false);
   const size = useRef({ layout: 0, content: 0 });
   const readyRef = useRef(ready);
-  readyRef.current = ready;
+  useEffect(() => { readyRef.current = ready; }, [ready]);
 
   const hide = useCallback(() => {
     clearTimeout(hideTimer.current);

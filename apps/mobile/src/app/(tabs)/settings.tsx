@@ -7,6 +7,7 @@ import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-nati
 import { useClearChat, useResetDemo, useSettings, useUpdateSettings } from '@/api/queries';
 import { useAuth } from '@/auth/AuthProvider';
 import { SettingsGroup, SettingsRow } from '@/components/settings/SettingsRow';
+import { SavingsBudgetSetting } from '@/components/settings/SavingsBudgetSetting';
 import { Button } from '@/components/ui/Button';
 import { SafeAreaView } from '@/components/ui/SafeAreaView';
 import { colors, fonts } from '@/theme/tokens';
@@ -94,6 +95,7 @@ export default function SettingsScreen() {
         </SettingsGroup>
 
         <SettingsGroup title="FINN">
+          <SavingsBudgetSetting budgetCents={data.prefs.monthlySavingsBudgetCents ?? null} onSave={(monthlySavingsBudgetCents) => update.mutateAsync({ prefs: { monthlySavingsBudgetCents } })} />
           <SettingsRow
             icon="bell"
             title="Finn check-ins"
