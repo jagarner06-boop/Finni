@@ -3,7 +3,9 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import * as Haptics from 'expo-haptics';
 import { useReducedMotion } from 'react-native-reanimated';
 
-import { phaseFor, successLine } from '@/components/approval/copy';
+import { ApiError } from '@/api/client';
+import { ExecutedPhase, FailedPhase, ReviewPhase } from '@/components/approval/ApprovalPhases';
+import { phaseFor } from '@/components/approval/copy';
 import { HoldToApprove } from '@/components/approval/HoldToApprove';
 import { crossedMilestones } from '@/components/approval/useHoldTimer';
 
@@ -106,35 +108,85 @@ describe('phaseFor', () => {
   });
 });
 
-describe('successLine', () => {
-  const action = (over: Partial<PendingAction>): PendingAction => ({
-    id: 'act_1',
-    type: 'bill_payment',
-    title: 'Pay your Closer Card statement before Oct 22',
-    amountCents: 118_420,
-    fromLabel: 'Everyday Checking',
-    toLabel: 'Closer Card',
-    requiresStepUp: true,
-    status: 'executed',
-    source: 'chat',
-    createdAt: '2026-10-17T12:00:00.000Z',
-    expiresAt: '2026-10-22T00:00:00.000Z',
-    executedAt: '2026-10-17T12:01:00.000Z',
-    error: null,
-    resultLine: null,
-    reference: null,
-    ...over,
+const action = (over: Partial<PendingAction>): PendingAction => ({
+  id: 'act_1',
+  type: 'card_payment',
+  title: 'Pay $1,184.00 toward your Closer Card',
+  amountCents: 118_400,
+  fromLabel: 'Everyday Checking',
+  toLabel: 'Closer Card',
+  fromDetail: '•••• 1093 · $2,140.00 available',
+  toDetail: '•••• 4821 · $1,364.00 owed',
+  reason: 'This brings you to 9% before the statement closes.',
+  requiresStepUp: true,
+  status: 'pending',
+  source: 'nudge',
+  createdAt: '2026-10-17T12:00:00.000Z',
+  expiresAt: '2026-10-22T00:00:00.000Z',
+  executedAt: null,
+  error: null,
+  resultLine: null,
+  reference: null,
+  ...over,
+});
+
+describe('phaseFor step-up', () => {
+  it('is stepUp when the approval needs a second sign-in', () => {
+    const error = new ApiError(403, 'step_up_required');
+    expect(phaseFor('pending', { isPending: false, isError: true, error }, true)).toBe('stepUp');
   });
 
-  it('says what was paid and to whom', () => {
-    expect(successLine(action({}))).toBe('Paid $1,184.20 to Closer Card.');
+  it('stays on stepUp while the sign-in runs', () => {
+    expect(phaseFor('pending', { isPending: false, isError: false }, true)).toBe('stepUp');
   });
 
-  it('says where a transfer landed', () => {
-    expect(successLine(action({ type: 'transfer', amountCents: 20_000, toLabel: 'Hawaii Fund' }))).toBe('$200.00 is in Hawaii Fund.');
+  it('is still failed for other errors', () => {
+    expect(phaseFor('pending', { isPending: false, isError: true, error: new ApiError(502, 'nessie_error') }, false)).toBe('failed');
+  });
+});
+
+describe('ReviewPhase', () => {
+  it('shows the From and To sub-lines and the payment label', async () => {
+    await render(<ReviewPhase action={action({})} onApprove={jest.fn()} onNotNow={jest.fn()} />);
+    expect(screen.getByText('•••• 1093 · $2,140.00 available')).toBeTruthy();
+    expect(screen.getByText('•••• 4821 · $1,364.00 owed')).toBeTruthy();
+    expect(screen.getByText('PAYMENT')).toBeTruthy();
   });
 
-  it('says a new goal is open', () => {
-    expect(successLine(action({ type: 'create_goal', amountCents: null, title: 'Hawaii Fund' }))).toBe('Hawaii Fund is open.');
+  it('has no amount block for a cancellation', async () => {
+    await render(
+      <ReviewPhase action={action({ type: 'cancel_subscription', title: 'Cancel Hulu', amountCents: 1_799 })} onApprove={jest.fn()} onNotNow={jest.fn()} />,
+    );
+    expect(screen.queryByText('$17')).toBeNull();
+    expect(screen.queryByText('PAYMENT')).toBeNull();
+  });
+});
+
+describe('ExecutedPhase', () => {
+  it("shows the server's result line and confirmation", async () => {
+    const onViewActivity = jest.fn();
+    await render(
+      <ExecutedPhase
+        action={action({ status: 'executed', resultLine: 'Paid $1,184.00 to your Closer Card.', reference: '#CP-12345' })}
+        onDone={jest.fn()}
+        onViewActivity={onViewActivity}
+      />,
+    );
+    expect(screen.getByText('Paid $1,184.00 to your Closer Card.')).toBeTruthy();
+    expect(screen.getByText(/Confirmation #CP-12345/)).toBeTruthy();
+    await fireEvent.press(screen.getByText('View in Activity'));
+    expect(onViewActivity).toHaveBeenCalled();
+  });
+});
+
+describe('FailedPhase', () => {
+  it('says nothing was changed for a cancellation', async () => {
+    await render(<FailedPhase type="cancel_subscription" onRetry={jest.fn()} onNotNow={jest.fn()} />);
+    expect(screen.getByText('Nothing was changed.')).toBeTruthy();
+  });
+
+  it('says nothing was moved for money', async () => {
+    await render(<FailedPhase type="card_payment" onRetry={jest.fn()} onNotNow={jest.fn()} />);
+    expect(screen.getByText('Nothing was moved.')).toBeTruthy();
   });
 });

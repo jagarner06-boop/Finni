@@ -1,11 +1,14 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { Easing, FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAction, useApproveAction, useRejectAction } from '@/api/queries';
+import { useAuth } from '@/auth/AuthProvider';
 import { EndedPhase, ExecutedPhase, ExecutingPhase, FailedPhase, ReviewPhase } from '@/components/approval/ApprovalPhases';
 import { phaseFor } from '@/components/approval/copy';
+import { StepUpPhase } from '@/components/approval/StepUpPhase';
 import { FinnTyping } from '@/components/finn/FinnTyping';
 import { colors, motion, radius } from '@/theme/tokens';
 
@@ -13,17 +16,27 @@ const sheetIn = SlideInDown.duration(motion.standard).easing(Easing.out(Easing.c
 const sheetOut = SlideOutDown.duration(motion.standard);
 
 // Approval sheet. Every money move ends here: plain summary, hold to approve, explicit outcome.
-// Step-up (403 → MFA → retry) happens inside apiFetch and shows as "executing".
+// A 403 step_up_required shows the step-up phase; a fresh sign-in then retries the approval.
 export default function ApproveScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { data } = useAction(id);
   const approve = useApproveAction();
   const reject = useRejectAction();
+  const { stepUp } = useAuth();
+  const [steppingUp, setSteppingUp] = useState(false);
 
   const action = approve.data?.action ?? reject.data?.action ?? data?.action;
-  const phase = action ? phaseFor(action.status, approve) : null;
+  const phase = action ? phaseFor(action.status, approve, steppingUp) : null;
   const close = () => router.back();
+
+  // Cancelled or failed sign-in keeps the step-up phase up (the 403 is still the last result).
+  const continueStepUp = async (id: string) => {
+    setSteppingUp(true);
+    const token = await stepUp().catch(() => null);
+    setSteppingUp(false);
+    if (token) approve.mutate(id);
+  };
 
   return (
     <View style={styles.root}>
@@ -45,12 +58,21 @@ export default function ApproveScreen() {
               close();
             }}
           />
+        ) : phase === 'stepUp' ? (
+          <StepUpPhase busy={steppingUp} onContinue={() => continueStepUp(action.id)} onCancel={close} />
         ) : phase === 'executing' ? (
           <ExecutingPhase />
         ) : phase === 'executed' ? (
-          <ExecutedPhase action={action} onDone={close} />
+          <ExecutedPhase
+            action={action}
+            onDone={close}
+            onViewActivity={() => {
+              close();
+              router.push('/activity?segment=transactions');
+            }}
+          />
         ) : phase === 'failed' ? (
-          <FailedPhase onRetry={() => approve.mutate(action.id)} onNotNow={close} />
+          <FailedPhase type={action.type} onRetry={() => approve.mutate(action.id)} onNotNow={close} />
         ) : (
           <EndedPhase declined={phase === 'declined'} onDone={close} />
         )}

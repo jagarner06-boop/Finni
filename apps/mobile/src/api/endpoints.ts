@@ -62,7 +62,8 @@ const realApi = {
   createAction: (body: CreateActionRequest) =>
     apiFetch<ActionResponse>('/actions', { method: 'POST', body }),
   approveAction: (id: string) =>
-    apiFetch<ActionResponse>(`/actions/${id}/approve`, { method: 'POST', withIdToken: true }),
+    // The approval sheet shows its own step-up phase, so the 403 comes back to it.
+    apiFetch<ActionResponse>(`/actions/${id}/approve`, { method: 'POST', withIdToken: true, stepUp: 'none' }),
   rejectAction: (id: string) =>
     apiFetch<ActionResponse>(`/actions/${id}/reject`, { method: 'POST' }),
 

@@ -1,11 +1,21 @@
-import { formatCents, type PendingAction, type PendingActionStatus, type PendingActionType } from '@finni/shared';
+import type { PendingActionStatus, PendingActionType } from '@finni/shared';
 
-export type Phase = 'review' | 'executing' | 'executed' | 'failed' | 'expired' | 'declined';
+import { ApiError } from '@/api/client';
 
-/** Which sheet to show. The in-flight request wins over the stored status; step-up happens inside apiFetch and reads as executing. */
-export function phaseFor(status: PendingActionStatus, mutation: { isPending: boolean; isError: boolean }): Phase {
+export type Phase = 'review' | 'stepUp' | 'executing' | 'executed' | 'failed' | 'expired' | 'declined';
+
+/**
+ * Which sheet to show. The in-flight request wins over the stored status. A 403 step_up_required
+ * (or a second sign-in still running, `steppingUp`) shows the step-up phase instead of failed.
+ */
+export function phaseFor(
+  status: PendingActionStatus,
+  mutation: { isPending: boolean; isError: boolean; error?: unknown },
+  steppingUp = false,
+): Phase {
   if (mutation.isPending) return 'executing';
-  if (mutation.isError) return 'failed';
+  if (steppingUp) return 'stepUp';
+  if (mutation.isError) return mutation.error instanceof ApiError && mutation.error.isStepUpRequired ? 'stepUp' : 'failed';
   switch (status) {
     case 'pending':
       return 'review';
@@ -24,18 +34,3 @@ export const AMOUNT_LABEL: Record<PendingActionType, string> = {
   dispute_charge: 'REFUND',
   cancel_subscription: '',
 };
-
-/** The executed line: what happened, in plain words. */
-export function successLine(action: PendingAction): string {
-  const amount = action.amountCents != null ? formatCents(action.amountCents) : '';
-  switch (action.type) {
-    case 'transfer':
-      return `${amount} is in ${action.toLabel ?? 'the account'}.`;
-    case 'bill_payment':
-      return `Paid ${amount} to ${action.toLabel ?? 'the payee'}.`;
-    case 'create_goal':
-      return `${action.title} is open.`;
-    default:
-      return action.resultLine ?? 'Done.';
-  }
-}
