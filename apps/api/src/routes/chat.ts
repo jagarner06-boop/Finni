@@ -40,6 +40,13 @@ chatRouter.post("/chat", async (req, res) => {
   res.json(body);
 });
 
+// Settings → Clear chat with Finn.
+chatRouter.delete("/chat/history", async (req, res) => {
+  const user = await requireUser(getSub(req));
+  await db.delete(schema.chatMessages).where(eq(schema.chatMessages.userId, user.id));
+  res.status(204).end();
+});
+
 chatRouter.get("/chat/history", async (req, res) => {
   const { limit } = historyQuery.parse(req.query);
   const user = await requireUser(getSub(req));

@@ -51,9 +51,9 @@ const big = await createAction(user, { type: "transfer", fromAccountId: checking
 check("$200 transfer requires step-up", big.requiresStepUp);
 const fakeReq = (payload: Record<string, unknown>, headers: Record<string, string> = {}) =>
   ({ auth: { payload: { sub: user.auth0Sub, ...payload } }, header: (name: string) => headers[name.toLowerCase()] }) as unknown as Request;
-check("no proof → 403", (await rejects(requireStepUp(fakeReq({})))) === "step_up_required");
-check("fresh MFA claim passes", (await rejects(requireStepUp(fakeReq({ [MFA_AT_CLAIM]: Math.floor(Date.now() / 1000) })))) === null);
-check("garbage ID token → 403", (await rejects(requireStepUp(fakeReq({}, { [ID_TOKEN_HEADER]: "not.a.jwt" })))) === "step_up_required");
+check("no proof → 403", (await rejects(requireStepUp(fakeReq({}), user))) === "step_up_required");
+check("fresh MFA claim passes", (await rejects(requireStepUp(fakeReq({ [MFA_AT_CLAIM]: Math.floor(Date.now() / 1000) }), user))) === null);
+check("garbage ID token → 403", (await rejects(requireStepUp(fakeReq({}, { [ID_TOKEN_HEADER]: "not.a.jwt" }), user))) === "step_up_required");
 check("reject works", (await rejectAction(user, big.id)).status === "rejected");
 
 // Over-balance proposals are refused up front.
