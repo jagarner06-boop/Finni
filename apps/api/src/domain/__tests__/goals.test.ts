@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { advanceContribution, cadenceLabel, goalEta, isBehind } from "../goals.js";
+import { advanceContribution, cadenceLabel, goalEta, isBehind, goalPercent } from "../goals.js";
+
+it('never reports a goal complete while money is still missing', () => {
+  expect(goalPercent(149900, 150000)).toBe(99);
+  expect(goalPercent(150000, 150000)).toBe(100);
+  expect(goalPercent(30000, 120000)).toBe(25);
+});
 
 describe("advanceContribution", () => {
   it("adds a week", () => expect(advanceContribution("2026-10-17", "weekly")).toBe("2026-10-24"));

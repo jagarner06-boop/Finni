@@ -106,7 +106,8 @@ function unwrap<T>(res: T[] | { data: T[] }): T[] {
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
-const list = <T>(path: string, query?: Record<string, string | number | undefined>) => request<T[]>("GET", path, { query, emptyList: true });
+// Financial lists must be fresh across API workers too; a process-local cache cannot see another worker's writes.
+const list = <T>(path: string, query?: Record<string, string | number | undefined>) => request<T[]>("GET", path, { query, emptyList: true, ttlMs: 0 });
 
 export const nessie = {
   // Customers

@@ -25,6 +25,13 @@ describe("parseReply", () => {
   it("does not display tool payloads as a reply", () => {
     expect(parseReply('{"name":"propose_goal","args":{"name":"Laptop","target_amount":900}}').text).toBe("I couldn't finish that request. Please try again.");
   });
+  it.each([
+    '{"text":"propose_goal({\\"name\\":\\"Laptop\\"})"}',
+    '[mood:happy] {"name":"propose_transfer","args":{"amount":50}}',
+    '[mood:happy] ```json\n{"name":"propose_goal"}\n```',
+  ])('rejects wrapped tool payloads: %s', (raw) => {
+    expect(parseReply(raw).text).toBe("I couldn't finish that request. Please try again.");
+  });
 });
 
 describe("namesToolInsteadOfCalling", () => {
