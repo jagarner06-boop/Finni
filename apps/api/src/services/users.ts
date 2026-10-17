@@ -76,8 +76,9 @@ export async function bootstrapUser(sub: string, profile: { firstName?: string; 
   return { user: row, created: true };
 }
 
-export async function saveProfile(userId: string, profile: FinnProfile): Promise<User> {
-  const [user] = await db.update(schema.users).set({ profile }).where(eq(schema.users.id, userId)).returning();
+export async function saveProfile(userId: string, profile: FinnProfile, firstName?: string): Promise<User> {
+  const name = firstName?.trim();
+  const [user] = await db.update(schema.users).set({ profile, ...(name ? { firstName: name } : {}) }).where(eq(schema.users.id, userId)).returning();
   if (!user) throw new HttpError(404, "not_found");
   return user;
 }
