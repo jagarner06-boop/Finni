@@ -1,3 +1,5 @@
+import { Sheet } from '@/components/feedback/Sheet';
+import { FinnSphere } from '@/components/finn/FinnSphere';
 import { formatCents } from '@finni/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
@@ -12,7 +14,7 @@ import { BackHeader } from '@/components/ui/BackHeader';
 import { Button } from '@/components/ui/Button';
 import { SafeAreaView } from '@/components/ui/SafeAreaView';
 import { formatShortDate } from '@/lib/format';
-import { colors, fonts, radius } from '@/theme/tokens';
+import { colors, fonts } from '@/theme/tokens';
 
 const PRESETS = [2_500, 5_000, 10_000];
 
@@ -24,6 +26,7 @@ export default function GoalDetailScreen() {
   const add = useCreateAction();
   const [amountCents, setAmountCents] = useState(0);
   const [other, setOther] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const goal = goals.data?.goals.find((g) => g.id === id);
   const checking = accounts.data?.accounts.find((a) => a.type === 'Checking');
@@ -52,7 +55,7 @@ export default function GoalDetailScreen() {
     if (!checking || amountCents <= 0) return;
     add.mutate(
       { type: 'transfer', fromAccountId: checking.id, toAccountId: goal.nessieAccountId, amountCents, reason: 'Added from Goals' },
-      { onSuccess: (res) => router.push(`/approve/${res.action.id}`) },
+      { onSuccess: (res) => { setSheetOpen(false); router.push(`/approve/${res.action.id}`); } },
     );
   };
 
@@ -73,14 +76,11 @@ export default function GoalDetailScreen() {
           {eta && !complete && <Text style={[styles.muted, goal.behind && styles.behind]}>{eta}</Text>}
         </View>
 
-        {complete ? (
-          <View style={styles.done}>
-            <FinnAvatar mood="celebrating" head="love" size={64} animated />
-            <Text style={styles.doneText}>Done. Nice work.</Text>
-          </View>
-        ) : (
-          <>
-            <Text style={styles.section}>Add to this goal</Text>
+        {complete ? <View style={styles.done}><FinnAvatar mood="celebrating" head="love" size={64} animated /><Text style={styles.doneText}>Done. Nice work.</Text></View> : <Button label="Add money" onPress={() => setSheetOpen(true)} />}
+      </ScrollView>
+      <Sheet visible={sheetOpen && !complete} onClose={() => !add.isPending && setSheetOpen(false)} label={`Add to ${goal.name}`}>
+        <FinnSphere size={44} head="happy" />
+            <Text style={styles.section}>Add to {goal.name}</Text>
             <View style={styles.presets}>
               {PRESETS.map((c) => {
                 const selected = !other && amountCents === c;
@@ -120,15 +120,12 @@ export default function GoalDetailScreen() {
                 onChangeText={(t) => setAmountCents(Math.min(1_000_000, Number(t.replace(/\D/g, '')) || 0) * 100)}
               />
             )}
-          </>
-        )}
-      </ScrollView>
-      {!complete && (
-        <View style={styles.footer}>
-          <Button label="Add money" onPress={addMoney} loading={add.isPending} disabled={amountCents <= 0 || !checking} />
-          {add.isError && <Text style={styles.error}>Couldn&apos;t set that up. Try again.</Text>}
-        </View>
-      )}
+
+        <Text style={styles.muted}>Lands today. You’ll be at <Text style={styles.bold}>{formatCents(goal.currentCents + amountCents)}</Text>.</Text>
+        <Button label={`Add ${formatCents(amountCents).replace(/\.00$/, '')}`} onPress={addMoney} loading={add.isPending} disabled={amountCents <= 0 || !checking} size="lg" />
+        <Button label="Not now" variant="ghost" onPress={() => setSheetOpen(false)} disabled={add.isPending} />
+        {add.isError && <Text style={styles.error}>Couldn’t set that up. Try again.</Text>}
+      </Sheet>
     </SafeAreaView>
   );
 }
@@ -136,6 +133,7 @@ export default function GoalDetailScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.canvas },
   content: { paddingHorizontal: 20, paddingBottom: 24, gap: 14 },
+  bold: { fontFamily: fonts.bold },
   title: { fontFamily: fonts.bold, fontSize: 28, lineHeight: 34, color: colors.ink },
   hero: { alignItems: 'center', gap: 8, paddingVertical: 8 },
   amount: { fontFamily: fonts.bold, fontSize: 20, color: colors.ink, fontVariant: ['tabular-nums'] },
@@ -144,9 +142,10 @@ const styles = StyleSheet.create({
   section: { fontFamily: fonts.bold, fontSize: 20, color: colors.ink, marginTop: 8 },
   presets: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   preset: {
-    height: 40,
+    minWidth: 80,
+    height: 56,
     paddingHorizontal: 18,
-    borderRadius: radius.pill,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.hairline,
     backgroundColor: colors.surface,

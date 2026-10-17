@@ -35,11 +35,11 @@ function Dot({ color, index }: { color: string; index: number }) {
     if (reduced) return;
     // keyframes: 0% rest, 30% up 3pt, 60–100% rest
     const q = { duration: 360, easing: ease.inOut };
-    y.value = withDelay(index * 150, withRepeat(withSequence(withTiming(-3, q), withTiming(0, q), withTiming(0, { duration: 480 })), -1));
+    y.value = withDelay(index * 150, withRepeat(withSequence(withTiming(-4, q), withTiming(0, q), withTiming(0, { duration: 480 })), -1));
     return () => cancelAnimation(y);
   }, [reduced, index, y]);
 
-  const style = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }], opacity: reduced ? 1 : 0.6 + (-y.value / 3) * 0.4 }));
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }], opacity: reduced ? 1 : 0.6 + (-y.value / 4) * 0.4 }));
 
   return <Animated.View testID="typing-dot" style={[styles.dot, { backgroundColor: color }, style]} />;
 }

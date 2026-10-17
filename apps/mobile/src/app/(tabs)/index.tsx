@@ -1,15 +1,10 @@
 import type { Nudge } from '@finni/shared';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, {
-  cancelAnimation,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { FinnRefresh } from '@/components/feedback/FinnRefresh';
+import { Delayed, Skeleton } from '@/components/feedback/Skeleton';
+import { BillDueBanner } from '@/components/feedback/BillDueBanner';
+import { MotionView } from '@/components/ui/MotionView';
 
 import { useActOnNudge, useHome, useScanNudges } from '@/api/queries';
 import { AccountHeroCard } from '@/components/home/AccountHeroCard';
@@ -28,13 +23,11 @@ export default function HomeScreen() {
   const home = useHome();
   const scan = useScanNudges();
   const act = useActOnNudge();
-  const [refreshing, setRefreshing] = useState(false);
 
   const refresh = async () => {
-    setRefreshing(true);
-    await scan.mutateAsync().catch(() => {});
-    await home.refetch();
-    setRefreshing(false);
+    await scan.mutateAsync();
+    const result = await home.refetch();
+    if (result.error) throw result.error;
   };
 
   // Actionable nudges open the approval sheet; the rest open Activity.
@@ -48,9 +41,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.muted} />}>
+      <FinnRefresh contentContainerStyle={styles.content} onRefresh={refresh}>
         <View style={styles.header}>
           <Text style={styles.greeting} accessibilityRole="header">
             Good <Text>{timeOfDay(new Date().getHours())},</Text> <Text style={styles.bold}>{name}</Text>
@@ -119,8 +110,8 @@ export default function HomeScreen() {
                     <Text style={styles.link}>See all ›</Text>
                   </Pressable>
                 </View>
-                {data.attention.map((n) => (
-                  <AttentionRow key={n.id} title={n.title} meta={n.meta} status={n.severity} onPress={() => open(n)} />
+                {data.attention.map((n, i) => (
+                  <MotionView key={n.id} delay={100 + i * 70}>{n.rule === 'bill_due' ? <Pressable accessibilityRole="button" accessibilityLabel={n.title} onPress={() => open(n)}><BillDueBanner title={n.title} body={n.body} /></Pressable> : <AttentionRow title={n.title} meta={n.meta} status={n.severity} onPress={() => open(n)} />}</MotionView>
                 ))}
               </>
             )}
@@ -128,33 +119,13 @@ export default function HomeScreen() {
             <GoalsRow count={data.goals.count} savedCents={data.goals.savedCents} onPress={() => router.push('/goals')} />
           </>
         )}
-      </ScrollView>
+      </FinnRefresh>
       <AskBar onPress={() => router.push('/finn?focus=1')} />
     </SafeAreaView>
   );
 }
 
-/** Gray blocks the size of the hero and cards; pulses unless Reduce Motion is on. */
-function HomeSkeleton() {
-  const reduced = useReducedMotion();
-  const opacity = useSharedValue(1);
-
-  useEffect(() => {
-    if (reduced) return;
-    opacity.set(withRepeat(withTiming(0.5, { duration: 700 }), -1, true));
-    return () => cancelAnimation(opacity);
-  }, [reduced, opacity]);
-
-  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
-
-  return (
-    <Animated.View style={[styles.skeleton, style]} accessibilityLabel="Loading your accounts">
-      <View style={[styles.block, { height: 150 }]} />
-      <View style={[styles.block, { height: 120 }]} />
-      <View style={[styles.block, { height: 100 }]} />
-    </Animated.View>
-  );
-}
+function HomeSkeleton() { return <Delayed><Skeleton hero /><Skeleton /></Delayed>; }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.canvas },
