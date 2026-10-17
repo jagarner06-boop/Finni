@@ -1,0 +1,24 @@
+# Secrets
+.env
+.env.*
+!.env.example
+test.py
+
+# Dependencies & builds
+node_modules/
+dist/
+build/
+.expo/
+web-build/
+*.tsbuildinfo
+
+# Logs & OS
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
