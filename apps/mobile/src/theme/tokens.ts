@@ -1,42 +1,96 @@
 import type { Mood } from '@finni/shared';
 
-// JS mirror of the @theme tokens in src/global.css, for places className can't
-// reach (navigator options, icon colors, Reanimated styles).
+// Finni design system v2. JS mirror of the @theme tokens in src/global.css, for
+// places className can't reach (navigator options, icon colors, Reanimated styles).
+// Spec: docs/design/finni-v2/README.md
 
 export const colors = {
-  deep: '#0B2545',
-  muted: '#5B6B82',
-  foam: '#F3FAFF',
+  canvas: '#FAF8F3',
   surface: '#FFFFFF',
-  ocean: '#2563EB',
-  lagoon: '#22C1C3',
-  coral: '#FF7A59',
-  sun: '#FFC845',
-  kelp: '#2FB37F',
-  berry: '#E5486A',
+  hairline: '#EDEAE3',
+  warmTrack: '#F1EEE7',
+  ink: '#14213D',
+  muted: '#5B6B82',
+  placeholder: '#7D8AA0',
+
+  accent: '#2563EB',
+  accentTint: '#E8F0FE',
+  accentPressed: '#1E4FD0',
+  accentLip: '#1B47B5',
+  accentDisabled: '#C9D6F5',
+  accentGradient: ['#3D78F2', '#2563EB', '#2159DC'] as const, // stops 0 / .6 / 1, 180°
+  chipGradient: ['#F1F5FF', '#E3ECFD'] as const,
+  chipLip: '#CBD9F8',
+
+  belly: '#FBF6EC',
+  bellySphere: ['#FFFFFF', '#FBF6EC', '#EADFC8'] as const, // radial at 34% 26%
+
+  heroFrom: '#1E3A8A',
+  heroTo: '#2F55C8',
+  heroLip: '#172E6E',
+  heroInk: '#1E3A8A',
+
+  danger: '#E5484D', dangerInk: '#C62F36', dangerTint: '#FBE9E9', dangerBorder: '#F3C9CA',
+  warning: '#F5A524', warningInk: '#9A5B00', warningTint: '#FEF4E2',
+  success: '#2FB37F', successInk: '#1F7A55',
+
+  scrim: 'rgba(20,33,61,0.42)',
+
+  typingDot: '#C3CCDA',
+  disabledBg: '#E3E8F0',
+  secondaryBorder: '#D9D4C9',
+  secondaryLip: '#E6E1D6',
+
+  tideWell: '#F4F7FE',
+  tideWellBorder: '#E1E8F8',
+  tideWater: ['#D6E2FC', '#BCD0FA'] as const,
+
+  // Spending bars never use semantic colors.
+  barFills: ['#14213D', '#2563EB', '#7FA2EE', '#C9D6F5'] as const,
 } as const;
 
 export const fonts = {
-  body: 'Nunito_400Regular',
-  bold: 'Nunito_700Bold',
-  heavy: 'Nunito_800ExtraBold',
+  regular: 'Figtree_400Regular',
+  medium: 'Figtree_500Medium',
+  semibold: 'Figtree_600SemiBold',
+  bold: 'Figtree_700Bold',
 } as const;
 
-export const radius = { card: 20, bubble: 22 } as const;
+export const fontSize = { hero: 32, title: 24, section: 20, body: 17, label: 15, caption: 14, micro: 12 } as const;
+export const space = { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32 } as const;
+export const radius = { tile: 12, card: 20, bubble: 22, bubbleTail: 6, sheet: 28, pill: 999 } as const;
+export const hitTarget = 44;
 
-export const fontSize = { hero: 32, title: 24, body: 17, caption: 14 } as const;
-
-export const moodColor: Record<Mood, string> = {
-  happy: colors.lagoon,
-  thinking: colors.ocean,
-  worried: colors.berry,
-  celebrating: colors.sun,
+export const moodRing: Record<Mood, string | null> = {
+  happy: null,
+  thinking: colors.accent,
+  worried: colors.warning,
+  celebrating: colors.success,
 };
 
+export const utilizationColor = (pct: number) =>
+  pct <= 30 ? colors.success : pct <= 60 ? colors.warning : colors.danger;
+
+// RN 0.76+ boxShadow strings (match the HTML reference exactly).
 export const shadow = {
-  shadowColor: colors.deep,
-  shadowOpacity: 0.08,
-  shadowRadius: 12,
-  shadowOffset: { width: 0, height: 4 },
-  elevation: 2,
+  card: '0px 1px 2px rgba(20,33,61,0.04), 0px 8px 20px -10px rgba(20,33,61,0.14)',
+  primary: 'inset 0px 1px 0px rgba(255,255,255,0.3), inset 0px -1px 0px rgba(10,30,90,0.25), 0px 3px 0px #1B47B5, 0px 8px 16px -6px rgba(37,99,235,0.5)',
+  // `primary` minus its 3pt lip, for when the lip is drawn as a view behind a moving face.
+  primaryFace: 'inset 0px 1px 0px rgba(255,255,255,0.3), inset 0px -1px 0px rgba(10,30,90,0.25), 0px 8px 16px -6px rgba(37,99,235,0.5)',
+  primaryPressed: 'inset 0px 2px 4px rgba(10,30,90,0.35)',
+  secondary: 'inset 0px -2px 0px rgba(20,33,61,0.05), 0px 2px 0px #E6E1D6, 0px 4px 8px -4px rgba(20,33,61,0.12)',
+  chip: 'inset 0px 1px 0px #FFFFFF, 0px 1px 0px #CBD9F8, 0px 3px 6px -3px rgba(37,99,235,0.25)',
+  well: 'inset 0px 2px 5px rgba(20,33,61,0.18), 0px 1px 0px #FFFFFF',
+  sphere: 'inset 0px -4px 8px rgba(130,100,50,0.14), inset 0px 2px 1px rgba(255,255,255,0.9), 0px 4px 10px -3px rgba(20,33,61,0.22)',
+  hero: 'inset 0px 1px 0px rgba(255,255,255,0.2), inset 0px -2px 0px rgba(0,0,0,0.12), 0px 3px 0px #172E6E, 0px 18px 30px -14px rgba(30,58,138,0.6)',
+  toast: '0px 10px 24px -8px rgba(20,33,61,0.5)',
+} as const;
+
+export const motion = {
+  micro: 150,
+  standard: 250,
+  hero: 400,
+  pressDown: 90,
+  hold: 600,
+  finnSpring: { damping: 14, stiffness: 180 },
 } as const;
