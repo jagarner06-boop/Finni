@@ -1,5 +1,6 @@
 import type {
   AccountsResponse,
+  ContributionLimit,
   ActionResponse,
   ActionsQuery,
   ActionsResponse,
@@ -51,6 +52,7 @@ const realApi = {
   stepUp: () => apiFetch<void>('/me/step-up', { method: 'POST' }),
 
   accounts: () => apiFetch<AccountsResponse>('/accounts'),
+  contributionLimit: (accountId: string) => apiFetch<ContributionLimit>(`/contribution-limit/${encodeURIComponent(accountId)}`),
 
   goals: () => apiFetch<GoalsResponse>('/goals'),
   createGoal: (body: CreateGoalRequest) =>
