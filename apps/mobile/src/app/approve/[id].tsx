@@ -8,6 +8,7 @@ import { useAction, useApproveAction, useRejectAction } from '@/api/queries';
 import { useAuth } from '@/auth/AuthProvider';
 import { EndedPhase, ExecutedPhase, ExecutingPhase, FailedPhase, ReviewPhase } from '@/components/approval/ApprovalPhases';
 import { phaseFor } from '@/components/approval/copy';
+import { GoalCompleteOverlay, useGoalCompleted } from '@/components/approval/GoalComplete';
 import { StepUpPhase } from '@/components/approval/StepUpPhase';
 import { FinnTyping } from '@/components/finn/FinnTyping';
 import { colors, motion, radius } from '@/theme/tokens';
@@ -28,6 +29,7 @@ export default function ApproveScreen() {
 
   const action = approve.data?.action ?? reject.data?.action ?? data?.action;
   const phase = action ? phaseFor(action.status, approve, steppingUp) : null;
+  const completedGoal = useGoalCompleted(action);
   const close = () => router.back();
 
   // Cancelled or failed sign-in keeps the step-up phase up (the 403 is still the last result).
@@ -77,6 +79,7 @@ export default function ApproveScreen() {
           <EndedPhase declined={phase === 'declined'} onDone={close} />
         )}
       </Animated.View>
+      {completedGoal && <GoalCompleteOverlay name={completedGoal} />}
     </View>
   );
 }

@@ -65,6 +65,7 @@ function RootNavigator() {
         />
         <Stack.Screen name="goals" />
         <Stack.Screen name="goal/new" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="goal/[id]" />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="welcome" />
