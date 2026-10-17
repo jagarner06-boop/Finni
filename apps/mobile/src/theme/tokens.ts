@@ -75,6 +75,8 @@ export const utilizationColor = (pct: number) =>
 export const shadow = {
   card: '0px 1px 2px rgba(20,33,61,0.04), 0px 8px 20px -10px rgba(20,33,61,0.14)',
   primary: 'inset 0px 1px 0px rgba(255,255,255,0.3), inset 0px -1px 0px rgba(10,30,90,0.25), 0px 3px 0px #1B47B5, 0px 8px 16px -6px rgba(37,99,235,0.5)',
+  // `primary` minus its 3pt lip, for when the lip is drawn as a view behind a moving face.
+  primaryFace: 'inset 0px 1px 0px rgba(255,255,255,0.3), inset 0px -1px 0px rgba(10,30,90,0.25), 0px 8px 16px -6px rgba(37,99,235,0.5)',
   primaryPressed: 'inset 0px 2px 4px rgba(10,30,90,0.35)',
   secondary: 'inset 0px -2px 0px rgba(20,33,61,0.05), 0px 2px 0px #E6E1D6, 0px 4px 8px -4px rgba(20,33,61,0.12)',
   chip: 'inset 0px 1px 0px #FFFFFF, 0px 1px 0px #CBD9F8, 0px 3px 6px -3px rgba(37,99,235,0.25)',

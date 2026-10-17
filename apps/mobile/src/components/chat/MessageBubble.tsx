@@ -1,51 +1,87 @@
 import type { ChatMessage } from '@finni/shared';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 
 import { CardRenderer } from '@/components/cards/CardRenderer';
+import type { BubblePosition } from '@/components/chat/grouping';
 import { FinnAvatar } from '@/components/finn/FinnAvatar';
 import { FinnTyping } from '@/components/finn/FinnTyping';
-import { colors, radius, shadow } from '@/theme/tokens';
+import { colors, fonts, motion, radius, shadow } from '@/theme/tokens';
 
-export function MessageBubble({ message }: { message: ChatMessage }) {
+const AVATAR = 32;
+const GROUPED_GAP = 4;
+const GROUP_GAP = 12;
+
+// User bubble lifts from the composer: fade in, rise 8pt.
+const userIn = new Keyframe({
+  0: { opacity: 0, transform: [{ translateY: 8 }] },
+  100: { opacity: 1, transform: [{ translateY: 0 }], easing: Easing.out(Easing.cubic) },
+}).duration(motion.standard);
+
+// Finn's reply pops: rise and grow, overshoot slightly, settle.
+const finnIn = new Keyframe({
+  0: { opacity: 0, transform: [{ translateY: 8 }, { scale: 0.94 }] },
+  60: { opacity: 1, transform: [{ translateY: -2 }, { scale: 1.01 }], easing: Easing.out(Easing.cubic) },
+  100: { opacity: 1, transform: [{ translateY: 0 }, { scale: 1 }] },
+}).duration(320);
+
+const grouped = (p: BubblePosition) => p === 'middle' || p === 'last';
+
+export function MessageBubble({ message, position = 'solo' }: { message: ChatMessage; position?: BubblePosition }) {
+  const spacing = { marginTop: grouped(position) ? GROUPED_GAP : GROUP_GAP };
+
   if (message.role === 'user') {
     return (
-      <View style={[styles.bubble, styles.user]}>
-        <Text style={styles.userText}>{message.text}</Text>
-      </View>
+      <Animated.View entering={userIn} style={[styles.bubble, styles.user, userCorners(position), spacing]}>
+        <Text style={styles.text}>{message.text}</Text>
+      </Animated.View>
     );
   }
+
+  const showAvatar = !grouped(position);
   return (
-    <View style={styles.finnRow}>
-      <FinnAvatar mood={message.mood ?? 'happy'} size={32} />
+    <Animated.View entering={finnIn} style={[styles.finnRow, spacing]}>
+      <View style={styles.avatarSlot}>{showAvatar && <FinnAvatar mood={message.mood ?? 'happy'} size={AVATAR} />}</View>
       <View style={styles.finnColumn}>
-        <View style={[styles.bubble, styles.finn]}>
-          <Text style={styles.finnText}>{message.text}</Text>
+        <View style={[styles.bubble, styles.finn, finnCorners(position)]}>
+          <Text style={styles.text}>{message.text}</Text>
         </View>
         {message.cards.map((card, i) => (
           <CardRenderer key={i} card={card} />
         ))}
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
 export function TypingBubble() {
   return (
-    <View style={styles.finnRow}>
-      <FinnAvatar mood="thinking" size={32} />
-      <View style={[styles.bubble, styles.finn]}>
+    <View style={[styles.finnRow, { marginTop: GROUP_GAP }]}>
+      <View style={styles.avatarSlot}>
+        <FinnAvatar mood="thinking" size={AVATAR} />
+      </View>
+      <View style={[styles.bubble, styles.finn, finnCorners('solo')]}>
         <FinnTyping />
       </View>
     </View>
   );
 }
 
+// The 6pt corner points at the speaker; grouped bubbles tuck in on the speaker's side.
+function finnCorners(p: BubblePosition): ViewStyle {
+  return grouped(p) ? { borderTopLeftRadius: radius.bubbleTail, borderBottomLeftRadius: radius.bubbleTail } : { borderBottomLeftRadius: radius.bubbleTail };
+}
+
+function userCorners(p: BubblePosition): ViewStyle {
+  return grouped(p) ? { borderTopRightRadius: radius.bubbleTail, borderBottomRightRadius: radius.bubbleTail } : { borderBottomRightRadius: radius.bubbleTail };
+}
+
 const styles = StyleSheet.create({
-  bubble: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: radius.bubble, maxWidth: '85%' },
-  user: { alignSelf: 'flex-end', backgroundColor: colors.accent, borderBottomRightRadius: 6 },
-  userText: { color: '#FFFFFF', fontSize: 16 },
-  finnRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, maxWidth: '92%' },
+  bubble: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: radius.bubble },
+  user: { alignSelf: 'flex-end', backgroundColor: colors.accentTint, maxWidth: '78%' },
+  finn: { alignSelf: 'flex-start', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairline, boxShadow: shadow.card },
+  text: { color: colors.ink, fontFamily: fonts.regular, fontSize: 16, lineHeight: 22 },
+  finnRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, maxWidth: '92%' },
+  avatarSlot: { width: AVATAR },
   finnColumn: { flexShrink: 1, gap: 8 },
-  finn: { alignSelf: 'flex-start', backgroundColor: colors.surface, borderBottomLeftRadius: 6, boxShadow: shadow.card },
-  finnText: { color: colors.ink, fontSize: 16, lineHeight: 22 },
 });
