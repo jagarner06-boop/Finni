@@ -15,7 +15,7 @@ jest.mock('expo-router', () => ({
 }));
 jest.mock('@/auth/AuthProvider', () => ({ useAuth: () => ({ stepUp: mockStepUp }) }));
 jest.mock('@/api/endpoints', () => ({
-  api: { action: jest.fn(), approveAction: jest.fn(), rejectAction: jest.fn() },
+  api: { action: jest.fn(), approveAction: jest.fn(), rejectAction: jest.fn(), goals: jest.fn() },
 }));
 
 const mockApi = api as jest.Mocked<typeof api>;
@@ -38,8 +38,10 @@ const pending: PendingAction = {
   reference: null,
 };
 
+let client: QueryClient;
+
 function wrap(ui: ReactNode) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { retry: false, gcTime: Infinity } } });
+  client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { retry: false, gcTime: Infinity } } });
   const metrics = { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 47, left: 0, right: 0, bottom: 34 } };
   return (
     <SafeAreaProvider initialMetrics={metrics}>
@@ -47,6 +49,11 @@ function wrap(ui: ReactNode) {
     </SafeAreaProvider>
   );
 }
+
+// Let refetches and mutations finish inside the test so no update lands outside act().
+afterEach(async () => {
+  await waitFor(() => expect(client.isFetching() + client.isMutating()).toBe(0));
+});
 
 beforeEach(() => jest.clearAllMocks());
 
@@ -85,5 +92,24 @@ describe('Approve screen step-up', () => {
     await waitFor(() => expect(mockStepUp).toHaveBeenCalled());
     expect(screen.getByText("Quick check it's you.")).toBeTruthy();
     expect(mockApi.approveAction).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Approve screen goal complete', () => {
+  const goal = (percent: number) => ({ id: 'g1', name: 'Car repair', percent, status: percent >= 100 ? 'completed' : 'active' });
+
+  it('celebrates when a transfer fills a goal', async () => {
+    const transfer: PendingAction = { ...pending, type: 'transfer', toLabel: 'Car repair', requiresStepUp: false, amountCents: 5_000 };
+    mockApi.action.mockResolvedValue({ action: transfer });
+    mockApi.approveAction.mockResolvedValue({ action: { ...transfer, status: 'executed', resultLine: '$50.00 is in Car repair.' } });
+    mockApi.goals.mockResolvedValue({ goals: [goal(100)] } as never);
+
+    const ui = wrap(<ApproveScreen />);
+    client.setQueryData(['goals'], { goals: [goal(96)] });
+    await render(ui);
+    await fireEvent(await screen.findByRole('button', { name: 'Hold to approve' }), 'accessibilityAction', {
+      nativeEvent: { actionName: 'activate' },
+    });
+    expect(await screen.findByText('Car repair is fully funded.')).toBeTruthy();
   });
 });

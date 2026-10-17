@@ -75,10 +75,17 @@ const full: HomeResponse = {
   hideBalance: false,
 };
 
+let client: QueryClient;
+
 function wrap(ui: ReactNode) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { retry: false, gcTime: Infinity } } });
+  client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { retry: false, gcTime: Infinity } } });
   return <QueryClientProvider client={client}>{ui}</QueryClientProvider>;
 }
+
+// Let refetches and mutations finish inside the test so no update lands outside act().
+afterEach(async () => {
+  await waitFor(() => expect(client.isFetching() + client.isMutating()).toBe(0));
+});
 
 beforeEach(() => jest.clearAllMocks());
 

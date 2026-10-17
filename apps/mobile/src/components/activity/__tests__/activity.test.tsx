@@ -71,6 +71,11 @@ function wrap(ui: ReactNode) {
   );
 }
 
+// Let refetches and mutations finish inside the test so no update lands outside act().
+afterEach(async () => {
+  await waitFor(() => expect(client.isFetching() + client.isMutating()).toBe(0));
+});
+
 beforeEach(() => {
   jest.clearAllMocks();
   delete mockParams.segment;
