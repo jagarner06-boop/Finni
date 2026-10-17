@@ -1,3 +1,4 @@
+import type { FinnProfile } from "@finni/shared";
 import {
   PERSONALITIES,
   type HabitAnswer,
@@ -36,11 +37,11 @@ export function canContinue(
 }
 // Suggested dates only: weekly/biweekly use upcoming Fridays; semimonthly uses 1st/15th;
 // monthly uses the next month start. "Not sure" remains available for every schedule.
-export function paydayLabels(
+export function paydayDates(
   schedule: PaySchedule,
   now = new Date(),
-): string[] {
-  if (schedule === "irregular") return ["This week", "Next week", "Not sure"];
+): (string | null)[] {
+  if (schedule === "irregular") return [null, null, null];
   const first = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const second = new Date(first);
   if (schedule === "weekly" || schedule === "biweekly") {
@@ -58,10 +59,22 @@ export function paydayLabels(
     else second.setMonth(second.getMonth() + 1, 1);
   }
   const format = (d: Date) =>
-    d.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-  return [format(first), format(second), "Not sure"];
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return [format(first), format(second), null];
+}
+
+export function paydayLabels(schedule: PaySchedule, now = new Date()): string[] {
+  if (schedule === "irregular") return ["This week", "Next week", "Not sure"];
+  return paydayDates(schedule, now).map((date) => {
+    if (!date) return "Not sure";
+    const [year, month, day] = date.split("-").map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  });
+}
+
+const STYLE_IDS = ["fresh_start", "free_spirit", "steady", "planner"] as const;
+export function toFinnProfile(p: OnboardingProfile, now = new Date()): FinnProfile {
+  const reference = p.paydayReferenceDate ? new Date(`${p.paydayReferenceDate}T00:00:00`) : now;
+  return { lifeStage: p.lifeStage, paySchedule: p.paySchedule, nextPayday: paydayDates(p.paySchedule, reference)[p.nextPayday],
+    style: STYLE_IDS[p.habits.filter((a) => a === "a").length], handsOn: p.handsOn };
 }

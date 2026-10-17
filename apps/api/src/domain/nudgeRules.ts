@@ -1,4 +1,4 @@
-import { formatCents, type Account, type Bill, type CardSummary, type Goal, type Nudge, type Transaction } from "@finni/shared";
+import { formatCents, type Account, type Bill, type CardSummary, type CashflowForecast, type Goal, type Nudge, type Transaction } from "@finni/shared";
 import { shortDate, weekStart } from "../lib/buckets.js";
 import { planCardPayment } from "./card.js";
 import { cadenceLabel } from "./goals.js";
@@ -12,6 +12,8 @@ export interface NudgeInput {
   today: string;
   card: CardSummary | null;
   checking: Account | null;
+  forecast?: CashflowForecast | null;
+  savings?: Account | null;
   bills: Bill[];
   purchases: Transaction[];
   /** Purchase ids already refunded. */
@@ -132,6 +134,19 @@ export function buildNudges(i: NudgeInput): NudgeCandidate[] {
         highlight: money(s.weekCents),
       }),
     );
+  }
+
+  if (i.checking && i.forecast?.firstShort && i.forecast.shortCents > 0) {
+    const f = i.forecast, b = f.firstShort!;
+    const cover = Math.ceil(f.shortCents / 100) * 100;
+    const savings = i.savings && i.savings.balanceCents >= cover ? i.savings : null;
+    const before = f.paycheck ? `, before your paycheck on ${shortDate(f.paycheck.date)}` : "";
+    out.push(nudge({
+      rule: "cash_short", dedupeKey: `short:${i.checking.id}:${f.untilDate}`, severity: "danger", mood: "worried",
+      title: "Checking may run short", meta: `${b.label} · ${money(b.amountCents)} · ${shortDate(b.date)}`, highlight: money(f.shortCents),
+      body: `Heads up, ${b.label} is due ${shortDate(b.date)}${before}. Checking would be ${money(f.shortCents)} short.${savings ? ` I can move ${money(cover)} from ${savings.nickname}.` : ""}`,
+      action: savings ? { type: "propose_transfer", fromAccountId: savings.id, toAccountId: i.checking.id, amountCents: cover, label: `Move ${money(cover)}` } : null,
+    }));
   }
 
   if (i.checking && i.checking.balanceCents < LOW_BALANCE_CENTS) {

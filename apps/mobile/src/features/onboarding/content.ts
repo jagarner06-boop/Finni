@@ -12,6 +12,7 @@ export interface OnboardingProfile {
   lifeStage: LifeStage | null;
   monthlyIncome: number;                   // whole dollars, 500–12000, step 50. Default 4200
   paySchedule: PaySchedule;                // default 'biweekly'
+  paydayReferenceDate?: string;           // local day when payday choices were calculated
   nextPayday: 0 | 1 | 2;                   // index into PAYDAYS. Default 0
   bills: string[];                         // labels from BILLS. Default ['Rent','Phone','Subscriptions']
   monthlyBills: number;                    // whole dollars, step 25, max = round(income*0.9/25)*25 (min 500). Default 1850
