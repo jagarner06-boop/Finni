@@ -46,11 +46,15 @@ export function FinnPeek({ shown, message }: { shown: boolean; message: string }
 }
 
 const styles = StyleSheet.create({
-  root: { position: 'absolute', right: 16, bottom: 0, alignItems: 'flex-end' },
+  // Full-width row along the bottom: [bubble][Finn], so the bubble sits beside his head as speech.
+  root: { position: 'absolute', left: 16, right: 16, bottom: 0, flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'flex-end' },
   window: { width: SIZE, height: SIZE, overflow: 'hidden' },
   bubble: {
-    marginRight: SIZE * 0.4,
-    marginBottom: -8,
+    flexShrink: 1,
+    // Finn rests 20% low in his window, so his head is about 45% up from the bottom; the tail
+    // corner (bottom-right) tucks in toward his face.
+    marginBottom: SIZE * 0.45,
+    marginRight: -SIZE * 0.1,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.hairline,

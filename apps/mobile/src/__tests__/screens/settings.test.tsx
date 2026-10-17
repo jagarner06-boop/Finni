@@ -62,7 +62,7 @@ beforeEach(() => {
 describe('Settings', () => {
   it('shows the step-up rule and accounts', async () => {
     await render(wrap(<SettingsScreen />));
-    expect(await screen.findByText('Over $100.00 needs Face ID')).toBeTruthy();
+    expect(await screen.findByText('Face ID over $100')).toBeTruthy();
     expect(screen.getByText('•••• 4821')).toBeTruthy();
     expect(screen.getByText('•••• 1093')).toBeTruthy();
     expect(screen.queryByText('•••• 5550')).toBeNull();

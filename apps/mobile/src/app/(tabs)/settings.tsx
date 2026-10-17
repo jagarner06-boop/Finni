@@ -54,7 +54,8 @@ export default function SettingsScreen() {
     );
   }
 
-  const approvals = `Over ${formatCents(data.stepUpThresholdCents)} ${data.authMode === 'demo' ? 'needs Face ID' : 'needs a second sign-in'}`;
+  // Short enough to sit on one line beside the label: "Face ID over $100" / "Sign-in over $100".
+  const approvals = `${data.authMode === 'demo' ? 'Face ID' : 'Sign-in'} over ${formatCents(data.stepUpThresholdCents).replace(/\.00$/, '')}`;
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>

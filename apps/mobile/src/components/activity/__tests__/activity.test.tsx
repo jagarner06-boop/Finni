@@ -12,6 +12,7 @@ const mockParams: { segment?: string; accountId?: string } = {};
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), setParams: jest.fn() },
   useLocalSearchParams: () => mockParams,
+  useFocusEffect: jest.fn(),
 }));
 jest.mock('@/api/endpoints', () => ({
   api: { nudges: jest.fn(), transactions: jest.fn(), dismissNudge: jest.fn(), actOnNudge: jest.fn(), markNudgeRead: jest.fn() },

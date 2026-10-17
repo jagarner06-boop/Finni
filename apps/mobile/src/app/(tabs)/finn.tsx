@@ -97,6 +97,8 @@ export default function FinnScreen() {
           style={styles.flex}
           contentContainerStyle={styles.list}
           onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}
+          // Drag the chat down to put the keyboard away (iOS follows the finger, like Messages).
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
           keyboardShouldPersistTaps="handled">
           {history.isLoading && <Text style={styles.empty}>Loading…</Text>}
           {/* History renders in place; only messages that arrive later animate in. */}

@@ -32,9 +32,11 @@ export function SettingsRow({
       </View>
       {children ?? (
         <View style={styles.text}>
-          <Text style={[styles.title, destructive && styles.destructive]}>{title}</Text>
+          <Text style={[styles.title, destructive && styles.destructive]} numberOfLines={1}>
+            {title}
+          </Text>
           {value ? (
-            <Text style={styles.value} numberOfLines={1}>
+            <Text style={styles.value} numberOfLines={2}>
               {value}
             </Text>
           ) : null}
@@ -82,9 +84,10 @@ const styles = StyleSheet.create({
   pressed: { backgroundColor: colors.canvas },
   tile: { width: 32, height: 32, borderRadius: 9, backgroundColor: colors.accentTint, alignItems: 'center', justifyContent: 'center' },
   text: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  title: { flexShrink: 1, fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
+  // The title keeps its full width; a long value wraps (right-aligned) instead of squeezing it.
+  title: { flexShrink: 0, fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
   destructive: { color: colors.dangerInk },
-  value: { flexShrink: 1, fontFamily: fonts.regular, fontSize: 14, color: colors.muted, fontVariant: ['tabular-nums'] },
+  value: { flexShrink: 1, textAlign: 'right', fontFamily: fonts.regular, fontSize: 14, color: colors.muted, fontVariant: ['tabular-nums'] },
   groupWrap: { gap: 6 },
   micro: { fontFamily: fonts.semibold, fontSize: 12, letterSpacing: 0.5, color: colors.muted, marginLeft: 4 },
   group: { borderRadius: 16, borderWidth: 1, borderColor: colors.hairline, backgroundColor: colors.surface, overflow: 'hidden' },
