@@ -135,6 +135,6 @@ function usePop(playing: { run: number } | null) {
 const styles = StyleSheet.create({
   fill: { ...StyleSheet.absoluteFill },
   sphere: { overflow: 'hidden', experimental_backgroundImage: SPHERE, boxShadow: shadow.sphere },
-  // Multiply hides the placeholder art's light background against the sphere.
-  head: { ...StyleSheet.absoluteFill, mixBlendMode: 'multiply' },
+  // The art is transparent, so the head sits straight on the sphere.
+  head: { ...StyleSheet.absoluteFill },
 });
