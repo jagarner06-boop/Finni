@@ -9,6 +9,20 @@ export function formatMoney(cents: Cents, opts: { signed?: boolean } = {}): stri
   return cents < 0 ? `−${s}` : `+${s}`;
 }
 
+/** 136420 → { whole: "$1,364", cents: ".20" }, for hero amounts that set cents lighter. */
+export function splitMoney(cents: Cents): { whole: string; cents: string } {
+  const s = formatMoney(cents);
+  const dot = s.lastIndexOf('.');
+  return { whole: s.slice(0, dot), cents: s.slice(dot) };
+}
+
+/** Greeting word for an hour of the day (0–23). Late night still reads as evening. */
+export function timeOfDay(hour: number): 'morning' | 'afternoon' | 'evening' {
+  if (hour >= 4 && hour < 12) return 'morning';
+  if (hour >= 12 && hour < 17) return 'afternoon';
+  return 'evening';
+}
+
 const DAY = 86_400_000;
 
 /** Calendar dates ("2026-10-20") are parsed as local midnight, not UTC. */
