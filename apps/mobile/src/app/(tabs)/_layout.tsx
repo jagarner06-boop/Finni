@@ -1,8 +1,16 @@
 import { Tabs } from 'expo-router';
+import type { ColorValue } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ActivityIcon, FinnGlyph, HomeIcon, SettingsIcon } from '@/components/nav/TabIcons';
 import { SessionGate } from '@/components/session/SessionGate';
 import { useNudgeNotifier } from '@/lib/useNudgeNotifier';
 import { colors, fonts } from '@/theme/tokens';
+
+type TabIcon = (props: { color: string; size: number }) => React.JSX.Element;
+const icon =
+  (Icon: TabIcon) =>
+  ({ color, size }: { color: ColorValue; size: number }) => <Icon color={String(color)} size={size} />;
 
 export default function TabsLayout() {
   return (
@@ -14,6 +22,7 @@ export default function TabsLayout() {
 
 function SignedInTabs() {
   const unread = useNudgeNotifier();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -21,23 +30,41 @@ function SignedInTabs() {
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.muted,
-        tabBarLabelStyle: { fontFamily: fonts.bold },
-        // Icons TBD in the design pass; labels only for now.
-        tabBarIconStyle: { display: 'none' },
+        tabBarLabelStyle: { fontFamily: fonts.semibold, fontSize: 11 },
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopWidth: 1,
+          borderTopColor: colors.hairline,
+          height: Math.max(76, 52 + insets.bottom),
+          elevation: 0,
+          shadowOpacity: 0,
+        },
         sceneStyle: { backgroundColor: colors.canvas },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Chat' }} />
-      <Tabs.Screen name="goals" options={{ title: 'Goals' }} />
-      <Tabs.Screen name="money" options={{ title: 'Money' }} />
+      <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: icon(HomeIcon) }} />
       <Tabs.Screen
-        name="inbox"
+        name="finn"
+        options={{ title: 'Finn', tabBarIcon: icon(FinnGlyph), tabBarAccessibilityLabel: 'Finn, chat with your money buddy' }}
+      />
+      <Tabs.Screen
+        name="activity"
         options={{
-          title: 'Inbox',
+          title: 'Activity',
+          tabBarIcon: icon(ActivityIcon),
           tabBarBadge: unread > 0 ? unread : undefined,
-          tabBarBadgeStyle: { backgroundColor: colors.accent },
+          tabBarBadgeStyle: {
+            backgroundColor: colors.accent,
+            color: colors.surface,
+            fontFamily: fonts.bold,
+            fontSize: 11,
+            minWidth: 18,
+            height: 18,
+            borderRadius: 9,
+          },
         }}
       />
+      <Tabs.Screen name="settings" options={{ title: 'Settings', tabBarIcon: icon(SettingsIcon) }} />
     </Tabs>
   );
 }
