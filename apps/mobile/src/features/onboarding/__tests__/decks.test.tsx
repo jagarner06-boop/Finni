@@ -4,6 +4,8 @@ import { OnboardingProvider } from '../OnboardingProvider';
 import { personalityFor, paydayLabels, incomePatch, canContinue } from '../logic';
 import { initialProfile } from '../state';
 
+// Official native-storage mock; the provider and storage logic stay real.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 jest.mock('@react-native-async-storage/async-storage', () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), replace: jest.fn() } }));
