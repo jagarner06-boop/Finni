@@ -1,3 +1,4 @@
+import { authModeProblem } from "./domain/demoToken.js";
 import { z } from "zod";
 
 const schema = z.object({
@@ -22,6 +23,12 @@ const schema = z.object({
 const parsed = schema.safeParse(process.env);
 if (!parsed.success) {
   console.error("Invalid environment:", parsed.error.flatten().fieldErrors);
+  process.exit(1);
+}
+
+const authProblem = authModeProblem(parsed.data.AUTH_MODE, process.env.NODE_ENV);
+if (authProblem) {
+  console.error(authProblem);
   process.exit(1);
 }
 

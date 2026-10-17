@@ -10,3 +10,7 @@ export function demoSubFromHeader(authorization: string | undefined): string | n
 
 /** Large approvals need an on-device confirmation (Face ID) in the last 5 minutes. */
 export const stepUpFresh = (stepUpAt: Date | null, now = new Date()): boolean => !!stepUpAt && now.getTime() - stepUpAt.getTime() <= STEP_UP_MAX_AGE_MS;
+
+/** Demo auth trusts any device id, so it must never run in production. */
+export const authModeProblem = (mode: "auth0" | "demo", nodeEnv: string | undefined): string | null =>
+  mode === "demo" && nodeEnv === "production" ? "AUTH_MODE=demo is refused when NODE_ENV=production" : null;
