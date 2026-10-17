@@ -1,4 +1,4 @@
-import type { ChatRequest, NudgesResponse, UpdateSettingsRequest, CreateActionRequest, CreateGoalRequest, PendingActionStatus } from '@finni/shared';
+import type { BootstrapRequest, ChatRequest, NudgesResponse, UpdateSettingsRequest, CreateActionRequest, CreateGoalRequest, PendingActionStatus } from '@finni/shared';
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { getLocation } from '@/lib/location';
@@ -53,7 +53,7 @@ export function useMe(opts: { enabled?: boolean; pollUntilSeeded?: boolean } = {
 export function useBootstrap() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: () => api.bootstrap(),
+    mutationFn: (body?: BootstrapRequest) => api.bootstrap(body),
     onSuccess: (res) => client.setQueryData(qk.me, res.me),
   });
 }

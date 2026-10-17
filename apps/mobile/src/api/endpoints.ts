@@ -33,7 +33,7 @@ const realApi = {
   bootstrap: (body?: BootstrapRequest) =>
     apiFetch<BootstrapResponse>('/me/bootstrap', {
       method: 'POST',
-      body: body ?? (config.authMode === 'demo' && config.demoName ? { firstName: config.demoName } : undefined),
+      body: { ...(config.authMode === 'demo' && config.demoName ? { firstName: config.demoName } : {}), ...body },
     }),
   me: () => apiFetch<Me>('/me'),
 
