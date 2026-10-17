@@ -1,4 +1,4 @@
-import type { Card } from '@finni/shared';
+import type { CashflowForecast, Card } from '@finni/shared';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
@@ -103,4 +103,33 @@ describe('CardRenderer', () => {
     await fireEvent.press(screen.getByRole('button', { name: /Spotify/ }));
     expect(onRowPress).toHaveBeenCalledWith('tx_1');
   });
+});
+
+const forecast: CashflowForecast = {
+  balanceCents: 214_000, paycheck: { date: "2026-10-29", amountCents: 62_000, source: "Campus job", basis: "deposits" }, untilDate: "2026-10-28",
+  commitments: [
+    { kind: "goal", id: "car", label: "Car repair", date: "2026-10-17", amountCents: 4_000 },
+    { kind: "bill", id: "b", label: "Phone", date: "2026-10-19", amountCents: 4_500 },
+    { kind: "goal", id: "hawaii", label: "Hawaii Fund", date: "2026-10-20", amountCents: 5_000 },
+    { kind: "goal", id: "hawaii", label: "Hawaii Fund", date: "2026-10-27", amountCents: 5_000 },
+  ], billsCents: 4_500, goalsCents: 14_000, safeCents: 195_500, shortCents: 0, firstShort: null,
+};
+
+it('shows what is safe to spend after bills and goals', async () => {
+  await render(<CardRenderer card={{ type: 'safe_to_spend', forecast }} />);
+  expect(screen.getByText('Before your paycheck Oct 29')).toBeTruthy();
+  expect(screen.getByText('Phone')).toBeTruthy();
+  expect(screen.getByText('−$45.00')).toBeTruthy();
+  expect(screen.getByText('Safe to spend')).toBeTruthy();
+  expect(screen.getByText('$1,955.00')).toBeTruthy();
+});
+it('shows the gap when a purchase does not fit', async () => {
+  await render(<CardRenderer card={{ type: 'safe_to_spend', forecast, askedCents: 200_000 }} />);
+  expect(screen.getByText('This purchase')).toBeTruthy();
+  expect(screen.getByText('Short by')).toBeTruthy();
+  expect(screen.getByText('$45.00')).toBeTruthy();
+});
+it('says next 2 weeks without a paycheck', async () => {
+  await render(<CardRenderer card={{ type: 'safe_to_spend', forecast: { ...forecast, paycheck: null } }} />);
+  expect(screen.getByText('Next 2 weeks')).toBeTruthy();
 });
