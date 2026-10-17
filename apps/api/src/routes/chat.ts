@@ -19,7 +19,7 @@ const chatBody = z.object({
 const historyQuery = z.object({ limit: z.coerce.number().int().min(1).max(200).default(50) });
 
 type Row = typeof schema.chatMessages.$inferSelect;
-const toMessage = (r: Row): ChatMessage => ({ id: r.id, role: r.role, text: r.text, mood: r.mood, cards: r.cards, createdAt: r.createdAt.toISOString() });
+const toMessage = (r: Row): ChatMessage => ({ id: r.id, role: r.role, text: r.text, mood: r.mood, cards: r.cards, chips: r.chips, createdAt: r.createdAt.toISOString() });
 
 chatRouter.post("/chat", async (req, res) => {
   const { message, location } = chatBody.parse(req.body);

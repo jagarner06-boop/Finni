@@ -2,6 +2,11 @@ import type { Cents } from './money';
 import type {
   Account,
   Bill,
+  CardSummary,
+  GoalCadence,
+  GoalIcon,
+  LedgerEntry,
+  Prefs,
   ChatMessage,
   Card,
   Goal,
@@ -60,15 +65,21 @@ export interface GoalsResponse {
 
 export interface CreateGoalRequest {
   name: string;
-  emoji?: string;
+  icon?: GoalIcon;
   targetCents: Cents;
   targetDate?: ISODate;
+  cadence?: GoalCadence;
+  contributionCents?: Cents;
+  fromAccountId?: string;
 }
 
 /** UI-initiated pending actions (Goals "+ Add money", Money "Pay", nudge buttons). */
 export type CreateActionRequest =
   | { type: 'transfer'; fromAccountId: string; toAccountId: string; amountCents: Cents; reason?: string }
   | { type: 'bill_payment'; billId: string; fromAccountId?: string }
+  | { type: 'card_payment'; amountCents: Cents; fromAccountId?: string }
+  | { type: 'dispute_charge'; purchaseId: string }
+  | { type: 'cancel_subscription'; billId: string }
   | ({ type: 'create_goal' } & CreateGoalRequest);
 
 export interface ActionResponse {
@@ -94,6 +105,40 @@ export interface NudgesResponse {
 export interface NudgeScanResponse {
   created: number;
   nudges: Nudge[];
+}
+
+export interface BootstrapRequest {
+  firstName?: string;
+}
+
+export interface HomeResponse {
+  firstName: string | null;
+  card: CardSummary | null;
+  checking: Account | null;
+  /** Finn's suggestion for the Home nudge card. */
+  plan: Nudge | null;
+  attention: Nudge[];
+  attentionCount: number;
+  goals: { count: number; savedCents: Cents };
+  hideBalance: boolean;
+}
+
+export interface TransactionsResponse {
+  entries: LedgerEntry[];
+}
+
+export interface SettingsResponse {
+  firstName: string | null;
+  email: string | null;
+  prefs: Prefs;
+  accounts: Account[];
+  stepUpThresholdCents: Cents;
+  authMode: 'auth0' | 'demo';
+}
+
+export interface UpdateSettingsRequest {
+  firstName?: string;
+  prefs?: Partial<Prefs>;
 }
 
 export interface HealthResponse {

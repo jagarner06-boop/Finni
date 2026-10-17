@@ -9,7 +9,7 @@ import { tideHeight } from '@/components/goals/tide';
 const goal = (percent: number, over: Partial<Goal> = {}): Goal => ({
   id: 'goal_hawaii',
   name: 'Hawaii Fund',
-  emoji: null,
+  icon: null,
   targetCents: 240_000,
   currentCents: Math.round((240_000 * percent) / 100),
   percent,
@@ -18,6 +18,11 @@ const goal = (percent: number, over: Partial<Goal> = {}): Goal => ({
   milestonesHit: [],
   status: percent >= 100 ? 'completed' : 'active',
   createdAt: '2026-09-01T00:00:00.000Z',
+  cadence: null,
+  contributionCents: null,
+  nextContributionOn: null,
+  eta: null,
+  behind: false,
   ...over,
 });
 

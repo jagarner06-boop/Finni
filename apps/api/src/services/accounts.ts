@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db, schema } from "../db/client.js";
 import type { User } from "../db/schema.js";
 import { nessie } from "../nessie/client.js";
+import { maskFor } from "../domain/mask.js";
 import { liveBalanceCents } from "./ledger.js";
 
 /** The user's Nessie accounts with ledger-derived balances; goal accounts are flagged. */
@@ -17,6 +18,7 @@ export async function listAccounts(user: User): Promise<Account[]> {
       id: a._id,
       nickname: a.nickname,
       type: a.type,
+      mask: maskFor(a._id),
       balanceCents: await liveBalanceCents(a),
       isGoal: goalByAccount.has(a._id),
       goalId: goalByAccount.get(a._id),
