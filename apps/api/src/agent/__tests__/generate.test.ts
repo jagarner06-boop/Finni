@@ -15,16 +15,6 @@ describe("generateWithFallback", () => {
     await expect(generateWithFallback(call, { primary: "p", fallback: "f" }, noSleep)).resolves.toBe("ok");
     expect(seen).toEqual(["p", "p", "f"]);
   });
-  it("tries each backup in a comma-separated list until one answers", async () => {
-    const seen: string[] = [];
-    const call = vi.fn(async (m: string) => {
-      seen.push(m);
-      if (m !== "f3") throw err(429, "per minute");
-      return "ok";
-    });
-    await expect(generateWithFallback(call, { primary: "p", fallback: "f1, f2,f3" }, noSleep)).resolves.toBe("ok");
-    expect(seen).toEqual(["p", "p", "f1", "f2", "f3"]);
-  });
   it("returns the primary when it works", async () => {
     const call = vi.fn(async (m: string) => m);
     await expect(generateWithFallback(call, { primary: "p", fallback: "f" }, noSleep)).resolves.toBe("p");

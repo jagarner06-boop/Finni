@@ -73,13 +73,6 @@ export async function scanNudges(user: User): Promise<{ created: number }> {
   }
 
   const live = new Set(candidates.map((c) => c.dedupeKey));
-  // A nudge auto-resolved earlier whose condition is true again comes back (dedupe keys would
-  // otherwise keep it hidden for the rest of its period). Dismissed ones stay dismissed.
-  if (live.size)
-    await db
-      .update(schema.nudges)
-      .set({ resolvedAt: null })
-      .where(and(eq(schema.nudges.userId, user.id), inArray(schema.nudges.dedupeKey, [...live]), isNotNull(schema.nudges.resolvedAt), isNull(schema.nudges.dismissedAt)));
   const open = await db
     .select({ id: schema.nudges.id, dedupeKey: schema.nudges.dedupeKey })
     .from(schema.nudges)

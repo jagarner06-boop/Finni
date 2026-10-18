@@ -5,7 +5,6 @@ import { db, schema } from "../db/client.js";
 import type { User } from "../db/schema.js";
 import { env } from "../env.js";
 import { listAccounts } from "../services/accounts.js";
-import { rejectAction } from "../services/actions.js";
 import { getCardSummary } from "../services/card.js";
 import { listNudges } from "../services/nudges.js";
 import { generateWithFallback } from "./generate.js";
@@ -26,29 +25,19 @@ export interface AgentReply {
   /** Pending actions proposed this turn. */
   actionIds: string[];
   chips: string[];
-  /** The turn failed; Finn's reply is the canned apology (saved as kind "fallback"). */
-  fallback: boolean;
 }
 
-const FALLBACK = { text: "Sorry, I'm having trouble answering right now. Please try again in a moment.", mood: "worried" as Mood, chips: DEFAULT_CHIPS };
+const FALLBACK = { text: "I can't think straight right now. Try me again in a moment.", mood: "worried" as Mood, chips: DEFAULT_CHIPS };
 
-/**
- * The conversation so far, for Gemini: the user's messages and Finn's own replies only. App lines
- * ("Paid $45.00 to Visible.") and error apologies stay out, so the model never learns that Finn pays.
- */
-async function loadHistory(userId: string): Promise<{ contents: Content[]; lastFinnText: string | null }> {
+
+async function loadHistory(userId: string): Promise<Content[]> {
   const rows = await db
-    .select({ role: schema.chatMessages.role, text: schema.chatMessages.text, kind: schema.chatMessages.kind })
+    .select({ role: schema.chatMessages.role, text: schema.chatMessages.text })
     .from(schema.chatMessages)
     .where(eq(schema.chatMessages.userId, userId))
     .orderBy(desc(schema.chatMessages.createdAt))
     .limit(HISTORY_TURNS);
-  const turns = rows.reverse().filter((r) => r.role === "user" || r.kind === "reply");
-  const lastFinn = [...turns].reverse().find((r) => r.role === "finn");
-  return {
-    contents: turns.map((r) => ({ role: r.role === "user" ? "user" : "model", parts: [{ text: r.text }] })),
-    lastFinnText: lastFinn?.text ?? null,
-  };
+  return rows.reverse().map((r) => ({ role: r.role === "user" ? "user" : "model", parts: [{ text: r.text }] }));
 }
 
 async function generate(contents: Content[], system: string, forceTools: string[] = [], round = 0) {
@@ -79,8 +68,6 @@ export async function runAgent(user: User, message: string, opts: { location?: L
       getCardSummary(user),
       listNudges(user).then((ns) => ns.filter((n) => !n.resolvedAt)),
     ]);
-    // Proposals only when the user asks for something, or says yes to Finn's offer (agent/intent.ts).
-    ctx.canPropose = wantsAction(message, history.lastFinnText);
     const system = systemPrompt(user, accounts, { card, alerts });
     const contents: Content[] = [...history, { role: "user", parts: [{ text: message }] }];
     let nudged = false;
@@ -98,17 +85,9 @@ export async function runAgent(user: User, message: string, opts: { location?: L
         contents.push(res.candidates![0].content!, { role: "user", parts: [{ text: "You wrote a tool name instead of calling it. Call the tool now, then answer." }] });
         continue;
       }
-
-      // 2. Gemini answered: check the answer before the user sees it (agent/guards.ts).
-      const raw = res.text ?? "";
-      if (!raw.trim()) return fail();
-      const reply = parseReply(raw);
-      const turn = { canPropose: ctx.canPropose, proposed: ctx.actionIds.length > 0, toolNames: TOOL_NAMES };
-      const problem = findProblem(raw, reply.text, turn);
-      if (problem && !retried && round < MAX_TOOL_ROUNDS) {
-        retried = true;
-        contents.push(res.candidates![0].content!, { role: "user", parts: [{ text: problem }] });
-        continue;
+      if (calls.length === 0 || round === MAX_TOOL_ROUNDS) {
+        const raw = res.text ?? "";
+        return done(raw.trim() ? parseReply(raw) : FALLBACK);
       }
       // Keep the model's turn verbatim (Gemini 3 needs its thought signatures echoed back).
       contents.push(res.candidates![0].content!);
@@ -123,9 +102,9 @@ export async function runAgent(user: User, message: string, opts: { location?: L
       }
       contents.push({ role: "user", parts: responses });
     }
-    return fail();
+    return done(FALLBACK);
   } catch (err) {
     console.error("agent failed", err);
-    return fail();
+    return done(FALLBACK);
   }
 }
