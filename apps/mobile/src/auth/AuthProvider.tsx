@@ -234,17 +234,20 @@ function Auth0Provider({ children }: { children: ReactNode }) {
     return refreshing.current;
   }, [discovery, saveTokens]);
 
+  // Large approvals: Face ID on the device for now (not a second Auth0 sign-in). The API accepts
+  // POST /me/step-up for 5 minutes.
   const stepUp = useCallback(async () => {
-    if (!discovery) return null;
-    // max_age=0 makes Auth0 show the login screen and stamp a fresh auth_time on the ID token,
-    // which the API checks for large approvals.
-    steppingUp.current ??= authorize(discovery, { max_age: '0' }, true)
+    steppingUp.current ??= (async () => {
+      if (!(await confirmWithDevice())) return null;
+      await api.stepUp();
+      return getAccessToken();
+    })()
       .catch(() => null)
       .finally(() => {
         steppingUp.current = null;
       });
     return steppingUp.current;
-  }, [authorize, discovery]);
+  }, [getAccessToken]);
 
   useEffect(
     () =>

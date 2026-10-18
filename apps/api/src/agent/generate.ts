@@ -13,7 +13,7 @@ export interface GenerationFailure {
 
 /**
  * Primary model first, then each fallback. `fallback` may be a comma-separated list
- * ("gemini-3.5-flash,gemini-3.6-flash"): on the free tier each model has its own per-minute quota, so
+ * ("gemini-3.1-flash-lite,gemini-3.7-flash"): on the free tier each model has its own per-minute quota, so
  * when the primary is overloaded another backup keeps Finn answering. A 503 switches models
  * immediately; at most three calls, or one per backup plus one retry when there are more backups.
  */

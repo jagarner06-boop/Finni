@@ -68,14 +68,6 @@ beforeEach(() => {
 });
 
 describe('Settings', () => {
-  it('saves an explicit monthly savings budget', async () => {
-    mockApi.updateSettings.mockResolvedValue({ ...settings, prefs: { ...settings.prefs, monthlySavingsBudgetCents: 25000 } });
-    await render(wrap(<SettingsScreen />));
-    await fireEvent.press(await screen.findByText('Monthly savings budget'));
-    await fireEvent.changeText(screen.getByLabelText('Monthly savings budget in dollars'), '250');
-    await fireEvent.press(screen.getByRole('button', { name: 'Save budget' }));
-    await waitFor(() => expect(mockApi.updateSettings).toHaveBeenCalledWith({ prefs: { monthlySavingsBudgetCents: 25000 } }));
-  });
   it('shows the step-up rule and accounts', async () => {
     await render(wrap(<SettingsScreen />));
     expect(await screen.findByText('Face ID over $100')).toBeTruthy();

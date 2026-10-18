@@ -1,15 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { formatCents } from '@finni/shared';
+import { formatCents, MFA_ACR } from '@finni/shared';
+import { AuthRequest, Prompt } from 'expo-auth-session';
 import Constants from 'expo-constants';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useClearChat, useResetDemo, useSettings, useUpdateSettings } from '@/api/queries';
-import { useAuth } from '@/auth/AuthProvider';
+import { redirectUri, useAuth } from '@/auth/AuthProvider';
 import { SettingsGroup, SettingsRow } from '@/components/settings/SettingsRow';
-import { SavingsBudgetSetting } from '@/components/settings/SavingsBudgetSetting';
 import { Button } from '@/components/ui/Button';
 import { SafeAreaView } from '@/components/ui/SafeAreaView';
+import { config } from '@/config';
 import { useOnboarding } from '@/features/onboarding/OnboardingProvider';
 import { saveOnboarding } from '@/features/onboarding/state';
 import { colors, fonts } from '@/theme/tokens';
@@ -20,6 +21,26 @@ function confirm(title: string, message: string, action: string, onConfirm: () =
     { text: 'Cancel', style: 'cancel' },
     { text: action, style: 'destructive', onPress: onConfirm },
   ]);
+}
+
+/**
+ * Demo: opens Auth0's own sign-in asking for multi-factor, so Auth0 shows its MFA setup (when a factor
+ * is enabled in the tenant). The result is ignored: no tokens are exchanged or saved, nothing else changes.
+ */
+async function openMfaSetup() {
+  if (config.authMode !== 'auth0') {
+    Alert.alert('MFA verification', 'MFA verification is set up through Auth0 sign-in.');
+    return;
+  }
+  const request = new AuthRequest({
+    clientId: config.auth0.clientId,
+    redirectUri,
+    scopes: ['openid', 'profile'],
+    usePKCE: true,
+    prompt: Prompt.Login,
+    extraParams: { audience: config.auth0.audience, acr_values: MFA_ACR },
+  });
+  await request.promptAsync({ authorizationEndpoint: `https://${config.auth0.domain}/authorize` }).catch(() => {});
 }
 
 // Settings: profile, Finn's check-ins, accounts, security, and demo data.
@@ -65,8 +86,8 @@ export default function SettingsScreen() {
     );
   }
 
-  // Short enough to sit on one line beside the label: "Face ID over $100" / "Sign-in over $100".
-  const approvals = `${data.authMode === 'demo' ? 'Face ID' : 'Sign-in'} over ${formatCents(data.stepUpThresholdCents).replace(/\.00$/, '')}`;
+  // Short enough to sit on one line beside the label: "Face ID over $100".
+  const approvals = `Face ID over ${formatCents(data.stepUpThresholdCents).replace(/\.00$/, '')}`;
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
@@ -105,7 +126,6 @@ export default function SettingsScreen() {
         </SettingsGroup>
 
         <SettingsGroup title="FINN">
-          <SavingsBudgetSetting budgetCents={data.prefs.monthlySavingsBudgetCents ?? null} onSave={(monthlySavingsBudgetCents) => update.mutateAsync({ prefs: { monthlySavingsBudgetCents } })} />
           <SettingsRow
             icon="bell"
             title="Finn check-ins"
@@ -133,6 +153,7 @@ export default function SettingsScreen() {
 
         <SettingsGroup title="SECURITY">
           <SettingsRow icon="shield" title="Approvals" value={approvals} />
+          <SettingsRow icon="lock" title="MFA verification" value="Set up with Auth0" onPress={() => void openMfaSetup()} />
         </SettingsGroup>
 
         <SettingsGroup title="DATA">

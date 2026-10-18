@@ -16,7 +16,7 @@ export function contributionLimitCents(balanceCents: number, budgetCents: number
 export function contributionError(amountCents: number, limitCents: number): string | null {
   if (!Number.isSafeInteger(amountCents) || amountCents <= 0 || amountCents % 100 !== 0) return 'Enter a positive amount in whole dollars.';
   if (amountCents > 100_000_000) return 'The maximum contribution is $1,000,000.';
-  return amountCents > limitCents ? `You can add up to ${formatCents(limitCents)} based on your balance and remaining savings budget.` : null;
+  return amountCents > limitCents ? `You can add up to ${formatCents(limitCents)} based on the balance in that account.` : null;
 }
 
 export interface ContributionLimit {

@@ -3,13 +3,10 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { FinnAvatar } from '@/components/finn/FinnAvatar';
 import { Button } from '@/components/ui/Button';
-import { config } from '@/config';
 import { colors, fonts } from '@/theme/tokens';
 
-/** Second sign-in before a large move. Demo mode confirms on this device; Auth0 mode signs in again. */
+/** Face ID check before a large move (both auth modes, for now). */
 export function StepUpPhase({ onContinue, onCancel, busy = false }: { onContinue: () => void; onCancel: () => void; busy?: boolean }) {
-  const demo = config.authMode === 'demo';
-
   return (
     <View style={styles.phase}>
       <View>
@@ -19,14 +16,14 @@ export function StepUpPhase({ onContinue, onCancel, busy = false }: { onContinue
         </View>
       </View>
       <Text style={styles.title}>Quick check it&apos;s you.</Text>
-      <Text style={styles.body}>Moves over $100 need a second sign-in. After that, Finn sends the request to Capital One.</Text>
+      <Text style={styles.body}>Moves over $100 need Face ID. After that, Finn sends the request to Capital One.</Text>
       <View style={styles.buttons}>
-        <Button label={demo ? 'Continue with Face ID' : 'Sign in again'} onPress={onContinue} loading={busy} />
+        <Button label="Continue with Face ID" onPress={onContinue} loading={busy} />
         <Button label="Cancel" variant="ghost" onPress={onCancel} disabled={busy} />
       </View>
       <View style={styles.foot}>
         <Feather name="lock" size={12} color={colors.muted} />
-        <Text style={styles.footText}>{demo ? 'Secured on this device' : 'Secured by Auth0'}</Text>
+        <Text style={styles.footText}>Secured on this device</Text>
       </View>
     </View>
   );

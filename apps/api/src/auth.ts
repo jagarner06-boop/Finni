@@ -48,15 +48,14 @@ async function hasFreshLogin(req: Request): Promise<boolean> {
  * 5 minutes. The app re-logs in and retries after a 403 step_up_required.
  */
 export async function requireStepUp(req: Request, user: User): Promise<void> {
-  // Demo mode: the app confirmed with Face ID on the device and called POST /me/step-up.
-  if (env.AUTH_MODE === "demo") {
-    if (stepUpFresh(user.stepUpAt)) return;
-    throw new HttpError(403, STEP_UP_REQUIRED, "Confirm it's you to approve this");
+  // For now both modes use Face ID: the app confirmed on the device and called POST /me/step-up.
+  if (stepUpFresh(user.stepUpAt)) return;
+  if (env.AUTH_MODE === "auth0") {
+    const mfaAt = Number(req.auth?.payload[MFA_AT_CLAIM]);
+    if (mfaAt && Date.now() / 1000 - mfaAt <= STEP_UP_MAX_AGE_S) return;
+    if (await hasFreshLogin(req)) return;
   }
-  const mfaAt = Number(req.auth?.payload[MFA_AT_CLAIM]);
-  if (mfaAt && Date.now() / 1000 - mfaAt <= STEP_UP_MAX_AGE_S) return;
-  if (await hasFreshLogin(req)) return;
-  throw new HttpError(403, STEP_UP_REQUIRED, "Sign in again to approve this");
+  throw new HttpError(403, STEP_UP_REQUIRED, "Confirm it's you to approve this");
 }
 
 export function getSub(req: Request): string {

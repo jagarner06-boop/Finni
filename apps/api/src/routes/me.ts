@@ -36,9 +36,8 @@ meRouter.post("/me/bootstrap", async (req, res) => {
   res.json(response);
 });
 
-// Demo mode: the app confirmed with Face ID on the device; large approvals pass for 5 minutes.
+// The app confirmed with Face ID on the device; large approvals pass for 5 minutes.
 meRouter.post("/me/step-up", async (req, res) => {
-  if (env.AUTH_MODE !== "demo") throw new HttpError(404, "not_found", "Step-up goes through Auth0");
   const user = await requireUser(getSub(req));
   await db.update(schema.users).set({ stepUpAt: new Date() }).where(eq(schema.users.id, user.id));
   res.status(204).end();
