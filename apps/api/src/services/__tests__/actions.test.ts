@@ -30,10 +30,12 @@ it('keeps an executed transfer successful if its confirmation message cannot be 
   expect(mocks.move).toHaveBeenCalledTimes(1);
   expect(mocks.returning).toHaveBeenCalledTimes(2);
 });
-it('removes emojis from deterministic confirmation messages too', async () => {
+it('posts no Finn chat message for results, and keeps the result line emoji-free', async () => {
   mocks.insert.mockResolvedValue(undefined);
-  await approveAction({ id: 'user' } as User, 'a1');
-  expect(mocks.insert.mock.calls[0][0].text).not.toMatch(/\p{Extended_Pictographic}/u);
+  const action = await approveAction({ id: 'user' } as User, 'a1');
+  // A "Paid $45.00 to Visible." line from Finn read as Finn paying it; the card turning Done is the result.
+  expect(mocks.insert).not.toHaveBeenCalled();
+  expect(action.resultLine ?? '').not.toMatch(/\p{Extended_Pictographic}/u);
 });
 it('keeps a completed deposit successful when fetching its progress card fails', async () => {
   mocks.insert.mockResolvedValue(undefined);

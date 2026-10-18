@@ -15,7 +15,7 @@ const forecast: CashflowForecast = {
     { kind: "goal", id: "hawaii", label: "Hawaii Fund", date: "2026-10-27", amountCents: 5_000 },
   ], billsCents: 4_500, goalsCents: 14_000, safeCents: 195_500, shortCents: 0, firstShort: null,
 };
-const ctx = (): ToolContext => ({ user: { id: "u" } as User, cards: [], actionIds: [], seenCents: new Set<number>() });
+const ctx = (): ToolContext => ({ user: { id: "u" } as User, cards: [], actionIds: [], seenCents: new Set<number>(), canPropose: false });
 it("answers can-I-afford with the server's numbers", async () => {
   mocks.cashflow.mockResolvedValue(forecast);
   const c = ctx();
