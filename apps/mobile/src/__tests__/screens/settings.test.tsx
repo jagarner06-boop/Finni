@@ -82,8 +82,11 @@ describe('Settings', () => {
     expect(screen.getByText('•••• 4821')).toBeTruthy();
     expect(screen.getByText('•••• 1093')).toBeTruthy();
     expect(screen.queryByText('•••• 5550')).toBeNull();
+    // Accounts are view-only here: shown, but not buttons.
+    expect(screen.getByText('Closer Card')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Closer Card|Everyday/ })).toBeNull();
     await fireEvent.press(screen.getByText('Closer Card'));
-    expect(router.push).toHaveBeenCalledWith('/activity?segment=transactions&accountId=acc_card');
+    expect(router.push).not.toHaveBeenCalled();
   });
 
   it('saves the hide balances toggle', async () => {
