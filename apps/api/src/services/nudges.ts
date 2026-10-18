@@ -39,6 +39,9 @@ export const toNudge = (r: NudgeRow): Nudge => ({
 });
 
 export async function scanNudges(user: User): Promise<{ created: number }> {
+  // Mid-seed (new account or demo reset) the ledger is half-built: purchases and rent can land before
+  // the paychecks, so Checking briefly reads negative. Scanning then created a false "Checking is low".
+  if (user.seededAt === null) return { created: 0 };
   const [card, accounts, bills, purchases, refunded, goals, forecast] = await Promise.all([
     getCardSummary(user),
     listAccounts(user),
@@ -73,10 +76,18 @@ export async function scanNudges(user: User): Promise<{ created: number }> {
   }
 
   const live = new Set(candidates.map((c) => c.dedupeKey));
+  // A nudge auto-resolved earlier whose condition is true again comes back (dedupe keys would
+  // otherwise keep it hidden for the rest of its period). Dismissed ones stay dismissed.
+  for (const key of live)
+    await db
+      .update(schema.nudges)
+      .set({ resolvedAt: null })
+      .where(and(eq(schema.nudges.userId, user.id), eq(schema.nudges.dedupeKey, key), isNotNull(schema.nudges.resolvedAt), isNull(schema.nudges.dismissedAt)));
   const open = await db
     .select({ id: schema.nudges.id, dedupeKey: schema.nudges.dedupeKey })
     .from(schema.nudges)
-    .where(and(eq(schema.nudges.userId, user.id), isNull(schema.nudges.resolvedAt), or(isNotNull(schema.nudges.action), eq(schema.nudges.rule, "cash_short"))));
+    // Actionable nudges, plus states (cash short, low balance): resolve once the condition is gone.
+    .where(and(eq(schema.nudges.userId, user.id), isNull(schema.nudges.resolvedAt), or(isNotNull(schema.nudges.action), eq(schema.nudges.rule, "cash_short"), eq(schema.nudges.rule, "low_balance"))));
   for (const n of open) if (!live.has(n.dedupeKey)) await db.update(schema.nudges).set({ resolvedAt: new Date() }).where(eq(schema.nudges.id, n.id));
 
   await db.update(schema.users).set({ lastNudgeScanAt: new Date() }).where(eq(schema.users.id, user.id));

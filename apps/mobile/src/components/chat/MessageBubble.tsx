@@ -64,7 +64,7 @@ export function MessageBubble({
           <Text style={styles.text}>{message.text}</Text>
         </View>
         {message.cards.map((card, i) => (
-          <CardRenderer key={i} card={card} />
+          <CardRenderer key={i} card={card} asOf={message.createdAt} />
         ))}
       </View>
     </Animated.View>

@@ -123,6 +123,12 @@ export function useApproveAction() {
       client.setQueryData(qk.action(res.action.id), res);
       await invalidateMoney(client);
     },
+    // e.g. 409 expired / already handled: the server updated the action and its chat card; show that.
+    onError: (_err, id) => {
+      client.invalidateQueries({ queryKey: qk.action(id) });
+      client.invalidateQueries({ queryKey: ['actions'] });
+      client.invalidateQueries({ queryKey: qk.history });
+    },
   });
 }
 
@@ -154,7 +160,11 @@ export function useScanNudges() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: api.scanNudges,
-    onSuccess: (res) => client.setQueryData(qk.nudges, { nudges: res.nudges }),
+    onSuccess: (res) => {
+      client.setQueryData(qk.nudges, { nudges: res.nudges });
+      // Home's plan card and Needs attention come from the same nudges.
+      client.invalidateQueries({ queryKey: qk.home });
+    },
   });
 }
 
