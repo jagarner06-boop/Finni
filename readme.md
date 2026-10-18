@@ -17,9 +17,9 @@
 
 ## Why we built it
 
-Most people open their banking app after something has already gone wrong: an overdraft, a forgotten bill, or a month of small purchases that added up. By then it's too late to change anything. Budgeting tools could help, but they take work to set up and most people give up on them.
+Most people open their banking app after something has already gone wrong like an overdraft, a forgotten bill, or a month of small purchases that added up. By then it's too late to change anything. Budgeting tools could help, but they take work to set up and most people give up on them.
 
-Finni turns that around. Finn watches your accounts and tells you what's coming, so you can fix it while you still have time.
+Finni really turns that experience around. It watches your accounts and tells you what's coming, so you can fix it while you still have time.
 
 ## What Finn does
 
