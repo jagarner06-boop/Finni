@@ -31,7 +31,7 @@ chatRouter.post("/chat", async (req, res) => {
   await db.insert(schema.chatMessages).values({ userId: user.id, role: "user", text: message });
   const [finn] = await db
     .insert(schema.chatMessages)
-    .values({ userId: user.id, role: "finn", kind: reply.fallback ? "fallback" : "reply", text: reply.text, mood: reply.mood, cards: reply.cards, chips: reply.chips })
+    .values({ userId: user.id, role: "finn", text: reply.text, mood: reply.mood, cards: reply.cards, chips: reply.chips })
     .returning();
   await linkActionsToMessage(reply.actionIds, finn.id);
 

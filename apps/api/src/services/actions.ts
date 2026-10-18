@@ -265,13 +265,10 @@ export async function getActionRow(user: User, id: string): Promise<ActionRow> {
 }
 
 export async function listActions(user: User, status?: PendingActionStatus): Promise<PendingAction[]> {
-  const expired = await db
+  await db
     .update(schema.pendingActions)
     .set({ status: "expired" })
-    .where(and(eq(schema.pendingActions.userId, user.id), eq(schema.pendingActions.status, "pending"), lt(schema.pendingActions.expiresAt, new Date())))
-    .returning();
-  // Keep chat history in step: those cards would otherwise still offer Review.
-  for (const row of expired) await syncChatCard(row);
+    .where(and(eq(schema.pendingActions.userId, user.id), eq(schema.pendingActions.status, "pending"), lt(schema.pendingActions.expiresAt, new Date())));
   const rows = await db
     .select()
     .from(schema.pendingActions)
@@ -361,36 +358,6 @@ export async function rejectAction(user: User, id: string): Promise<PendingActio
   if (!row) throw new HttpError(409, "action_not_pending", `This action is already ${(await getActionRow(user, id)).status}`);
   await syncChatCard(row);
   return toPendingAction(row);
-}
-
-/** What an action acts on, when two approvals for it can't both make sense (null = no conflict). */
-function targetOf(row: ActionRow): string | null {
-  const p = row.payload as Partial<BillPaymentPayload & DisputePayload & CancelSubscriptionPayload>;
-  switch (row.type) {
-    case "bill_payment":
-    case "cancel_subscription":
-      return p.billId ? `bill:${p.billId}` : null;
-    case "dispute_charge":
-      return p.purchaseId ? `purchase:${p.purchaseId}` : null;
-    case "card_payment":
-      return "card"; // one card per user
-    default:
-      return null; // transfers and new goals can legitimately repeat
-  }
-}
-
-/**
- * The same bill can be proposed twice (Finn in chat and the Activity nudge). Once one approval runs,
- * the other would only fail, so it's expired (with its chat card) instead of still offering Review.
- */
-async function retireDuplicates(user: User, done: ActionRow): Promise<void> {
-  const target = targetOf(done);
-  if (!target) return;
-  const pending = await db
-    .select()
-    .from(schema.pendingActions)
-    .where(and(eq(schema.pendingActions.userId, user.id), eq(schema.pendingActions.type, done.type), eq(schema.pendingActions.status, "pending")));
-  for (const row of pending) if (row.id !== done.id && targetOf(row) === target) await finish(row, { status: "expired", error: "Already handled by another approval" });
 }
 
 /** Saves the final state and updates the approval card in the chat message that proposed it. */

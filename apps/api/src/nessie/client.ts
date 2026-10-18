@@ -1,5 +1,4 @@
 import { env } from "../env.js";
-import { isoDay } from "../lib/dates.js";
 import type {
   NessieAccount,
   NessieAccountType,
@@ -106,14 +105,9 @@ function unwrap<T>(res: T[] | { data: T[] }): T[] {
   return Array.isArray(res) ? res : (res?.data ?? []);
 }
 
-<<<<<<< HEAD
-const today = () => isoDay();
-const list = <T>(path: string, query?: Record<string, string | number | undefined>) => request<T[]>("GET", path, { query, emptyList: true });
-=======
 const today = () => new Date().toISOString().slice(0, 10);
 // Financial lists must be fresh across API workers too; a process-local cache cannot see another worker's writes.
 const list = <T>(path: string, query?: Record<string, string | number | undefined>) => request<T[]>("GET", path, { query, emptyList: true, ttlMs: 0 });
->>>>>>> 6ece23a5f974b1f0aa2c380d38efcb2e0913281f
 
 export const nessie = {
   // Customers

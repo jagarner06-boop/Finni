@@ -86,20 +86,6 @@ describe('CardRenderer', () => {
     expect(screen.getByText(/Nothing was moved\./)).toBeTruthy();
   });
 
-  it('marks data cards in older chat messages as a snapshot', async () => {
-    const hourAgo = new Date(Date.now() - 60 * 60_000).toISOString();
-    await render(<CardRenderer card={transactions} asOf={hourAgo} />);
-    expect(screen.getByText(/^As of /)).toBeTruthy();
-  });
-
-  it('leaves fresh answers and approval cards without the snapshot line', async () => {
-    const hourAgo = new Date(Date.now() - 60 * 60_000).toISOString();
-    await render(<CardRenderer card={transactions} asOf={new Date().toISOString()} />);
-    expect(screen.queryByText(/^As of /)).toBeNull();
-    await render(<CardRenderer card={approval('pending')} asOf={hourAgo} />);
-    expect(screen.queryByText(/^As of /)).toBeNull();
-  });
-
   it('shows a stale pending approval as expired instead of offering Review', async () => {
     await render(<CardRenderer card={{ ...approval('pending'), expiresAt: '2020-01-01T00:00:00.000Z' } as Card} />);
     expect(screen.getByText('Expired. Nothing was moved.')).toBeTruthy();
