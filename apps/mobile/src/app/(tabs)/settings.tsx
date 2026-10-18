@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatCents } from '@finni/shared';
 import Constants from 'expo-constants';
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -128,7 +127,6 @@ export default function SettingsScreen() {
                 icon={a.type === 'Credit Card' ? 'credit-card' : 'briefcase'}
                 title={a.nickname}
                 value={`•••• ${a.mask}`}
-                onPress={() => router.push(`/activity?segment=transactions&accountId=${a.id}`)}
               />
             ))}
         </SettingsGroup>
