@@ -23,6 +23,11 @@ export function getDemoToken(): Promise<string> {
   return pending;
 }
 
+/** True once this device has signed in, so a relaunch skips the sign-in screen. */
+export async function hasDemoDevice(): Promise<boolean> {
+  return !!(await secureRead(KEY));
+}
+
 /** Sign out: the next launch gets a new device id, so a new user with a fresh persona. */
 export async function clearDemoDevice(): Promise<void> {
   await secureWrite(KEY, null);

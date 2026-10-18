@@ -32,7 +32,8 @@ export function useSession() {
 
   let phase: SessionPhase;
   if (bootstrap.isError || me.isError) phase = 'error';
-  else if (!bootstrap.isSuccess) phase = 'bootstrapping';
+  // A seeded /me already in the cache (the plan screen just ran) skips the loader on re-bootstrap.
+  else if (!bootstrap.isSuccess && !me.data?.seeded) phase = 'bootstrapping';
   else if (!me.data?.seeded) phase = 'seeding';
   else phase = 'ready';
 
