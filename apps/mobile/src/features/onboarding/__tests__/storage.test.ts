@@ -4,6 +4,7 @@ import {
   saveOnboarding,
   initialProfile,
   destination,
+  setPlanPending,
 } from "../state";
 
 function memory() {
@@ -17,11 +18,25 @@ function memory() {
   };
 }
 
-it("starts new users in Basics only after authentication and hydration", () => {
-  expect(destination("signedOut", true, false)).toBe("welcome");
-  expect(destination("signedIn", false, false)).toBe(null);
+it("onboards first, then signs in, then builds the plan once", () => {
+  expect(destination("loading", true, false)).toBe(null);
+  expect(destination("signedOut", false, false)).toBe(null);
+  expect(destination("signedOut", true, false)).toBe("onboarding");
   expect(destination("signedIn", true, false)).toBe("onboarding");
+  expect(destination("signedOut", true, true, true)).toBe("sign-in");
+  expect(destination("signedOut", true, true)).toBe("sign-in");
+  expect(destination("signedIn", true, true, true)).toBe("plan");
   expect(destination("signedIn", true, true)).toBe("tabs");
+});
+
+it("keeps the plan pending until it is cleared", async () => {
+  const store = memory();
+  expect((await loadOnboarding(store)).planPending).toBe(false);
+  await setPlanPending(store, true);
+  await saveOnboarding(store, initialProfile());
+  expect(await loadOnboarding(store)).toMatchObject({ complete: true, planPending: true });
+  await setPlanPending(store, false);
+  expect((await loadOnboarding(store)).planPending).toBe(false);
 });
 
 it("persists the profile before marking onboarding complete", async () => {

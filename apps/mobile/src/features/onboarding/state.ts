@@ -62,10 +62,14 @@ function valid(value: unknown): value is OnboardingProfile {
   );
 }
 
+/** Set when onboarding finishes; cleared once the plan-building screen has played. */
+const PLAN_PENDING = "finni.plan.pending";
+
 export async function loadOnboarding(store: Storage) {
-  const [raw, flag] = await Promise.all([
+  const [raw, flag, plan] = await Promise.all([
     store.getItem("finni.onboarding.v1"),
     store.getItem("finni.onboarding.complete"),
+    store.getItem(PLAN_PENDING),
   ]);
   let parsed: unknown;
   try {
@@ -74,8 +78,10 @@ export async function loadOnboarding(store: Storage) {
     parsed = null;
   }
   const profile = valid(parsed) ? parsed : initialProfile();
-  return { profile, complete: flag === "true" && valid(parsed) };
+  return { profile, complete: flag === "true" && valid(parsed), planPending: plan === "true" };
 }
+export const setPlanPending = (store: Storage, pending: boolean) =>
+  store.setItem(PLAN_PENDING, String(pending));
 export async function saveOnboarding(
   store: Storage,
   profile: OnboardingProfile,
@@ -86,14 +92,17 @@ export async function saveOnboarding(
   );
   await store.setItem("finni.onboarding.complete", "true");
 }
+/** Onboarding needs no account; sign-in follows it, then the plan builds once. */
 export function destination(
   auth: "loading" | "signedOut" | "signedIn",
   hydrated: boolean,
   complete: boolean,
+  planPending = false,
 ) {
   if (auth === "loading" || !hydrated) return null;
-  if (auth === "signedOut") return "welcome";
-  return complete ? "tabs" : "onboarding";
+  if (!complete) return "onboarding";
+  if (auth === "signedOut") return "sign-in";
+  return planPending ? "plan" : "tabs";
 }
 export const billsMaximum = (income: number) =>
   Math.max(500, Math.round((income * 0.9) / 25) * 25);

@@ -62,4 +62,12 @@ export const ONBOARDING_HEAD = {
   confident: require('../../../assets/finn/head-confident.png'),
   surprised: require('../../../assets/finn/head-surprised.png'),
   love: require('../../../assets/finn/head-love.png'),
+  worried: require('../../../assets/finn/head-worried.png'),
+} as const;
+
+/** Plush cutouts for the sign-in and plan-building screens. */
+export const FINN_PLUSH_FLOW = {
+  shield: require('../../../assets/finn/plush-shield.png'),
+  thinking: require('../../../assets/finn/plush-thinking.png'),
+  celebrate: require('../../../assets/finn/plush-celebrate.png'),
 } as const;

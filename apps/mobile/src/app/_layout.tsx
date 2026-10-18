@@ -64,13 +64,22 @@ function RootNavigator() {
   if (!ready) return null;
   if (onboarding.loadFailed) return <View style={{ flex: 1, justifyContent: 'center', padding: 24, gap: 20, backgroundColor: colors.canvas }}><Text style={{ color: colors.ink }}>{onboarding.error}</Text><Button label="Try again" onPress={onboarding.retry} /></View>;
 
+  // Onboarding needs no account. Sign-in follows it, then the plan builds once before the tabs.
   const signedIn = status === 'signedIn';
+  const { complete, planPending } = onboarding;
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }}>
-      <Stack.Protected guard={signedIn && !onboarding.complete}>
+      <Stack.Protected guard={!complete}>
         <Stack.Screen name="(onboarding)" />
       </Stack.Protected>
-      <Stack.Protected guard={signedIn && onboarding.complete}>
+      <Stack.Protected guard={signedIn && complete && planPending}>
+        <Stack.Screen name="plan" options={{ animation: 'fade', gestureEnabled: false }} />
+      </Stack.Protected>
+      {/* Stays open after sign-in while the plan is pending, for the "You're in" moment. */}
+      <Stack.Protected guard={complete && (!signedIn || planPending)}>
+        <Stack.Screen name="sign-in" options={{ animation: 'fade', gestureEnabled: false }} />
+      </Stack.Protected>
+      <Stack.Protected guard={signedIn && complete && !planPending}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="approve/[id]"
@@ -79,9 +88,6 @@ function RootNavigator() {
         <Stack.Screen name="goals" />
         <Stack.Screen name="goal/new" options={{ presentation: 'modal' }} />
         <Stack.Screen name="goal/[id]" />
-      </Stack.Protected>
-      <Stack.Protected guard={!signedIn}>
-        <Stack.Screen name="welcome" />
       </Stack.Protected>
     </Stack>
   );

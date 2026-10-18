@@ -1,9 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState, type ReactNode } from "react";
-import { api } from "@/api/endpoints";
 import { FinnAnalyzing } from "@/components/feedback/FinnAnalyzing";
+import { ANALYSIS_KEY, analysisTasks } from "./analysis";
 
-const KEY = "finni.analysis.v1";
 export function FirstAnalysisGate({ children }: { children: ReactNode }) {
   const [done, setDone] = useState(false),
     [completed, setCompleted] = useState(0),
@@ -22,40 +21,21 @@ export function FirstAnalysisGate({ children }: { children: ReactNode }) {
         timers.add(timer);
       });
     const run = async () => {
-      if ((await AsyncStorage.getItem(KEY)) === "true") {
+      if ((await AsyncStorage.getItem(ANALYSIS_KEY)) === "true") {
         if (alive) setDone(true);
         return;
       }
       if (!alive) return;
       setCompleted(0);
       setError(null);
-      const tasks = [
-        () => api.transactions({ days: 90 }),
-        async () =>
-          (await api.bills()).bills.filter(
-            (bill) => bill.status === "recurring",
-          ),
-        () => api.bills(),
-        async () => {
-          await api.scanNudges();
-          const { nudges } = await api.nudges();
-          return nudges.filter(
-            (n) =>
-              !n.resolvedAt &&
-              (n.rule === "trial_converted" ||
-                n.rule === "goal_contribution" ||
-                n.rule === "high_utilization"),
-          ).length;
-        },
-      ];
-      for (let i = 0; i < tasks.length; i++) {
+      for (let i = 0; i < analysisTasks.length; i++) {
         if (!alive) return;
-        const [result] = await Promise.all([tasks[i](), pause()]);
+        const [result] = await Promise.all([analysisTasks[i](), pause()]);
         if (!alive) return;
         if (i === 3 && typeof result === "number") setFound(result);
         setCompleted(i + 1);
       }
-      await AsyncStorage.setItem(KEY, "true");
+      await AsyncStorage.setItem(ANALYSIS_KEY, "true");
       await pause();
       if (alive) setDone(true);
     };

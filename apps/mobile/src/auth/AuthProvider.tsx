@@ -24,7 +24,7 @@ import {
 import { config } from '@/config';
 import { api } from '@/api/endpoints';
 import { authBridge } from './authBridge';
-import { clearDemoDevice, confirmWithDevice, getDemoToken } from './demoAuth';
+import { clearDemoDevice, confirmWithDevice, getDemoToken, hasDemoDevice } from './demoAuth';
 import { tokenStore, type StoredTokens } from './tokenStore';
 
 // Closes the Auth0 popup on web and hands the result back to the opener.
@@ -45,7 +45,8 @@ interface AuthContextValue {
   user: AuthUser | null;
   /** False until Auth0 discovery has loaded; disable the sign-in button until then. */
   ready: boolean;
-  login: (opts?: { forcePrompt?: boolean }) => Promise<boolean>;
+  /** `connection` skips Auth0's picker (e.g. google-oauth2); `loginHint` prefills the email. */
+  login: (opts?: { forcePrompt?: boolean; connection?: string; loginHint?: string }) => Promise<boolean>;
   logout: () => Promise<void>;
   getAccessToken: () => Promise<string | null>;
   /** MFA re-auth for large approvals; resolves to the new access token or null. */
@@ -81,13 +82,14 @@ function toStored(res: TokenResponse, prev?: StoredTokens | null): StoredTokens 
   };
 }
 
-/** Expo Go demo: no login. A device id is the identity; Face ID confirms large approvals. */
+/** Expo Go demo: no real login. A device id is the identity; Face ID confirms large approvals. */
 function DemoAuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading');
 
+  // New devices start signed out so the sign-in screen follows onboarding.
   useEffect(() => {
     let alive = true;
-    getDemoToken().then(() => alive && setStatus('signedIn'));
+    hasDemoDevice().then((known) => alive && setStatus(known ? 'signedIn' : 'signedOut'));
     return () => {
       alive = false;
     };
@@ -106,7 +108,7 @@ function DemoAuthProvider({ children }: { children: ReactNode }) {
     setStatus('signedOut');
   }, []);
 
-  // Signed out only after logout; signing in again makes a new device id.
+  // Makes the device id on first sign-in, and a new one after logout.
   const login = useCallback(async () => {
     await getDemoToken();
     setStatus('signedIn');
@@ -195,9 +197,12 @@ function Auth0Provider({ children }: { children: ReactNode }) {
   );
 
   const login = useCallback(
-    async (opts?: { forcePrompt?: boolean }) => {
+    async (opts?: { forcePrompt?: boolean; connection?: string; loginHint?: string }) => {
       if (!discovery) return false;
-      return (await authorize(discovery, {}, opts?.forcePrompt)) !== null;
+      const extra: Record<string, string> = {};
+      if (opts?.connection) extra.connection = opts.connection;
+      if (opts?.loginHint) extra.login_hint = opts.loginHint;
+      return (await authorize(discovery, extra, opts?.forcePrompt)) !== null;
     },
     [authorize, discovery],
   );
