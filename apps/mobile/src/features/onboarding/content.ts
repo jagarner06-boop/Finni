@@ -137,6 +137,6 @@ export const COPY = {
   },
   cta: {
     start: 'Let’s go', continue: 'Continue', seeStyle: 'See my style', connect: 'Connect with Plaid',
-    chooseBank: 'Choose your bank', connecting: 'Connecting…', finishSetup: 'Finish setup', goHome: 'Go to Home',
+    chooseBank: 'Choose your bank', connecting: 'Connecting…', finishSetup: 'Finish setup', goHome: 'Save my plan',
   },
 } as const;
